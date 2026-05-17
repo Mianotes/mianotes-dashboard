@@ -192,6 +192,7 @@ export function App() {
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
   const [tags, setTags] = useState<TagRecord[]>([]);
   const [notes, setNotes] = useState<NoteRecord[]>([]);
+  const [selectedView, setSelectedView] = useState<"recent" | "starred">("recent");
   const [selectedUserId, setSelectedUserId] = useState<string | "all">("all");
   const [selectedProjectId, setSelectedProjectId] = useState<string | "all">("all");
   const [selectedTag, setSelectedTag] = useState<string | "all">("all");
@@ -253,9 +254,16 @@ export function App() {
     }
   }, [selectedUserId, selectedProjectId]);
 
-  const notesByUser = useMemo(() => countBy(notes, (note) => note.user?.id ?? note.user_id ?? ""), [notes]);
   const notesByProject = useMemo(() => countBy(notes, (note) => note.project?.id ?? note.project_id ?? ""), [notes]);
-  const projectsForSidebar = selectedUserId === "all" ? projects : projects.filter((project) => project.user_id === selectedUserId);
+  const selectedProject = selectedProjectId === "all" ? null : projects.find((project) => project.id === selectedProjectId) ?? null;
+  const selectedTagRecord = selectedTag === "all" ? null : tags.find((tag) => tag.slug === selectedTag) ?? null;
+  const selectedUser = selectedUserId === "all" ? null : users.find((user) => user.id === selectedUserId) ?? null;
+  const activeFilterLabel = [selectedTagRecord?.name, selectedUser?.name].filter(Boolean).join(" / ");
+  const breadcrumbItems = [
+    selectedView === "starred" ? "Starred" : "Recent",
+    selectedProject?.name,
+    activeFilterLabel || null
+  ].filter(Boolean);
   const filteredNotes = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     return notes.filter((note) => {
@@ -299,45 +307,31 @@ export function App() {
           </button>
 
           <nav className="nav-group" aria-label="Note filters">
-            <button className="nav-item active" onClick={() => {
+            <button className={`nav-item ${selectedView === "recent" ? "active" : ""}`} onClick={() => {
+              setSelectedView("recent");
               setSelectedProjectId("all");
-              setSelectedUserId("all");
             }}>
               <Inbox size={20} />
               <span>Recent</span>
             </button>
-            <button className="nav-item">
+            <button className={`nav-item ${selectedView === "starred" ? "active" : ""}`} onClick={() => setSelectedView("starred")}>
               <Star size={20} />
               <span>Starred</span>
             </button>
           </nav>
 
-          <SidebarSection title="Users">
-            {users.map((person) => (
-              <button
-                key={person.id}
-                className={`nav-item ${selectedUserId === person.id ? "active-soft" : ""}`}
-                onClick={() => {
-                  setSelectedUserId(person.id);
-                  setSelectedProjectId("all");
-                }}
-              >
-                <User size={19} />
-                <span>{person.name}</span>
-                <small>{notesByUser[person.id] ?? 0}</small>
-              </button>
-            ))}
-          </SidebarSection>
-
           <SidebarSection
             title="Projects"
             action={<button className="icon-button" aria-label="Add project"><Plus size={15} /></button>}
           >
-            {projectsForSidebar.map((project) => (
+            {projects.map((project) => (
               <button
                 key={project.id}
                 className={`nav-item ${selectedProjectId === project.id ? "active-soft" : ""}`}
-                onClick={() => setSelectedProjectId(project.id)}
+                onClick={() => {
+                  setSelectedView("recent");
+                  setSelectedProjectId(project.id);
+                }}
               >
                 <Folder size={19} />
                 <span>{project.name}</span>
@@ -368,9 +362,12 @@ export function App() {
         <section className="workspace">
           <header className="toolbar">
             <div className="breadcrumb">
-              <span>{selectedUserId === "all" ? "Everyone" : users.find((user) => user.id === selectedUserId)?.name}</span>
-              <ChevronRight size={17} />
-              <strong>{openedNote ? openedNote.title : selectedProjectId === "all" ? "Recent notes" : projects.find((project) => project.id === selectedProjectId)?.name}</strong>
+              {breadcrumbItems.map((item, index) => (
+                <span key={`${item}-${index}`} className={index === breadcrumbItems.length - 1 ? "current" : undefined}>
+                  {index > 0 && <ChevronRight size={14} />}
+                  {item}
+                </span>
+              ))}
             </div>
             <div className="toolbar-actions">
               <label className="search-box">
@@ -390,6 +387,17 @@ export function App() {
                   <option value="all">Tags</option>
                   {tags.map((tag) => (
                     <option value={tag.slug} key={tag.id}>{tag.name}</option>
+                  ))}
+                </select>
+                <ChevronDown className="select-button-chevron" size={12} />
+              </label>
+              <label className="select-button user-select-button">
+                <User className="select-button-icon" size={16} />
+                <span className="select-button-label">{selectedUser?.name ?? "Users"}</span>
+                <select value={selectedUserId} onChange={(event) => setSelectedUserId(event.target.value)}>
+                  <option value="all">Users</option>
+                  {users.map((person) => (
+                    <option value={person.id} key={person.id}>{person.name}</option>
                   ))}
                 </select>
                 <ChevronDown className="select-button-chevron" size={12} />

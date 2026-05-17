@@ -233,14 +233,21 @@ button {
 .breadcrumb {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 4px;
   min-width: 190px;
   color: #777781;
   font-size: 13px;
 }
 
-.breadcrumb strong {
+.breadcrumb span {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.breadcrumb .current {
   color: #2e2f36;
+  font-weight: 700;
   font-size: 13px;
 }
 
@@ -321,6 +328,10 @@ button {
   pointer-events: none;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.user-select-button {
+  width: 124px;
 }
 
 .result-count {
