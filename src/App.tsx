@@ -26,6 +26,7 @@ import type { FormEvent, ReactNode } from "react";
 import logoUrl from "./assets/logo_small.png";
 
 const MarkdownViewer = lazy(() => import("./MarkdownViewer"));
+const MarkdownEditor = lazy(() => import("./MarkdownViewer").then((module) => ({ default: module.MarkdownEditor })));
 
 type UserRecord = {
   id: string;
@@ -689,7 +690,7 @@ function NotePanel({
             </>
           ) : (
             <>
-              <button className="text-button compact" type="button" onClick={() => setIsEditing(true)}>Edit Markdown</button>
+              <button className="text-button compact" type="button" onClick={() => setIsEditing(true)}>Edit</button>
               <button className="icon-button" aria-label="More note actions"><MoreVertical size={19} /></button>
             </>
           )}
@@ -701,12 +702,15 @@ function NotePanel({
         <span><Clock3 size={16} />{relativeTime(note.updated_at ?? note.created_at)}</span>
       </div>
       {isEditing ? (
-        <textarea
-          className="markdown-source-editor"
-          value={draftText}
-          onChange={(event) => setDraftText(event.target.value)}
-          aria-label="Markdown source"
-        />
+        <div className="markdown-preview">
+          <Suspense fallback={<div className="editor-loading">Loading editor...</div>}>
+            <MarkdownEditor
+              id={note.id}
+              markdown={draftText}
+              onChange={setDraftText}
+            />
+          </Suspense>
+        </div>
       ) : (
         <div className="markdown-preview">
           <Suspense fallback={<div className="editor-loading">Loading note...</div>}>

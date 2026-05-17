@@ -601,20 +601,24 @@ button {
   margin: 0 0 1em;
 }
 
-.markdown-source-editor {
-  width: 100%;
+.mianotes-rich-editor {
+  background: transparent;
+}
+
+.mianotes-rich-editor .mdxeditor-toolbar {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  margin: 0 0 22px;
+  padding: 8px 0;
+  border-bottom: 1px solid #e4e5e9;
+  background: #ffffff;
+}
+
+.mianotes-rich-editor [role="textbox"] {
   min-height: min(520px, calc(100vh - 260px));
   max-height: calc(100vh - 180px);
-  padding: 18px;
-  border: 1px solid #d9dae1;
-  border-radius: 8px;
-  color: #30313a;
-  background: #fbfbfc;
-  font-family: "SFMono-Regular", Consolas, monospace;
-  font-size: 14px;
-  line-height: 1.7;
   overflow: auto;
-  resize: vertical;
 }
 
 .editor-loading {
