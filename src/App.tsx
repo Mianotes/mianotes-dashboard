@@ -263,11 +263,30 @@ export function App() {
   const selectedTagRecord = selectedTag === "all" ? null : tags.find((tag) => tag.slug === selectedTag) ?? null;
   const selectedUser = selectedUserId === "all" ? null : users.find((user) => user.id === selectedUserId) ?? null;
   const activeFilterLabel = [selectedTagRecord?.name, selectedUser?.name].filter(Boolean).join(" / ");
-  const breadcrumbIcon = selectedView === "starred" ? <Star size={15} /> : <History size={15} />;
   const breadcrumbItems = [
     selectedProject?.name,
     activeFilterLabel || null
   ].filter(Boolean);
+  const tagSuggestions = useMemo(() => {
+    const query = searchQuery.trim().toLowerCase();
+    if (!query) return [];
+
+    const tagMap = new Map<string, TagRecord>();
+    notes.forEach((note) => {
+      const haystack = `${note.title} ${note.text ?? ""} ${note.project?.name ?? ""} ${note.user?.name ?? ""}`.toLowerCase();
+      const noteMatches = haystack.includes(query);
+      note.tags?.forEach((tag) => {
+        const tagMatches = `${tag.name} ${tag.slug}`.toLowerCase().includes(query);
+        if ((noteMatches || tagMatches) && tag.slug !== selectedTag) {
+          tagMap.set(tag.slug, tag);
+        }
+      });
+    });
+
+    return Array.from(tagMap.values())
+      .sort((first, second) => first.name.localeCompare(second.name))
+      .slice(0, 6);
+  }, [notes, searchQuery, selectedTag]);
   const filteredNotes = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     return notes.filter((note) => {
@@ -368,7 +387,6 @@ export function App() {
             <header className="toolbar">
               <div className="breadcrumb">
                 <span className="breadcrumb-root">
-                  {breadcrumbIcon}
                   {selectedView === "starred" ? "Starred" : "Recent"}
                 </span>
                 {breadcrumbItems.map((item, index) => (
@@ -379,27 +397,40 @@ export function App() {
                 ))}
               </div>
               <div className="toolbar-actions">
-                <label className="search-box">
-                  <Search size={18} />
-                  <input
-                    value={searchQuery}
-                    onChange={(event) => setSearchQuery(event.target.value)}
-                    placeholder="Search notes..."
-                  />
-                </label>
-                <label className="select-button">
-                  <Tags className="select-button-icon" size={16} />
-                  <span className="select-button-label">
-                    {selectedTag === "all" ? "Tags" : tags.find((tag) => tag.slug === selectedTag)?.name ?? "Tags"}
-                  </span>
-                  <select value={selectedTag} onChange={(event) => setSelectedTag(event.target.value)}>
-                    <option value="all">Tags</option>
-                    {tags.map((tag) => (
-                      <option value={tag.slug} key={tag.id}>{tag.name}</option>
-                    ))}
-                  </select>
-                  <ChevronDown className="select-button-chevron" size={12} />
-                </label>
+                <div className="search-area">
+                  <label className="search-box">
+                    <Search size={18} />
+                    <input
+                      value={searchQuery}
+                      onChange={(event) => setSearchQuery(event.target.value)}
+                      placeholder="Search notes..."
+                    />
+                  </label>
+                  {tagSuggestions.length > 0 && (
+                    <div className="tag-suggestions" role="listbox" aria-label="Suggested tags">
+                      {tagSuggestions.map((tag) => (
+                        <button
+                          key={tag.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedTag(tag.slug);
+                            setSearchQuery("");
+                          }}
+                        >
+                          <Tags size={14} />
+                          {tag.name}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+                {selectedTagRecord && (
+                  <button className="active-tag-filter" type="button" onClick={() => setSelectedTag("all")}>
+                    <Tags size={14} />
+                    {selectedTagRecord.name}
+                    <X size={14} />
+                  </button>
+                )}
                 <label className="select-button user-select-button">
                   <User className="select-button-icon" size={16} />
                   <span className="select-button-label">{selectedUser?.name ?? "Users"}</span>
@@ -725,7 +756,6 @@ function NotePanel({
     }
   }
 
-  const viewIcon = view === "starred" ? <Star size={15} /> : <History size={15} />;
   const viewLabel = view === "starred" ? "Starred" : "Recent";
   const noteDate = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(new Date(note.created_at));
   const authorName = note.user?.name ?? "Unknown";
@@ -738,10 +768,7 @@ function NotePanel({
           <ChevronLeft size={16} />
         </button>
         <div className="note-document-breadcrumb">
-          <span className="breadcrumb-root">
-            {viewIcon}
-            {viewLabel}
-          </span>
+          <span className="breadcrumb-root">{viewLabel}</span>
           <ChevronRight size={14} />
           <span>{note.project?.name ?? "Project"}</span>
           <ChevronRight size={14} />

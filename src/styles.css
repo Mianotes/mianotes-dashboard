@@ -258,6 +258,11 @@ button {
   min-width: 0;
 }
 
+.search-area {
+  position: relative;
+  min-width: 0;
+}
+
 .search-box {
   display: flex;
   align-items: center;
@@ -278,6 +283,43 @@ button {
   background: transparent;
   color: #25262d;
   font-size: 13px;
+}
+
+.tag-suggestions {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  z-index: 12;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  width: min(360px, 70vw);
+  padding: 8px;
+  border: 1px solid #dedfe5;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 14px 34px rgba(18, 18, 22, 0.12);
+}
+
+.tag-suggestions button,
+.active-tag-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 32px;
+  padding: 0 10px;
+  border: 1px solid #e1e2e7;
+  border-radius: 999px;
+  color: #555762;
+  background: #ffffff;
+  font-size: 12px;
+}
+
+.tag-suggestions button:hover,
+.active-tag-filter:hover {
+  color: #202128;
+  border-color: #c8c9d0;
+  background: #f7f7f8;
 }
 
 .select-button {
