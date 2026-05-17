@@ -494,7 +494,7 @@ function AuthScreen({ onSignedIn }: { onSignedIn: () => void }) {
         <h1>{step === "email" ? "Open your local knowledge base" : step === "join" ? "Create your profile" : "Welcome back"}</h1>
         <p>
           {isFirstUser
-            ? "You are setting up this Mianotes instance. The password becomes the shared household password."
+            ? "This is a new instance of Mianotes. The password you choose will become the master password for this instance."
             : "Sign in to browse notes, projects, sources, comments, and Mia prompts."}
         </p>
         {step === "email" ? (

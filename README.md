@@ -22,7 +22,7 @@ During development, Vite proxies `/api` and `/data` requests to
 
 ## Current scope
 
-- Email/password household login flow.
+- Email/password instance login flow.
 - Recent notes, users, projects, search, and tag filtering.
 - Note preview with Markdown, source files, and comments.
 - `@mia` comments for synchronous Mia prompts.
