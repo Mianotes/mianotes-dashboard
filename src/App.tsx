@@ -4,6 +4,8 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock3,
+  Edit3,
+  Eye,
   File,
   FileText,
   Folder,
@@ -15,8 +17,10 @@ import {
   MoreVertical,
   Plus,
   Search,
+  Share2,
   Star,
   Tags,
+  Trash2,
   Upload,
   User,
   X
@@ -360,57 +364,59 @@ export function App() {
         </aside>
 
         <section className="workspace">
-          <header className="toolbar">
-            <div className="breadcrumb">
-              <span className="breadcrumb-root">
-                {breadcrumbIcon}
-                {selectedView === "starred" ? "Starred" : "Recent"}
-              </span>
-              {breadcrumbItems.map((item, index) => (
-                <span key={`${item}-${index}`} className={index === breadcrumbItems.length - 1 ? "current" : undefined}>
-                  <ChevronRight size={14} />
-                  {item}
+          {!openedNote && (
+            <header className="toolbar">
+              <div className="breadcrumb">
+                <span className="breadcrumb-root">
+                  {breadcrumbIcon}
+                  {selectedView === "starred" ? "Starred" : "Recent"}
                 </span>
-              ))}
-            </div>
-            <div className="toolbar-actions">
-              <label className="search-box">
-                <Search size={18} />
-                <input
-                  value={searchQuery}
-                  onChange={(event) => setSearchQuery(event.target.value)}
-                  placeholder="Search notes..."
-                />
-              </label>
-              <label className="select-button">
-                <Tags className="select-button-icon" size={16} />
-                <span className="select-button-label">
-                  {selectedTag === "all" ? "Tags" : tags.find((tag) => tag.slug === selectedTag)?.name ?? "Tags"}
-                </span>
-                <select value={selectedTag} onChange={(event) => setSelectedTag(event.target.value)}>
-                  <option value="all">Tags</option>
-                  {tags.map((tag) => (
-                    <option value={tag.slug} key={tag.id}>{tag.name}</option>
-                  ))}
-                </select>
-                <ChevronDown className="select-button-chevron" size={12} />
-              </label>
-              <label className="select-button user-select-button">
-                <User className="select-button-icon" size={16} />
-                <span className="select-button-label">{selectedUser?.name ?? "Users"}</span>
-                <select value={selectedUserId} onChange={(event) => setSelectedUserId(event.target.value)}>
-                  <option value="all">Users</option>
-                  {users.map((person) => (
-                    <option value={person.id} key={person.id}>{person.name}</option>
-                  ))}
-                </select>
-                <ChevronDown className="select-button-chevron" size={12} />
-              </label>
-              <span className="result-count">{filteredNotes.length} notes</span>
-              <button className="icon-button" aria-label="Previous page"><ChevronLeft size={18} /></button>
-              <button className="icon-button" aria-label="Next page"><ChevronRight size={18} /></button>
-            </div>
-          </header>
+                {breadcrumbItems.map((item, index) => (
+                  <span key={`${item}-${index}`} className={index === breadcrumbItems.length - 1 ? "current" : undefined}>
+                    <ChevronRight size={14} />
+                    {item}
+                  </span>
+                ))}
+              </div>
+              <div className="toolbar-actions">
+                <label className="search-box">
+                  <Search size={18} />
+                  <input
+                    value={searchQuery}
+                    onChange={(event) => setSearchQuery(event.target.value)}
+                    placeholder="Search notes..."
+                  />
+                </label>
+                <label className="select-button">
+                  <Tags className="select-button-icon" size={16} />
+                  <span className="select-button-label">
+                    {selectedTag === "all" ? "Tags" : tags.find((tag) => tag.slug === selectedTag)?.name ?? "Tags"}
+                  </span>
+                  <select value={selectedTag} onChange={(event) => setSelectedTag(event.target.value)}>
+                    <option value="all">Tags</option>
+                    {tags.map((tag) => (
+                      <option value={tag.slug} key={tag.id}>{tag.name}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="select-button-chevron" size={12} />
+                </label>
+                <label className="select-button user-select-button">
+                  <User className="select-button-icon" size={16} />
+                  <span className="select-button-label">{selectedUser?.name ?? "Users"}</span>
+                  <select value={selectedUserId} onChange={(event) => setSelectedUserId(event.target.value)}>
+                    <option value="all">Users</option>
+                    {users.map((person) => (
+                      <option value={person.id} key={person.id}>{person.name}</option>
+                    ))}
+                  </select>
+                  <ChevronDown className="select-button-chevron" size={12} />
+                </label>
+                <span className="result-count">{filteredNotes.length} notes</span>
+                <button className="icon-button" aria-label="Previous page"><ChevronLeft size={18} /></button>
+                <button className="icon-button" aria-label="Next page"><ChevronRight size={18} /></button>
+              </div>
+            </header>
+          )}
 
           {error && <div className="notice danger">{error}</div>}
 
@@ -418,10 +424,15 @@ export function App() {
             {openedNote ? (
               <NotePanel
                 note={openedNote}
+                view={selectedView}
                 onClose={() => setOpenedNoteId(null)}
                 onRefresh={async () => {
                   const fullNote = await apiFetch<NoteRecord>(`/api/notes/${openedNote.id}`);
                   setNotes((items) => items.map((item) => item.id === openedNote.id ? fullNote : item));
+                }}
+                onDeleted={async () => {
+                  setOpenedNoteId(null);
+                  await refreshNotes();
                 }}
               />
             ) : (
@@ -611,28 +622,33 @@ function NoteRow({ note, onClick }: { note: NoteRecord; onClick: () => void }) {
 
 function NotePanel({
   note,
+  view,
   onClose,
-  onRefresh
+  onRefresh,
+  onDeleted
 }: {
   note: NoteRecord;
+  view: "recent" | "starred";
   onClose: () => void;
   onRefresh: () => Promise<void>;
+  onDeleted: () => Promise<void>;
 }) {
   const [comments, setComments] = useState<CommentRecord[]>([]);
   const [commentBody, setCommentBody] = useState("");
   const [miaResponse, setMiaResponse] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [draftText, setDraftText] = useState(noteBodyMarkdown(note.text ?? ""));
+  const [draftText, setDraftText] = useState(note.text ?? "");
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   useEffect(() => {
     setMiaResponse(null);
     setCommentBody("");
     setIsEditing(false);
-    setDraftText(noteBodyMarkdown(note.text ?? ""));
+    setDraftText(note.text ?? "");
     setIsActionsOpen(false);
     if (!note) return;
     void apiFetch<CommentRecord[]>(`/api/notes/${note.id}/comments`).then(setComments).catch(() => setComments([]));
@@ -688,18 +704,47 @@ function NotePanel({
     }
   }
 
+  async function copyShareLink() {
+    const shareUrl = note.note_url ? new URL(note.note_url, window.location.origin).toString() : window.location.href;
+    await navigator.clipboard?.writeText(shareUrl);
+    setIsActionsOpen(false);
+  }
+
+  async function deleteNote() {
+    const confirmed = window.confirm(`Delete "${note.title}"? This cannot be undone.`);
+    if (!confirmed) return;
+    setIsDeleting(true);
+    setError(null);
+    try {
+      await apiFetch(`/api/notes/${note.id}`, { method: "DELETE" });
+      await onDeleted();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not delete note");
+    } finally {
+      setIsDeleting(false);
+    }
+  }
+
+  const viewIcon = view === "starred" ? <Star size={15} /> : <History size={15} />;
+  const viewLabel = view === "starred" ? "Starred" : "Recent";
+  const noteDate = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(new Date(note.created_at));
+  const authorName = note.user?.name ?? "Unknown";
+
   return (
     <section className="note-panel">
-      <div className="note-view-nav">
-        <button className="back-button" onClick={onClose}>
-          <ChevronLeft size={17} />
-          Notes
+      <div className="note-document-header">
+        <button className="back-square-button" onClick={onClose} aria-label="Back to notes">
+          <ChevronLeft size={16} />
         </button>
-      </div>
-      <div className="panel-header">
-        <div>
-          <span className={`badge ${badgeTone(note.status)}`}>{note.status.replace("_", " ")}</span>
-          <h2>{note.title}</h2>
+        <div className="note-document-breadcrumb">
+          <span className="breadcrumb-root">
+            {viewIcon}
+            {viewLabel}
+          </span>
+          <ChevronRight size={14} />
+          <span>{note.project?.name ?? "Project"}</span>
+          <ChevronRight size={14} />
+          <strong>{note.title}</strong>
         </div>
         <div className="panel-actions">
           {isEditing ? (
@@ -708,7 +753,7 @@ function NotePanel({
                 className="text-button compact"
                 type="button"
                 onClick={() => {
-                  setDraftText(noteBodyMarkdown(note.text ?? ""));
+                  setDraftText(note.text ?? "");
                   setIsEditing(false);
                 }}
               >
@@ -721,7 +766,10 @@ function NotePanel({
             </>
           ) : (
             <>
-              <button className="text-button compact" type="button" onClick={() => setIsEditing(true)}>Edit</button>
+              <button className="secondary-action-button" type="button" onClick={() => setIsEditing(true)}>
+                <Edit3 size={16} />
+                Edit
+              </button>
               <div className="note-actions-menu">
                 <button
                   className="icon-button"
@@ -733,14 +781,30 @@ function NotePanel({
                 </button>
                 {isActionsOpen && (
                   <div className="note-actions-popover" role="menu">
+                    <button type="button" role="menuitem" onClick={() => {
+                      setIsEditing(true);
+                      setIsActionsOpen(false);
+                    }}>
+                      <Edit3 size={15} />
+                      Edit
+                    </button>
+                    <button type="button" role="menuitem" onClick={() => void copyShareLink()}>
+                      <Share2 size={15} />
+                      Share
+                    </button>
                     {(note.source_files ?? []).length > 0 ? (
                       <a href={note.source_files?.[0]?.url} target="_blank" rel="noreferrer" role="menuitem" onClick={() => setIsActionsOpen(false)}>
-                        <FileText size={15} />
-                        View source
+                        <Eye size={15} />
+                        View Source
                       </a>
                     ) : (
                       <span>No source file</span>
                     )}
+                    <div className="note-actions-divider" />
+                    <button className="danger-action" type="button" role="menuitem" disabled={isDeleting} onClick={() => void deleteNote()}>
+                      {isDeleting ? <Loader2 size={15} className="spin" /> : <Trash2 size={15} />}
+                      Delete
+                    </button>
                   </div>
                 )}
               </div>
@@ -748,10 +812,17 @@ function NotePanel({
           )}
         </div>
       </div>
-      <div className="panel-meta">
-        <span><User size={16} />{note.user?.name ?? "Unknown"}</span>
-        <span><Folder size={16} />{note.project?.name ?? "Project"}</span>
-        <span><Clock3 size={16} />{relativeTime(note.updated_at ?? note.created_at)}</span>
+      <div className="note-document-meta">
+        <span className="avatar note-author-avatar">{authorName.slice(0, 2).toUpperCase()}</span>
+        <div className="note-author-details">
+          <strong>{authorName}</strong>
+          <span>{noteDate}</span>
+        </div>
+        <div className="note-document-tags">
+          {(note.tags ?? []).map((tag) => (
+            <span className="tag-pill" key={tag.id}>{tag.name}</span>
+          ))}
+        </div>
       </div>
       {isEditing ? (
         <div className="markdown-preview">
@@ -769,7 +840,7 @@ function NotePanel({
             <MarkdownViewer
               id={note.id}
               updatedAt={note.updated_at}
-              markdown={noteBodyMarkdown(note.text ?? "Open the note to load the full Markdown body.")}
+              markdown={note.text ?? "Open the note to load the full Markdown body."}
             />
           </Suspense>
         </div>
