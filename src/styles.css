@@ -647,6 +647,26 @@ button {
   background: #f5f5f7;
 }
 
+.comment-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.comment-header button {
+  border: 0;
+  padding: 0;
+  color: #696b75;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.comment-header button:hover {
+  color: #1f2026;
+}
+
 .comment p {
   margin: 6px 0 0;
   color: #60626d;

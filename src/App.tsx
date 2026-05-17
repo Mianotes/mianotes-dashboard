@@ -88,6 +88,7 @@ type CommentRecord = {
 type MiaPromptRecord = {
   type: "prompt";
   text: string;
+  comment?: CommentRecord;
 };
 
 type EmailCheckResponse = {
@@ -147,6 +148,10 @@ function noteExcerpt(note: NoteRecord) {
     .replace(/\s+/g, " ")
     .trim();
   return clean || "Open this note to see its generated Markdown content.";
+}
+
+function displayCommentBody(body: string) {
+  return body.trim().toLowerCase().startsWith("@mia") ? body.trim().slice(4).trim() : body;
 }
 
 function sourceIcon(type: string) {
@@ -622,16 +627,24 @@ function NotePanel({
   async function addComment(event: FormEvent) {
     event.preventDefault();
     if (!note || !commentBody.trim()) return;
+    const body = commentBody.trim().toLowerCase().startsWith("@mia")
+      ? commentBody.trim()
+      : `@mia ${commentBody.trim()}`;
     setIsLoading(true);
     setMiaResponse(null);
     setError(null);
     try {
       const result = await apiFetch<CommentRecord | MiaPromptRecord>(`/api/notes/${note.id}/comments`, {
         method: "POST",
-        body: JSON.stringify({ body: commentBody })
+        body: JSON.stringify({ body })
       });
       if (isMiaPrompt(result)) {
         setMiaResponse(result.text);
+        if (result.comment) {
+          setComments((items) => [...items, result.comment!]);
+        }
+        setCommentBody("");
+        await onRefresh();
       } else {
         setComments((items) => [...items, result]);
         setCommentBody("");
@@ -715,24 +728,27 @@ function NotePanel({
         ))}
       </div>
       <section className="comments-box">
-        <h3>Comments and Mia</h3>
+        <h3>Ask Mia</h3>
         <form onSubmit={addComment} className="comment-form">
           <textarea
             value={commentBody}
             onChange={(event) => setCommentBody(event.target.value)}
-            placeholder="@mia summarise this note, or write a normal comment"
+            placeholder="Summarise this note, extract key points, or suggest improvements"
           />
           <button className="primary-button small" disabled={isLoading}>
             {isLoading ? <Loader2 className="spin" size={16} /> : <MessageCircle size={16} />}
-            Send
+            Ask Mia
           </button>
         </form>
         {miaResponse && <pre className="mia-response">{miaResponse}</pre>}
         {error && <div className="notice danger">{error}</div>}
         {comments.map((comment) => (
           <div className="comment" key={comment.id}>
-            <strong>{comment.user?.name ?? "User"}</strong>
-            <p>{comment.body}</p>
+            <div className="comment-header">
+              <strong>{comment.user?.name ?? "User"}</strong>
+              <button type="button" onClick={() => void navigator.clipboard?.writeText(displayCommentBody(comment.body))}>Copy</button>
+            </div>
+            <p>{displayCommentBody(comment.body)}</p>
           </div>
         ))}
       </section>
