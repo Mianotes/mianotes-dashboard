@@ -408,19 +408,22 @@ export function App() {
                   </label>
                   {tagSuggestions.length > 0 && (
                     <div className="tag-suggestions" role="listbox" aria-label="Suggested tags">
-                      {tagSuggestions.map((tag) => (
-                        <button
-                          key={tag.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedTag(tag.slug);
-                            setSearchQuery("");
-                          }}
-                        >
-                          <Tags size={14} />
-                          {tag.name}
-                        </button>
-                      ))}
+                      <div className="tag-suggestions-title">Recommended tags</div>
+                      <div className="tag-suggestions-list">
+                        {tagSuggestions.map((tag) => (
+                          <button
+                            key={tag.id}
+                            type="button"
+                            onClick={() => {
+                              setSelectedTag(tag.slug);
+                              setSearchQuery("");
+                            }}
+                          >
+                            <Tags size={14} />
+                            {tag.name}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>
