@@ -7,8 +7,8 @@ import {
   File,
   FileText,
   Folder,
+  History,
   Image,
-  Inbox,
   Link,
   Loader2,
   MessageCircle,
@@ -259,8 +259,8 @@ export function App() {
   const selectedTagRecord = selectedTag === "all" ? null : tags.find((tag) => tag.slug === selectedTag) ?? null;
   const selectedUser = selectedUserId === "all" ? null : users.find((user) => user.id === selectedUserId) ?? null;
   const activeFilterLabel = [selectedTagRecord?.name, selectedUser?.name].filter(Boolean).join(" / ");
+  const breadcrumbIcon = selectedView === "starred" ? <Star size={15} /> : <History size={15} />;
   const breadcrumbItems = [
-    selectedView === "starred" ? "Starred" : "Recent",
     selectedProject?.name,
     activeFilterLabel || null
   ].filter(Boolean);
@@ -311,7 +311,7 @@ export function App() {
               setSelectedView("recent");
               setSelectedProjectId("all");
             }}>
-              <Inbox size={20} />
+              <History size={20} />
               <span>Recent</span>
             </button>
             <button className={`nav-item ${selectedView === "starred" ? "active" : ""}`} onClick={() => setSelectedView("starred")}>
@@ -362,9 +362,13 @@ export function App() {
         <section className="workspace">
           <header className="toolbar">
             <div className="breadcrumb">
+              <span className="breadcrumb-root">
+                {breadcrumbIcon}
+                {selectedView === "starred" ? "Starred" : "Recent"}
+              </span>
               {breadcrumbItems.map((item, index) => (
                 <span key={`${item}-${index}`} className={index === breadcrumbItems.length - 1 ? "current" : undefined}>
-                  {index > 0 && <ChevronRight size={14} />}
+                  <ChevronRight size={14} />
                   {item}
                 </span>
               ))}
@@ -770,6 +774,7 @@ function NotePanel({
           </Suspense>
         </div>
       )}
+      <div className="note-section-divider" />
       <section className="comments-box">
         <h3>Ask Mia</h3>
         <form onSubmit={addComment} className="comment-form">

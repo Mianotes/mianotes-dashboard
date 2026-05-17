@@ -247,7 +247,6 @@ button {
 
 .breadcrumb .current {
   color: #2e2f36;
-  font-weight: 700;
   font-size: 13px;
 }
 
@@ -689,6 +688,11 @@ button {
 .editor-loading {
   color: #777985;
   font-size: 13px;
+}
+
+.note-section-divider {
+  margin: 24px 0;
+  border-top: 1px solid #e4e5e9;
 }
 
 .comments-box h3 {
