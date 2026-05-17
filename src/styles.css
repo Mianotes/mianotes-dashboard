@@ -650,7 +650,7 @@ button {
 }
 
 .mianotes-rich-editor [role="textbox"] {
-  min-height: min(520px, calc(100vh - 260px));
+  min-height: 8rem;
   max-height: calc(100vh - 180px);
   overflow: auto;
 }
