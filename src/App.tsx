@@ -16,7 +16,6 @@ import {
   MoreVertical,
   Plus,
   Search,
-  Sparkles,
   Star,
   Tags,
   Upload,
@@ -174,7 +173,7 @@ export function App() {
   const [selectedUserId, setSelectedUserId] = useState<string | "all">("all");
   const [selectedProjectId, setSelectedProjectId] = useState<string | "all">("all");
   const [selectedTag, setSelectedTag] = useState<string | "all">("all");
-  const [selectedNoteId, setSelectedNoteId] = useState<string | null>(null);
+  const [openedNoteId, setOpenedNoteId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -212,7 +211,6 @@ export function App() {
     setProjects(activeProjects);
     setTags(nextTags);
     setNotes(detailed);
-    setSelectedNoteId((current) => current ?? detailed[0]?.id ?? null);
   }
 
   async function refreshNotes() {
@@ -224,7 +222,7 @@ export function App() {
     const hydrated = hydrateNotes(nextNotes, users, projects);
     const detailed = await loadNoteDetails(hydrated);
     setNotes(detailed);
-    setSelectedNoteId((current) => current && detailed.some((note) => note.id === current) ? current : detailed[0]?.id ?? null);
+    setOpenedNoteId((current) => current && detailed.some((note) => note.id === current) ? current : null);
   }
 
   useEffect(() => {
@@ -248,14 +246,14 @@ export function App() {
     });
   }, [notes, searchQuery, selectedTag]);
 
-  const selectedNote = filteredNotes.find((note) => note.id === selectedNoteId) ?? filteredNotes[0] ?? null;
+  const openedNote = notes.find((note) => note.id === openedNoteId) ?? null;
 
   useEffect(() => {
-    if (!selectedNote || selectedNote.text) return;
-    void apiFetch<NoteRecord>(`/api/notes/${selectedNote.id}`)
-      .then((fullNote) => setNotes((items) => items.map((item) => item.id === selectedNote.id ? fullNote : item)))
+    if (!openedNote || openedNote.text) return;
+    void apiFetch<NoteRecord>(`/api/notes/${openedNote.id}`)
+      .then((fullNote) => setNotes((items) => items.map((item) => item.id === openedNote.id ? fullNote : item)))
       .catch(() => undefined);
-  }, [selectedNote?.id]);
+  }, [openedNote?.id]);
 
   if (isLoading) {
     return (
@@ -311,7 +309,7 @@ export function App() {
 
           <SidebarSection
             title="Projects"
-            action={<button className="icon-button" aria-label="Add project"><Plus size={17} /></button>}
+            action={<button className="icon-button" aria-label="Add project"><Plus size={15} /></button>}
           >
             {projectsForSidebar.map((project) => (
               <button
@@ -342,7 +340,7 @@ export function App() {
             <div className="breadcrumb">
               <span>{selectedUserId === "all" ? "Everyone" : users.find((user) => user.id === selectedUserId)?.name}</span>
               <ChevronRight size={17} />
-              <strong>{selectedProjectId === "all" ? "Recent notes" : projects.find((project) => project.id === selectedProjectId)?.name}</strong>
+              <strong>{openedNote ? openedNote.title : selectedProjectId === "all" ? "Recent notes" : projects.find((project) => project.id === selectedProjectId)?.name}</strong>
             </div>
             <div className="toolbar-actions">
               <label className="search-box">
@@ -374,40 +372,39 @@ export function App() {
 
           {error && <div className="notice danger">{error}</div>}
 
-          <div className="content-grid">
-            <section className="note-list" aria-label="Notes">
-              {filteredNotes.length === 0 ? (
-                <EmptyState onAdd={() => setIsAddOpen(true)} />
-              ) : (
-                filteredNotes.map((note) => (
-                  <NoteRow
-                    key={note.id}
-                    note={note}
-                    selected={selectedNote?.id === note.id}
-                    onClick={async () => {
-                      setSelectedNoteId(note.id);
-                      if (!note.text) {
+          <div className="content-surface">
+            {openedNote ? (
+              <NotePanel
+                note={openedNote}
+                onClose={() => setOpenedNoteId(null)}
+                onRefresh={async () => {
+                  const fullNote = await apiFetch<NoteRecord>(`/api/notes/${openedNote.id}`);
+                  setNotes((items) => items.map((item) => item.id === openedNote.id ? fullNote : item));
+                }}
+              />
+            ) : (
+              <section className="note-list" aria-label="Notes">
+                {filteredNotes.length === 0 ? (
+                  <EmptyState onAdd={() => setIsAddOpen(true)} />
+                ) : (
+                  filteredNotes.map((note) => (
+                    <NoteRow
+                      key={note.id}
+                      note={note}
+                      onClick={async () => {
                         try {
-                          const fullNote = await apiFetch<NoteRecord>(`/api/notes/${note.id}`);
+                          const fullNote = note.text ? note : await apiFetch<NoteRecord>(`/api/notes/${note.id}`);
                           setNotes((items) => items.map((item) => item.id === note.id ? fullNote : item));
+                          setOpenedNoteId(note.id);
                         } catch (err) {
                           setError(err instanceof Error ? err.message : "Could not open note");
                         }
-                      }
-                    }}
-                  />
-                ))
-              )}
-            </section>
-
-            <NotePanel
-              note={selectedNote}
-              onRefresh={async () => {
-                if (!selectedNote) return;
-                const fullNote = await apiFetch<NoteRecord>(`/api/notes/${selectedNote.id}`);
-                setNotes((items) => items.map((item) => item.id === selectedNote.id ? fullNote : item));
-              }}
-            />
+                      }}
+                    />
+                  ))
+                )}
+              </section>
+            )}
           </div>
         </section>
       </section>
@@ -539,7 +536,7 @@ function SidebarSection({ title, action, children }: { title: string; action?: R
   );
 }
 
-function NoteRow({ note, selected, onClick }: { note: NoteRecord; selected: boolean; onClick: () => void }) {
+function NoteRow({ note, onClick }: { note: NoteRecord; onClick: () => void }) {
   const Icon = sourceIcon(note.source_type);
   const projectName = note.project?.name ?? "Unassigned";
   const owner = note.user?.name ?? "Unknown";
@@ -547,8 +544,8 @@ function NoteRow({ note, selected, onClick }: { note: NoteRecord; selected: bool
   const isBusy = ["pending_parse", "parsing"].includes(note.status);
 
   return (
-    <button className={`note-row ${selected ? "selected" : ""}`} onClick={onClick}>
-      <span className={`star ${selected ? "on" : ""}`}><Star size={21} fill={selected ? "currentColor" : "none"} /></span>
+    <button className="note-row" onClick={onClick}>
+      <span className="star"><Star size={21} /></span>
       <div className="note-body">
         <div className="note-meta-top">
           <span className="project-name">{projectName}</span>
@@ -572,7 +569,15 @@ function NoteRow({ note, selected, onClick }: { note: NoteRecord; selected: bool
   );
 }
 
-function NotePanel({ note, onRefresh }: { note: NoteRecord | null; onRefresh: () => Promise<void> }) {
+function NotePanel({
+  note,
+  onClose,
+  onRefresh
+}: {
+  note: NoteRecord;
+  onClose: () => void;
+  onRefresh: () => Promise<void>;
+}) {
   const [comments, setComments] = useState<CommentRecord[]>([]);
   const [commentBody, setCommentBody] = useState("");
   const [miaResponse, setMiaResponse] = useState<string | null>(null);
@@ -585,16 +590,6 @@ function NotePanel({ note, onRefresh }: { note: NoteRecord | null; onRefresh: ()
     if (!note) return;
     void apiFetch<CommentRecord[]>(`/api/notes/${note.id}/comments`).then(setComments).catch(() => setComments([]));
   }, [note?.id]);
-
-  if (!note) {
-    return (
-      <aside className="note-panel empty-panel">
-        <Sparkles size={28} />
-        <h2>Select a note</h2>
-        <p>Pick a note to preview Markdown, source files, comments, and Mia prompts.</p>
-      </aside>
-    );
-  }
 
   async function addComment(event: FormEvent) {
     event.preventDefault();
@@ -622,7 +617,13 @@ function NotePanel({ note, onRefresh }: { note: NoteRecord | null; onRefresh: ()
   }
 
   return (
-    <aside className="note-panel">
+    <section className="note-panel">
+      <div className="note-view-nav">
+        <button className="back-button" onClick={onClose}>
+          <ChevronLeft size={17} />
+          Notes
+        </button>
+      </div>
       <div className="panel-header">
         <div>
           <span className={`badge ${badgeTone(note.status)}`}>{note.status.replace("_", " ")}</span>
@@ -666,7 +667,7 @@ function NotePanel({ note, onRefresh }: { note: NoteRecord | null; onRefresh: ()
           </div>
         ))}
       </section>
-    </aside>
+    </section>
   );
 }
 

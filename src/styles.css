@@ -26,6 +26,7 @@ textarea {
 
 button {
   cursor: pointer;
+  box-shadow: none;
 }
 
 .screen {
@@ -43,7 +44,7 @@ button {
 
 .shell {
   display: grid;
-  grid-template-columns: 300px minmax(0, 1fr);
+  grid-template-columns: minmax(240px, 270px) minmax(0, 1fr);
   min-height: calc(100vh - 112px);
   max-width: 1720px;
   margin: 0 auto;
@@ -59,22 +60,22 @@ button {
   flex-direction: column;
   border-right: 1px solid #dedfe5;
   background: #fcfcfd;
+  font-size: 13px;
 }
 
 .add-note-button {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 8px;
   height: 48px;
   margin: 22px 26px;
   border: 0;
   border-radius: 8px;
   color: #ffffff;
   background: #17181d;
-  font-size: 1rem;
+  font-size: 13px;
   font-weight: 750;
-  box-shadow: 0 10px 24px rgba(23, 24, 29, 0.16);
 }
 
 .nav-group {
@@ -84,8 +85,9 @@ button {
 
 .nav-item {
   display: grid;
-  grid-template-columns: 22px minmax(0, 1fr) auto;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
   align-items: center;
+  column-gap: 8px;
   width: 100%;
   min-height: 44px;
   padding: 0 24px;
@@ -93,7 +95,7 @@ button {
   border-left: 3px solid transparent;
   color: #54545d;
   background: transparent;
-  font-size: 1rem;
+  font-size: 13px;
   text-align: left;
 }
 
@@ -113,7 +115,7 @@ button {
   border-radius: 99px;
   color: #ffffff;
   background: #18191f;
-  font-size: 0.86rem;
+  font-size: 12px;
   font-weight: 800;
   text-align: center;
 }
@@ -141,10 +143,22 @@ button {
   justify-content: space-between;
   padding: 0 26px 11px;
   color: #73737d;
-  font-size: 0.86rem;
+  font-size: 12px;
   font-weight: 850;
   letter-spacing: 0;
   text-transform: uppercase;
+}
+
+.section-title .icon-button {
+  width: 28px;
+  height: 28px;
+  border: 0;
+  background: transparent;
+}
+
+.section-title .icon-button svg {
+  width: 15px;
+  height: 15px;
 }
 
 .storage-meter {
@@ -190,6 +204,7 @@ button {
   min-height: 78px;
   padding: 0 20px 0 32px;
   border-bottom: 1px solid #e1e2e6;
+  font-size: 13px;
 }
 
 .breadcrumb {
@@ -198,12 +213,12 @@ button {
   gap: 8px;
   min-width: 190px;
   color: #777781;
-  font-size: 1rem;
+  font-size: 13px;
 }
 
 .breadcrumb strong {
   color: #2e2f36;
-  font-size: 1.08rem;
+  font-size: 13px;
 }
 
 .toolbar-actions {
@@ -233,7 +248,7 @@ button {
   outline: 0;
   background: transparent;
   color: #25262d;
-  font-size: 1rem;
+  font-size: 13px;
 }
 
 .select-button {
@@ -255,13 +270,13 @@ button {
   color: inherit;
   background: transparent;
   appearance: none;
-  font-size: 1rem;
+  font-size: 13px;
   font-weight: 650;
 }
 
 .result-count {
   color: #71727d;
-  font-size: 0.98rem;
+  font-size: 13px;
   white-space: nowrap;
 }
 
@@ -282,16 +297,14 @@ button {
   border-color: #c8c9d0;
 }
 
-.content-grid {
-  display: grid;
-  grid-template-columns: minmax(430px, 1fr) minmax(360px, 520px);
+.content-surface {
   height: calc(100vh - 196px);
   min-height: 590px;
+  overflow: auto;
 }
 
 .note-list {
   overflow: auto;
-  border-right: 1px solid #e4e5e9;
 }
 
 .note-row {
@@ -299,16 +312,15 @@ button {
   grid-template-columns: 34px minmax(0, 1fr);
   gap: 12px;
   width: 100%;
-  min-height: 144px;
-  padding: 24px 26px 22px 22px;
+  min-height: 132px;
+  padding: 22px 26px 20px 22px;
   border: 0;
   border-bottom: 1px solid #e5e6ea;
   background: #ffffff;
   text-align: left;
 }
 
-.note-row:hover,
-.note-row.selected {
+.note-row:hover {
   background: #fbfbfc;
 }
 
@@ -332,7 +344,7 @@ button {
   gap: 10px;
   min-width: 0;
   color: #777985;
-  font-size: 0.95rem;
+  font-size: 13px;
 }
 
 .project-name {
@@ -344,7 +356,7 @@ button {
 .note-row h2 {
   margin: 12px 0 7px;
   color: #1d1e24;
-  font-size: 1.28rem;
+  font-size: 15px;
   line-height: 1.25;
 }
 
@@ -353,7 +365,7 @@ button {
   margin: 0 0 18px;
   overflow: hidden;
   color: #747680;
-  font-size: 1rem;
+  font-size: 13px;
   line-height: 1.48;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -425,10 +437,33 @@ button {
 }
 
 .note-panel {
+  width: min(100%, 960px);
   min-width: 0;
-  overflow: auto;
-  padding: 24px;
+  margin: 0 auto;
+  padding: 24px 34px 42px;
   background: #ffffff;
+}
+
+.note-view-nav {
+  margin-bottom: 18px;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  border: 0;
+  border-radius: 8px;
+  color: #5f616b;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 750;
+}
+
+.back-button:hover {
+  color: #202128;
+  background: #f2f2f4;
 }
 
 .panel-header {
@@ -440,7 +475,7 @@ button {
 .panel-header h2 {
   margin: 10px 0 0;
   color: #1f2026;
-  font-size: 1.55rem;
+  font-size: 24px;
   line-height: 1.25;
 }
 
@@ -457,7 +492,6 @@ button {
 
 .markdown-preview,
 .mia-response {
-  max-height: 360px;
   overflow: auto;
   margin: 0;
   padding: 16px;
@@ -466,9 +500,17 @@ button {
   color: #343540;
   background: #fbfbfc;
   font-family: "SFMono-Regular", Consolas, monospace;
-  font-size: 0.9rem;
-  line-height: 1.55;
+  font-size: 14px;
+  line-height: 1.7;
   white-space: pre-wrap;
+}
+
+.markdown-preview {
+  max-height: none;
+}
+
+.mia-response {
+  max-height: 360px;
 }
 
 .source-list {
@@ -518,7 +560,6 @@ button {
   color: #60626d;
 }
 
-.empty-panel,
 .empty-state {
   display: grid;
   place-items: center;
@@ -708,13 +749,8 @@ textarea:focus {
     grid-template-columns: 250px minmax(0, 1fr);
   }
 
-  .content-grid {
-    grid-template-columns: 1fr;
+  .content-surface {
     height: auto;
-  }
-
-  .note-panel {
-    border-top: 1px solid #e4e5e9;
   }
 
   .toolbar {
