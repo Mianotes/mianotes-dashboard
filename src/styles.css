@@ -45,10 +45,9 @@ button {
 .shell {
   display: grid;
   grid-template-columns: minmax(240px, 270px) minmax(0, 1fr);
-  min-height: calc(100vh - 112px);
   max-width: 1720px;
   margin: 0 auto;
-  overflow: hidden;
+  overflow: visible;
   border: 1px solid #dedfe5;
   border-radius: 8px;
   background: #ffffff;
@@ -328,13 +327,11 @@ button {
 }
 
 .content-surface {
-  height: calc(100vh - 196px);
-  min-height: 590px;
-  overflow: auto;
+  min-height: 0;
 }
 
 .note-list {
-  overflow: auto;
+  min-height: 0;
 }
 
 .note-row {
@@ -531,7 +528,7 @@ button {
 
 .markdown-preview {
   max-height: none;
-  overflow: auto;
+  overflow: visible;
   margin: 0;
   padding: 0;
   border: 0;
@@ -606,7 +603,8 @@ button {
 
 .markdown-source-editor {
   width: 100%;
-  min-height: 520px;
+  min-height: min(520px, calc(100vh - 260px));
+  max-height: calc(100vh - 180px);
   padding: 18px;
   border: 1px solid #d9dae1;
   border-radius: 8px;
@@ -615,6 +613,7 @@ button {
   font-family: "SFMono-Regular", Consolas, monospace;
   font-size: 14px;
   line-height: 1.7;
+  overflow: auto;
   resize: vertical;
 }
 
