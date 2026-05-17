@@ -276,12 +276,14 @@ button {
 }
 
 .select-button {
-  display: flex;
+  display: grid;
+  grid-template-columns: 18px minmax(0, auto) 14px;
   align-items: center;
-  gap: 8px;
-  height: 40px;
-  min-width: 122px;
-  padding: 0 12px;
+  justify-content: center;
+  gap: 10px;
+  width: 132px;
+  height: 44px;
+  padding: 0 14px;
   border: 1px solid #aeb1bb;
   border-radius: 8px;
   background: #ffffff;
@@ -289,14 +291,17 @@ button {
 }
 
 .select-button select {
-  max-width: 74px;
+  min-width: 0;
+  max-width: 100%;
   border: 0;
   outline: 0;
   color: inherit;
   background: transparent;
   appearance: none;
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 750;
+  line-height: 1;
+  text-align: center;
 }
 
 .result-count {
@@ -513,7 +518,9 @@ button {
 
 .panel-meta {
   flex-wrap: wrap;
-  margin: 16px 0 20px;
+  margin: 16px 0 28px;
+  padding-bottom: 24px;
+  border-bottom: 1px solid #e4e5e9;
 }
 
 .panel-meta span {
@@ -522,9 +529,22 @@ button {
   gap: 7px;
 }
 
-.markdown-preview,
+.markdown-preview {
+  max-height: none;
+  overflow: auto;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 0;
+  color: #343540;
+  background: transparent;
+  font-family: inherit;
+  white-space: normal;
+}
+
 .mia-response {
   overflow: auto;
+  max-height: 360px;
   margin: 0;
   padding: 16px;
   border: 1px solid #e2e3e8;
@@ -534,19 +554,17 @@ button {
   font-family: "SFMono-Regular", Consolas, monospace;
   font-size: 14px;
   line-height: 1.7;
-}
-
-.markdown-preview {
-  max-height: none;
-  padding: 20px 24px;
-  font-family: inherit;
-  white-space: normal;
-}
-
-.mia-response {
-  max-height: 360px;
-  font-family: "SFMono-Regular", Consolas, monospace;
   white-space: pre-wrap;
+}
+
+.markdown-preview .mdxeditor {
+  background: transparent;
+}
+
+.markdown-preview [contenteditable="true"],
+.markdown-preview [contenteditable="false"] {
+  padding: 0;
+  outline: 0;
 }
 
 .mianotes-rich-content {
