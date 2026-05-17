@@ -637,7 +637,7 @@ function NotePanel({
   const [commentBody, setCommentBody] = useState("");
   const [miaResponse, setMiaResponse] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [draftText, setDraftText] = useState(note.text ?? "");
+  const [draftText, setDraftText] = useState(noteBodyMarkdown(note.text ?? ""));
   const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -648,7 +648,7 @@ function NotePanel({
     setMiaResponse(null);
     setCommentBody("");
     setIsEditing(false);
-    setDraftText(note.text ?? "");
+    setDraftText(noteBodyMarkdown(note.text ?? ""));
     setIsActionsOpen(false);
     if (!note) return;
     void apiFetch<CommentRecord[]>(`/api/notes/${note.id}/comments`).then(setComments).catch(() => setComments([]));
@@ -729,6 +729,7 @@ function NotePanel({
   const viewLabel = view === "starred" ? "Starred" : "Recent";
   const noteDate = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(new Date(note.created_at));
   const authorName = note.user?.name ?? "Unknown";
+  const noteMarkdownBody = noteBodyMarkdown(note.text ?? "");
 
   return (
     <section className="note-panel">
@@ -753,7 +754,7 @@ function NotePanel({
                 className="text-button compact"
                 type="button"
                 onClick={() => {
-                  setDraftText(note.text ?? "");
+                  setDraftText(noteMarkdownBody);
                   setIsEditing(false);
                 }}
               >
@@ -840,7 +841,7 @@ function NotePanel({
             <MarkdownViewer
               id={note.id}
               updatedAt={note.updated_at}
-              markdown={note.text ?? "Open the note to load the full Markdown body."}
+              markdown={noteMarkdownBody || "Open the note to load the full Markdown body."}
             />
           </Suspense>
         </div>
