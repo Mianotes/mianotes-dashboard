@@ -143,7 +143,7 @@ function relativeTime(value: string) {
 }
 
 function noteExcerpt(note: NoteRecord) {
-  const clean = (note.text ?? "")
+  const clean = noteBodyMarkdown(note.text ?? "")
     .replace(/^# .+$/m, "")
     .replace(/Created: .+$/m, "")
     .replace(/[#>*_`-]/g, " ")
@@ -154,6 +154,20 @@ function noteExcerpt(note: NoteRecord) {
 
 function displayCommentBody(body: string) {
   return body.trim().toLowerCase().startsWith("@mia") ? body.trim().slice(4).trim() : body;
+}
+
+function noteBodyMarkdown(markdown: string) {
+  const lines = markdown.split(/\r?\n/);
+  const noteHeadingIndex = lines.findIndex((line) => line.trim().toLowerCase() === "## note");
+  if (noteHeadingIndex >= 0) {
+    return lines.slice(noteHeadingIndex + 1).join("\n").trimStart();
+  }
+
+  const withoutTitle = lines[0]?.startsWith("# ") ? lines.slice(1) : lines;
+  return withoutTitle
+    .filter((line) => !line.trim().startsWith("Created:"))
+    .join("\n")
+    .trimStart();
 }
 
 function sourceIcon(type: string) {
@@ -593,7 +607,8 @@ function NotePanel({
   const [commentBody, setCommentBody] = useState("");
   const [miaResponse, setMiaResponse] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [draftText, setDraftText] = useState(note.text ?? "");
+  const [draftText, setDraftText] = useState(noteBodyMarkdown(note.text ?? ""));
+  const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
@@ -602,7 +617,8 @@ function NotePanel({
     setMiaResponse(null);
     setCommentBody("");
     setIsEditing(false);
-    setDraftText(note.text ?? "");
+    setDraftText(noteBodyMarkdown(note.text ?? ""));
+    setIsActionsOpen(false);
     if (!note) return;
     void apiFetch<CommentRecord[]>(`/api/notes/${note.id}/comments`).then(setComments).catch(() => setComments([]));
   }, [note?.id]);
@@ -677,7 +693,7 @@ function NotePanel({
                 className="text-button compact"
                 type="button"
                 onClick={() => {
-                  setDraftText(note.text ?? "");
+                  setDraftText(noteBodyMarkdown(note.text ?? ""));
                   setIsEditing(false);
                 }}
               >
@@ -691,7 +707,28 @@ function NotePanel({
           ) : (
             <>
               <button className="text-button compact" type="button" onClick={() => setIsEditing(true)}>Edit</button>
-              <button className="icon-button" aria-label="More note actions"><MoreVertical size={19} /></button>
+              <div className="note-actions-menu">
+                <button
+                  className="icon-button"
+                  aria-label="More note actions"
+                  aria-expanded={isActionsOpen}
+                  onClick={() => setIsActionsOpen((current) => !current)}
+                >
+                  <MoreVertical size={19} />
+                </button>
+                {isActionsOpen && (
+                  <div className="note-actions-popover" role="menu">
+                    {(note.source_files ?? []).length > 0 ? (
+                      <a href={note.source_files?.[0]?.url} target="_blank" rel="noreferrer" role="menuitem" onClick={() => setIsActionsOpen(false)}>
+                        <FileText size={15} />
+                        View source
+                      </a>
+                    ) : (
+                      <span>No source file</span>
+                    )}
+                  </div>
+                )}
+              </div>
             </>
           )}
         </div>
@@ -717,19 +754,11 @@ function NotePanel({
             <MarkdownViewer
               id={note.id}
               updatedAt={note.updated_at}
-              markdown={note.text ?? "Open the note to load the full Markdown body."}
+              markdown={noteBodyMarkdown(note.text ?? "Open the note to load the full Markdown body.")}
             />
           </Suspense>
         </div>
       )}
-      <div className="source-list">
-        {(note.source_files ?? []).map((source) => (
-          <a key={source.id} href={source.url} target="_blank" rel="noreferrer">
-            <FileText size={17} />
-            {source.original_filename}
-          </a>
-        ))}
-      </div>
       <section className="comments-box">
         <h3>Ask Mia</h3>
         <form onSubmit={addComment} className="comment-form">

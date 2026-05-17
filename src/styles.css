@@ -478,6 +478,42 @@ button {
   flex: 0 0 auto;
 }
 
+.note-actions-menu {
+  position: relative;
+}
+
+.note-actions-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 10;
+  min-width: 148px;
+  padding: 6px;
+  border: 1px solid #dedfe5;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 14px 34px rgba(18, 18, 22, 0.12);
+}
+
+.note-actions-popover a,
+.note-actions-popover span {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 10px;
+  border-radius: 6px;
+  color: #343640;
+  font-size: 13px;
+  font-weight: 650;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.note-actions-popover a:hover {
+  background: #f3f3f5;
+}
+
 .note-view-nav {
   margin-bottom: 18px;
 }
@@ -624,24 +660,6 @@ button {
 .editor-loading {
   color: #777985;
   font-size: 13px;
-}
-
-.source-list {
-  display: grid;
-  gap: 8px;
-  margin: 16px 0;
-}
-
-.source-list a {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 36px;
-  padding: 0 12px;
-  border: 1px solid #e2e3e8;
-  border-radius: 8px;
-  color: #2f3038;
-  text-decoration: none;
 }
 
 .comments-box h3 {
