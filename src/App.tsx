@@ -374,7 +374,7 @@ export function App() {
             </div>
             <div className="toolbar-actions">
               <label className="search-box">
-                <Search size={21} />
+                <Search size={18} />
                 <input
                   value={searchQuery}
                   onChange={(event) => setSearchQuery(event.target.value)}
@@ -382,18 +382,21 @@ export function App() {
                 />
               </label>
               <label className="select-button">
-                <Tags size={19} />
+                <Tags className="select-button-icon" size={16} />
+                <span className="select-button-label">
+                  {selectedTag === "all" ? "Tags" : tags.find((tag) => tag.slug === selectedTag)?.name ?? "Tags"}
+                </span>
                 <select value={selectedTag} onChange={(event) => setSelectedTag(event.target.value)}>
                   <option value="all">Tags</option>
                   {tags.map((tag) => (
                     <option value={tag.slug} key={tag.id}>{tag.name}</option>
                   ))}
                 </select>
-                <ChevronDown size={14} />
+                <ChevronDown className="select-button-chevron" size={12} />
               </label>
               <span className="result-count">{filteredNotes.length} notes</span>
-              <button className="icon-button" aria-label="Previous page"><ChevronLeft size={21} /></button>
-              <button className="icon-button" aria-label="Next page"><ChevronRight size={21} /></button>
+              <button className="icon-button" aria-label="Previous page"><ChevronLeft size={18} /></button>
+              <button className="icon-button" aria-label="Next page"><ChevronRight size={18} /></button>
             </div>
           </header>
 
