@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
+import logoUrl from "./assets/logo_small.png";
 
 const MarkdownViewer = lazy(() => import("./MarkdownViewer"));
 
@@ -421,8 +422,7 @@ export function App() {
       </section>
 
       <footer className="brand-footer">
-        <span className="brand-mark" />
-        <strong>mianotes</strong>
+        <img className="brand-logo" src={logoUrl} alt="Mianotes" />
       </footer>
 
       {isAddOpen && (
@@ -496,8 +496,7 @@ function AuthScreen({ onSignedIn }: { onSignedIn: () => void }) {
     <main className="screen auth-screen">
       <section className="auth-panel">
         <div className="auth-brand">
-          <span className="brand-mark" />
-          <strong>mianotes</strong>
+          <img className="brand-logo" src={logoUrl} alt="Mianotes" />
         </div>
         <h1>{step === "email" ? "Open your local knowledge base" : step === "join" ? "Create your profile" : "Welcome back"}</h1>
         <p>

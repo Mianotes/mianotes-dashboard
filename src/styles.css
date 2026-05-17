@@ -707,22 +707,13 @@ button {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 9px;
   height: 72px;
-  color: #111219;
-  font-size: 1.35rem;
 }
 
-.brand-mark {
-  width: 26px;
-  height: 26px;
-  display: inline-block;
-  border-radius: 7px;
-  background:
-    linear-gradient(45deg, #dc0cff 0 34%, transparent 34%),
-    linear-gradient(45deg, #7d5cff 0 67%, transparent 67%),
-    linear-gradient(45deg, #0aa7ff 0);
-  transform: skewY(-8deg);
+.brand-logo {
+  display: block;
+  width: 148px;
+  height: auto;
 }
 
 .auth-screen {
@@ -743,8 +734,10 @@ button {
 .auth-brand {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-size: 24px;
+}
+
+.auth-brand .brand-logo {
+  width: 176px;
 }
 
 .auth-panel h1 {
