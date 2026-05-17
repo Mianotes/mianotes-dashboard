@@ -11,7 +11,6 @@ import {
   Inbox,
   Link,
   Loader2,
-  LogOut,
   MessageCircle,
   MoreVertical,
   Plus,
@@ -22,8 +21,10 @@ import {
   User,
   X
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
+
+const MarkdownViewer = lazy(() => import("./MarkdownViewer"));
 
 type UserRecord = {
   id: string;
@@ -333,6 +334,14 @@ export function App() {
               <div className="meter-fill" />
             </div>
           </div>
+
+          <div className="sidebar-links" aria-label="Account links">
+            <button type="button">Profile</button>
+            <span>|</span>
+            <button type="button">Settings</button>
+            <span>|</span>
+            <button type="button" onClick={() => void logout(setCurrentUser)}>Sign out</button>
+          </div>
         </aside>
 
         <section className="workspace">
@@ -352,21 +361,18 @@ export function App() {
                 />
               </label>
               <label className="select-button">
-                <Tags size={18} />
+                <Tags size={19} />
                 <select value={selectedTag} onChange={(event) => setSelectedTag(event.target.value)}>
                   <option value="all">Tags</option>
                   {tags.map((tag) => (
                     <option value={tag.slug} key={tag.id}>{tag.name}</option>
                   ))}
                 </select>
-                <ChevronDown size={16} />
+                <ChevronDown size={14} />
               </label>
               <span className="result-count">{filteredNotes.length} notes</span>
               <button className="icon-button" aria-label="Previous page"><ChevronLeft size={21} /></button>
               <button className="icon-button" aria-label="Next page"><ChevronRight size={21} /></button>
-              <button className="icon-button" aria-label="Account menu" onClick={() => void logout(setCurrentUser)}>
-                <LogOut size={19} />
-              </button>
             </div>
           </header>
 
@@ -581,15 +587,37 @@ function NotePanel({
   const [comments, setComments] = useState<CommentRecord[]>([]);
   const [commentBody, setCommentBody] = useState("");
   const [miaResponse, setMiaResponse] = useState<string | null>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [draftText, setDraftText] = useState(note.text ?? "");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     setMiaResponse(null);
     setCommentBody("");
+    setIsEditing(false);
+    setDraftText(note.text ?? "");
     if (!note) return;
     void apiFetch<CommentRecord[]>(`/api/notes/${note.id}/comments`).then(setComments).catch(() => setComments([]));
   }, [note?.id]);
+
+  async function saveMarkdown() {
+    setIsSaving(true);
+    setError(null);
+    try {
+      await apiFetch<NoteRecord>(`/api/notes/${note.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ text: draftText })
+      });
+      setIsEditing(false);
+      await onRefresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not save note");
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
   async function addComment(event: FormEvent) {
     event.preventDefault();
@@ -629,14 +657,55 @@ function NotePanel({
           <span className={`badge ${badgeTone(note.status)}`}>{note.status.replace("_", " ")}</span>
           <h2>{note.title}</h2>
         </div>
-        <button className="icon-button" aria-label="More note actions"><MoreVertical size={19} /></button>
+        <div className="panel-actions">
+          {isEditing ? (
+            <>
+              <button
+                className="text-button compact"
+                type="button"
+                onClick={() => {
+                  setDraftText(note.text ?? "");
+                  setIsEditing(false);
+                }}
+              >
+                Cancel
+              </button>
+              <button className="primary-button compact" type="button" disabled={isSaving} onClick={() => void saveMarkdown()}>
+                {isSaving ? <Loader2 className="spin" size={15} /> : null}
+                Save
+              </button>
+            </>
+          ) : (
+            <>
+              <button className="text-button compact" type="button" onClick={() => setIsEditing(true)}>Edit Markdown</button>
+              <button className="icon-button" aria-label="More note actions"><MoreVertical size={19} /></button>
+            </>
+          )}
+        </div>
       </div>
       <div className="panel-meta">
         <span><User size={16} />{note.user?.name ?? "Unknown"}</span>
         <span><Folder size={16} />{note.project?.name ?? "Project"}</span>
         <span><Clock3 size={16} />{relativeTime(note.updated_at ?? note.created_at)}</span>
       </div>
-      <pre className="markdown-preview">{note.text ?? "Open the note to load the full Markdown body."}</pre>
+      {isEditing ? (
+        <textarea
+          className="markdown-source-editor"
+          value={draftText}
+          onChange={(event) => setDraftText(event.target.value)}
+          aria-label="Markdown source"
+        />
+      ) : (
+        <div className="markdown-preview">
+          <Suspense fallback={<div className="editor-loading">Loading note...</div>}>
+            <MarkdownViewer
+              id={note.id}
+              updatedAt={note.updated_at}
+              markdown={note.text ?? "Open the note to load the full Markdown body."}
+            />
+          </Suspense>
+        </div>
+      )}
       <div className="source-list">
         {(note.source_files ?? []).map((source) => (
           <a key={source.id} href={source.url} target="_blank" rel="noreferrer">
