@@ -567,6 +567,10 @@ button {
   font-size: 26px;
 }
 
+.mianotes-rich-content h1:first-child {
+  margin-top: 0;
+}
+
 .mianotes-rich-content h2 {
   font-size: 20px;
 }
