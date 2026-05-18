@@ -431,7 +431,14 @@ export function App() {
         method: "PATCH",
         body: JSON.stringify({ is_starred: nextStarred })
       });
-      setNotes((items) => items.map((item) => item.id === note.id ? updated : item));
+      setNotes((items) => items.map((item) => item.id === note.id ? {
+        ...item,
+        ...updated,
+        user_id: updated.user_id ?? updated.user?.id ?? item.user_id,
+        project_id: updated.project_id ?? updated.project?.id ?? item.project_id,
+        user: updated.user ?? item.user,
+        project: updated.project ?? item.project
+      } : item));
     } catch (err) {
       setNotes((items) => (
         items.map((item) => item.id === note.id ? { ...item, is_starred: note.is_starred } : item)
