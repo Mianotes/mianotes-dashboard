@@ -529,6 +529,37 @@ button {
   min-height: 0;
 }
 
+.dashboard-notice {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  align-self: flex-start;
+  max-width: calc(100% - 52px);
+  margin: 14px 26px 0;
+  padding: 9px 10px 9px 12px;
+  border: 1px solid #f1c6cc;
+  border-radius: 8px;
+  color: #8a1f2a;
+  background: #fff1f3;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.dashboard-notice button {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: inherit;
+}
+
+.dashboard-notice button:hover {
+  background: rgba(138, 31, 42, 0.08);
+}
+
 .note-list {
   min-height: 0;
 }

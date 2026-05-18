@@ -435,7 +435,7 @@ export function App() {
       setNotes((items) => (
         items.map((item) => item.id === note.id ? { ...item, is_starred: note.is_starred } : item)
       ));
-      setError(err instanceof Error ? err.message : "Could not update starred note");
+      setError("Could not update the star. Please refresh the Mianotes service and try again.");
     }
   }
 
@@ -713,7 +713,14 @@ export function App() {
             </header>
           )}
 
-          {error && <div className="notice danger">{error}</div>}
+          {error && (
+            <div className="dashboard-notice" role="status">
+              <span>{error}</span>
+              <button type="button" aria-label="Dismiss message" onClick={() => setError(null)}>
+                <X size={14} />
+              </button>
+            </div>
+          )}
 
           <div className="content-surface">
             {openedNote ? (
