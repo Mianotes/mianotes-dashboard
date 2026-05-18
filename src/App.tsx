@@ -597,7 +597,7 @@ function AuthScreen({ onSignedIn }: { onSignedIn: () => void }) {
 
   const masterPasswordCopy = masterPasswordOwnerName
     ? `Enter the master password set by ${masterPasswordOwnerName}.`
-    : "Enter the master password for this Mianotes instance.";
+    : "Enter the master password set by the instance admin.";
   const authCopy = step === "email"
     ? "Enter your email address."
     : isFirstUser
