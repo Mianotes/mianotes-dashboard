@@ -27,6 +27,7 @@ textarea {
 button {
   cursor: pointer;
   box-shadow: none;
+  font-weight: 600;
 }
 
 .screen {
@@ -74,7 +75,7 @@ button {
   color: #ffffff;
   background: #17181d;
   font-size: 13px;
-  font-weight: 750;
+  font-weight: 600;
 }
 
 .nav-group {
@@ -814,7 +815,7 @@ button {
   color: #454752;
   background: #ffffff;
   font-size: 13px;
-  font-weight: 700;
+  font-weight: 600;
 }
 
 .secondary-action-button:hover {
@@ -1106,7 +1107,7 @@ button {
   border-radius: 8px;
   background: #ffffff;
   color: #2e3037;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .mia-quick-action:hover {
@@ -1119,15 +1120,21 @@ button {
   cursor: not-allowed;
 }
 
-.mia-form-error {
-  color: #8a1f2a;
-  font-size: 13px;
-}
-
 .comment-form textarea,
 .modal textarea {
   min-height: 86px;
   resize: vertical;
+}
+
+.prompt-history {
+  margin-top: 24px;
+}
+
+.prompt-history h4 {
+  margin: 0 0 10px;
+  padding-top: 24px;
+  color: #1f2026;
+  font-size: 14px;
 }
 
 .comment,
@@ -1146,16 +1153,20 @@ button {
 }
 
 .comment-header button {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
   border: 0;
+  border-radius: 6px;
   padding: 0;
   color: #696b75;
   background: transparent;
-  font-size: 12px;
-  font-weight: 700;
 }
 
 .comment-header button:hover {
   color: #1f2026;
+  background: #ececf0;
 }
 
 .comment p {
@@ -1265,7 +1276,7 @@ textarea:focus {
   min-height: 44px;
   border: 0;
   border-radius: 8px;
-  font-weight: 800;
+  font-weight: 600;
 }
 
 .primary-button.compact,

@@ -5,6 +5,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock3,
+  Copy,
   Edit3,
   Eye,
   File,
@@ -981,7 +982,6 @@ function NotePanel({
   const [comments, setComments] = useState<CommentRecord[]>([]);
   const [commentBody, setCommentBody] = useState("");
   const [miaResponse, setMiaResponse] = useState<string | null>(null);
-  const [miaFormError, setMiaFormError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [draftText, setDraftText] = useState(noteBodyMarkdown(note.text ?? ""));
   const [isActionsOpen, setIsActionsOpen] = useState(false);
@@ -992,7 +992,7 @@ function NotePanel({
 
   useEffect(() => {
     setMiaResponse(null);
-    setMiaFormError(null);
+    setError(null);
     setCommentBody("");
     setIsEditing(false);
     setDraftText(noteBodyMarkdown(note.text ?? ""));
@@ -1022,7 +1022,7 @@ function NotePanel({
     if (!note) return;
     const trimmedInstructions = instructions.trim();
     if (!trimmedInstructions) {
-      setMiaFormError("Please provide instructions for Mia.");
+      setError("Please provide instructions for Mia.");
       return;
     }
     const body = trimmedInstructions.toLowerCase().startsWith("@mia")
@@ -1030,7 +1030,6 @@ function NotePanel({
       : `@mia ${trimmedInstructions}`;
     setIsLoading(true);
     setMiaResponse(null);
-    setMiaFormError(null);
     setError(null);
     try {
       const result = await apiFetch<CommentRecord | MiaPromptRecord>(`/api/notes/${note.id}/comments`, {
@@ -1218,9 +1217,13 @@ function NotePanel({
         <form onSubmit={addComment} className="comment-form">
           <textarea
             value={commentBody}
-            onFocus={() => setMiaFormError(null)}
-            onChange={(event) => setCommentBody(event.target.value)}
-            placeholder="Summarise this note, extract key points, or suggest improvements"
+            onChange={(event) => {
+              setCommentBody(event.target.value);
+              if (error === "Please provide instructions for Mia.") {
+                setError(null);
+              }
+            }}
+            placeholder="Ask Mia anything about this note."
           />
           <div className="mia-action-row">
             <button className="primary-button small ask-mia-button" disabled={isLoading}>
@@ -1241,18 +1244,29 @@ function NotePanel({
               ))}
             </div>
           </div>
-          {miaFormError && <div className="mia-form-error">{miaFormError}</div>}
         </form>
         {error && <div className="notice danger">{error}</div>}
-        {comments.map((comment) => (
-          <div className="comment" key={comment.id}>
-            <div className="comment-header">
-              <strong>{comment.user?.name ?? "User"}</strong>
-              <button type="button" onClick={() => void navigator.clipboard?.writeText(displayCommentBody(comment.body))}>Copy</button>
-            </div>
-            <p>{displayCommentBody(comment.body)}</p>
+        {comments.length > 0 && (
+          <div className="prompt-history">
+            <h4>Past prompts</h4>
+            {comments.map((comment) => (
+              <div className="comment" key={comment.id}>
+                <div className="comment-header">
+                  <strong>{comment.user?.name ?? "User"}</strong>
+                  <button
+                    type="button"
+                    aria-label="Copy prompt"
+                    title="Copy prompt"
+                    onClick={() => void navigator.clipboard?.writeText(displayCommentBody(comment.body))}
+                  >
+                    <Copy size={14} />
+                  </button>
+                </div>
+                <p>{displayCommentBody(comment.body)}</p>
+              </div>
+            ))}
           </div>
-        ))}
+        )}
       </section>
     </section>
   );
