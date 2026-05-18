@@ -615,10 +615,31 @@ button {
   width: 28px;
   height: 28px;
   border-radius: 999px;
-  color: #073f45;
-  background: #9ee8dd;
+  color: #ffffff;
+  background: #7b5cff;
   font-size: 0.78rem;
   font-weight: 850;
+}
+
+.avatar-magenta {
+  background: linear-gradient(135deg, #ff2ccf 0%, #b815ff 100%);
+}
+
+.avatar-violet {
+  background: linear-gradient(135deg, #b815ff 0%, #6b5cff 100%);
+}
+
+.avatar-blue {
+  background: linear-gradient(135deg, #6b5cff 0%, #1684ff 100%);
+}
+
+.avatar-sky {
+  background: linear-gradient(135deg, #1684ff 0%, #19c7ff 100%);
+}
+
+.avatar-cyan {
+  color: #073f45;
+  background: linear-gradient(135deg, #19c7ff 0%, #9ee8dd 100%);
 }
 
 .avatar-photo {

@@ -268,6 +268,14 @@ function userInitials(name: string) {
   return (parts[0] ?? "?").slice(0, 2).toUpperCase();
 }
 
+function avatarTone(name: string) {
+  const tones = ["magenta", "violet", "blue", "sky", "cyan"];
+  const hash = [...name.trim().toLowerCase()].reduce((total, character) => (
+    total + character.charCodeAt(0)
+  ), 0);
+  return tones[hash % tones.length];
+}
+
 function UserAvatar({
   user,
   name,
@@ -281,7 +289,7 @@ function UserAvatar({
   if (user?.photo_url) {
     return <img className={`avatar avatar-photo ${className}`} src={user.photo_url} alt={displayName} />;
   }
-  return <span className={`avatar ${className}`}>{userInitials(displayName)}</span>;
+  return <span className={`avatar avatar-${avatarTone(displayName)} ${className}`}>{userInitials(displayName)}</span>;
 }
 
 export function App() {
