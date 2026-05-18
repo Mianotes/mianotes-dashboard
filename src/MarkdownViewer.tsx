@@ -158,7 +158,6 @@ export function MarkdownEditor({
       plugins={richMarkdownEditorPlugins()}
       className="mianotes-rich-editor"
       contentEditableClassName="mianotes-rich-content"
-      autoFocus={{ defaultSelection: "rootEnd" }}
     />
   );
 }
