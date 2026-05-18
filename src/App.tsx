@@ -986,6 +986,7 @@ function NotePanel({
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isApplyingMia, setIsApplyingMia] = useState(false);
+  const noteActionsMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     setMiaResponse(null);
@@ -1002,6 +1003,33 @@ function NotePanel({
       setDraftText(noteBodyMarkdown(note.text ?? ""));
     }
   }, [isEditing, note.text]);
+
+  useEffect(() => {
+    if (!isActionsOpen) return;
+
+    function closeNoteActionsMenu(event: PointerEvent) {
+      if (
+        event.target instanceof Node
+        && noteActionsMenuRef.current
+        && !noteActionsMenuRef.current.contains(event.target)
+      ) {
+        setIsActionsOpen(false);
+      }
+    }
+
+    function closeNoteActionsMenuOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsActionsOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", closeNoteActionsMenu);
+    document.addEventListener("keydown", closeNoteActionsMenuOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeNoteActionsMenu);
+      document.removeEventListener("keydown", closeNoteActionsMenuOnEscape);
+    };
+  }, [isActionsOpen]);
 
   async function saveMarkdown() {
     setIsSaving(true);
@@ -1167,7 +1195,7 @@ function NotePanel({
                 <Edit3 size={16} />
                 Edit
               </button>
-              <div className="note-actions-menu">
+              <div className="note-actions-menu" ref={noteActionsMenuRef}>
                 <button
                   className="icon-button"
                   aria-label="More note actions"
