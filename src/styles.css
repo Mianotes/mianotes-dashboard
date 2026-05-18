@@ -1031,6 +1031,10 @@ textarea:focus {
   font-size: 13px;
 }
 
+.primary-button.save-note-button {
+  min-width: 76px;
+}
+
 .primary-button {
   color: #ffffff;
   background: #17181d;

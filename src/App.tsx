@@ -779,6 +779,10 @@ function NotePanel({
         <div className="panel-actions">
           {isEditing ? (
             <>
+              <button className="primary-button compact save-note-button" type="button" disabled={isSaving} onClick={() => void saveMarkdown()}>
+                {isSaving ? <Loader2 className="spin" size={15} /> : null}
+                Save
+              </button>
               <button
                 className="text-button compact"
                 type="button"
@@ -788,10 +792,6 @@ function NotePanel({
                 }}
               >
                 Cancel
-              </button>
-              <button className="primary-button compact" type="button" disabled={isSaving} onClick={() => void saveMarkdown()}>
-                {isSaving ? <Loader2 className="spin" size={15} /> : null}
-                Save
               </button>
             </>
           ) : (
