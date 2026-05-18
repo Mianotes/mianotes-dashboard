@@ -1116,7 +1116,7 @@ button {
 
 .mdxeditor .cm-gutters {
   background: transparent;
-  color: var(--slate-7);
+  color: #c9c9c9;
   font-size: 13px;
 }
 
