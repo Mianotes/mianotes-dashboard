@@ -1082,7 +1082,13 @@ button {
 .mianotes-rich-content [class*="codeMirrorWrapper"] .cm-editor,
 .mianotes-rich-editor [class*="codeMirrorWrapper"],
 .mianotes-rich-editor [class*="codeMirrorWrapper"] .cm-editor {
-  font-size: 14px;
+  font-size: 13px;
+}
+
+.mdxeditor .cm-gutters {
+  background: transparent;
+  color: #ccc;
+  font-size: 13px;
 }
 
 .mianotes-rich-content .cm-activeLineGutter,
