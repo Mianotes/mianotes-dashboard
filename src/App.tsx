@@ -113,6 +113,7 @@ type StorageCapacityRecord = {
 type EmailCheckResponse = {
   user_id: string | null;
   is_first_user?: boolean;
+  master_password_owner_name?: string | null;
 };
 
 const apiBase = import.meta.env.VITE_API_BASE_URL ?? "";
@@ -275,10 +276,9 @@ export function App() {
   const selectedProject = selectedProjectId === "all" ? null : projects.find((project) => project.id === selectedProjectId) ?? null;
   const selectedTagRecord = selectedTag === "all" ? null : tags.find((tag) => tag.slug === selectedTag) ?? null;
   const selectedUser = selectedUserId === "all" ? null : users.find((user) => user.id === selectedUserId) ?? null;
-  const activeFilterLabel = [selectedTagRecord?.name, selectedUser?.name].filter(Boolean).join(" / ");
   const breadcrumbItems = [
     selectedProject?.name,
-    activeFilterLabel || null
+    selectedUser?.name
   ].filter(Boolean);
   const tagSuggestions = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -416,6 +416,12 @@ export function App() {
                     {item}
                   </span>
                 ))}
+                {selectedTagRecord && (
+                  <button className="breadcrumb-filter-chip" type="button" onClick={() => setSelectedTag("all")}>
+                    {selectedTagRecord.name}
+                    <X size={12} />
+                  </button>
+                )}
               </div>
               <div className="toolbar-actions">
                 <div className="search-area">
@@ -540,6 +546,7 @@ function AuthScreen({ onSignedIn }: { onSignedIn: () => void }) {
   const [email, setEmail] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
   const [isFirstUser, setIsFirstUser] = useState(false);
+  const [masterPasswordOwnerName, setMasterPasswordOwnerName] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
@@ -555,6 +562,7 @@ function AuthScreen({ onSignedIn }: { onSignedIn: () => void }) {
       });
       setUserId(result.user_id);
       setIsFirstUser(Boolean(result.is_first_user));
+      setMasterPasswordOwnerName(result.master_password_owner_name ?? null);
       setStep(result.user_id ? "login" : "join");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not check email");
@@ -587,6 +595,15 @@ function AuthScreen({ onSignedIn }: { onSignedIn: () => void }) {
     }
   }
 
+  const masterPasswordCopy = masterPasswordOwnerName
+    ? `Enter the master password set by ${masterPasswordOwnerName}.`
+    : "Enter the master password for this Mianotes instance.";
+  const authCopy = step === "email"
+    ? "Enter your email address."
+    : isFirstUser
+      ? "This is a new Mianotes instance. The password you choose will be used as the master password by all users who sign in to this instance."
+      : masterPasswordCopy;
+
   return (
     <main className="screen auth-screen">
       <section className="auth-panel">
@@ -594,11 +611,7 @@ function AuthScreen({ onSignedIn }: { onSignedIn: () => void }) {
           <img className="brand-logo" src={logoUrl} alt="Mianotes" />
         </div>
         <h1>Sign in</h1>
-        <p>
-          {isFirstUser
-            ? "This is a new Mianotes instance. The password you choose will be used as the master password by all users who sign in to this instance."
-            : "Sign in to browse notes, projects, sources, comments, and talk to Mia."}
-        </p>
+        <p>{authCopy}</p>
         {step === "email" ? (
           <form onSubmit={checkEmail} className="form-stack">
             <input type="email" required value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Email address" />

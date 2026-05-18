@@ -261,6 +261,25 @@ button {
   font-size: 13px;
 }
 
+.breadcrumb-filter-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 26px;
+  margin-left: 8px;
+  padding: 0 9px 0 10px;
+  border: 1px solid #e1e2e7;
+  border-radius: 999px;
+  color: #565863;
+  background: #fbfbfc;
+  font-size: 12px;
+}
+
+.breadcrumb-filter-chip:hover {
+  border-color: #c8c9d0;
+  background: #f7f7f8;
+}
+
 .toolbar-actions {
   display: flex;
   align-items: center;
