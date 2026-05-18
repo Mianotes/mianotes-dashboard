@@ -1022,8 +1022,8 @@ button {
 
 .mianotes-rich-editor [role="textbox"] {
   min-height: 8rem;
-  max-height: calc(100vh - 180px);
-  overflow: auto;
+  max-height: none;
+  overflow: visible;
 }
 
 .editor-loading {
