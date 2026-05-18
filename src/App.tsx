@@ -997,6 +997,12 @@ function NotePanel({
     setIsApplyingMia(false);
   }, [note?.id]);
 
+  useEffect(() => {
+    if (!isEditing) {
+      setDraftText(noteBodyMarkdown(note.text ?? ""));
+    }
+  }, [isEditing, note.text]);
+
   async function saveMarkdown() {
     setIsSaving(true);
     setError(null);
@@ -1103,6 +1109,7 @@ function NotePanel({
   const viewLabel = view === "starred" ? "Starred" : "Recent";
   const noteDate = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(new Date(note.created_at));
   const authorName = note.user?.name ?? "Unknown";
+  const hasLoadedNoteText = typeof note.text === "string";
   const noteMarkdownBody = noteBodyMarkdown(note.text ?? "");
 
   return (
@@ -1210,11 +1217,15 @@ function NotePanel({
       ) : (
         <div className="markdown-preview">
           <Suspense fallback={<div className="editor-loading">Loading note...</div>}>
-            <MarkdownViewer
-              id={note.id}
-              updatedAt={note.updated_at}
-              markdown={noteMarkdownBody || "Open the note to load the full Markdown body."}
-            />
+            {hasLoadedNoteText ? (
+              <MarkdownViewer
+                id={note.id}
+                updatedAt={note.updated_at}
+                markdown={noteMarkdownBody}
+              />
+            ) : (
+              <div className="editor-loading">Loading note...</div>
+            )}
           </Suspense>
         </div>
       )}

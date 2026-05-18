@@ -57,6 +57,14 @@ const codeBlockLanguages = [
   { name: "SQL", alias: ["sql"], support: sql() }
 ];
 
+function contentKey(value: string) {
+  let hash = 0;
+  for (let index = 0; index < value.length; index += 1) {
+    hash = Math.imul(31, hash) + value.charCodeAt(index) | 0;
+  }
+  return `${value.length}-${hash}`;
+}
+
 function isAdmonition(editorInFocus: EditorInFocus | null) {
   const node = editorInFocus?.rootNode;
   if (!node || node.getType() !== "directive") return false;
@@ -83,7 +91,7 @@ function richMarkdownPlugins() {
 export default function MarkdownViewer({ id, updatedAt, markdown }: { id: string; updatedAt: string; markdown: string }) {
   return (
     <MDXEditor
-      key={`${id}-${updatedAt}`}
+      key={`${id}-${updatedAt}-${contentKey(markdown)}`}
       markdown={markdown}
       readOnly
       plugins={richMarkdownPlugins()}
