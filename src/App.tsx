@@ -142,6 +142,12 @@ const defaultDashboardUiState: DashboardUiState = {
   searchQuery: ""
 };
 
+const miaQuickActions = [
+  { label: "Summarise", prompt: "summarise text" },
+  { label: "Extract key points", prompt: "extract key points" },
+  { label: "Humanize", prompt: "humanize text" }
+] as const;
+
 function apiPath(path: string) {
   return `${apiBase}${path}`;
 }
@@ -968,6 +974,7 @@ function NotePanel({
   const [comments, setComments] = useState<CommentRecord[]>([]);
   const [commentBody, setCommentBody] = useState("");
   const [miaResponse, setMiaResponse] = useState<string | null>(null);
+  const [miaFormError, setMiaFormError] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [draftText, setDraftText] = useState(noteBodyMarkdown(note.text ?? ""));
   const [isActionsOpen, setIsActionsOpen] = useState(false);
@@ -978,6 +985,7 @@ function NotePanel({
 
   useEffect(() => {
     setMiaResponse(null);
+    setMiaFormError(null);
     setCommentBody("");
     setIsEditing(false);
     setDraftText(noteBodyMarkdown(note.text ?? ""));
@@ -1003,14 +1011,19 @@ function NotePanel({
     }
   }
 
-  async function addComment(event: FormEvent) {
-    event.preventDefault();
-    if (!note || !commentBody.trim()) return;
-    const body = commentBody.trim().toLowerCase().startsWith("@mia")
-      ? commentBody.trim()
-      : `@mia ${commentBody.trim()}`;
+  async function submitMiaPrompt(instructions: string, clearInput = false) {
+    if (!note) return;
+    const trimmedInstructions = instructions.trim();
+    if (!trimmedInstructions) {
+      setMiaFormError("Please provide instructions for Mia.");
+      return;
+    }
+    const body = trimmedInstructions.toLowerCase().startsWith("@mia")
+      ? trimmedInstructions
+      : `@mia ${trimmedInstructions}`;
     setIsLoading(true);
     setMiaResponse(null);
+    setMiaFormError(null);
     setError(null);
     try {
       const result = await apiFetch<CommentRecord | MiaPromptRecord>(`/api/notes/${note.id}/comments`, {
@@ -1022,11 +1035,11 @@ function NotePanel({
         if (result.comment) {
           setComments((items) => [...items, result.comment!]);
         }
-        setCommentBody("");
+        if (clearInput) setCommentBody("");
         await onRefresh();
       } else {
         setComments((items) => [...items, result]);
-        setCommentBody("");
+        if (clearInput) setCommentBody("");
         await onRefresh();
       }
     } catch (err) {
@@ -1034,6 +1047,11 @@ function NotePanel({
     } finally {
       setIsLoading(false);
     }
+  }
+
+  async function addComment(event: FormEvent) {
+    event.preventDefault();
+    await submitMiaPrompt(commentBody, true);
   }
 
   async function copyShareLink() {
@@ -1178,18 +1196,46 @@ function NotePanel({
       <div className="note-section-divider" />
       <section className="comments-box">
         <h3>Ask Mia</h3>
+        {(isLoading || miaResponse) && (
+          <div className={`mia-output ${isLoading ? "loading" : ""}`} aria-live="polite">
+            {isLoading ? (
+              <div className="mia-loader">
+                <img src={logoUrl} alt="" />
+                <Loader2 className="spin" size={18} />
+              </div>
+            ) : (
+              <pre>{miaResponse}</pre>
+            )}
+          </div>
+        )}
         <form onSubmit={addComment} className="comment-form">
           <textarea
             value={commentBody}
+            onFocus={() => setMiaFormError(null)}
             onChange={(event) => setCommentBody(event.target.value)}
             placeholder="Summarise this note, extract key points, or suggest improvements"
           />
-          <button className="primary-button small" disabled={isLoading}>
-            {isLoading ? <Loader2 className="spin" size={16} /> : <MessageCircle size={16} />}
-            Ask Mia
-          </button>
+          <div className="mia-action-row">
+            <button className="primary-button small ask-mia-button" disabled={isLoading}>
+              <MessageCircle size={16} />
+              Ask Mia
+            </button>
+            <div className="mia-quick-actions">
+              {miaQuickActions.map((action) => (
+                <button
+                  className="mia-quick-action"
+                  disabled={isLoading}
+                  key={action.label}
+                  type="button"
+                  onClick={() => void submitMiaPrompt(action.prompt)}
+                >
+                  {action.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          {miaFormError && <div className="mia-form-error">{miaFormError}</div>}
         </form>
-        {miaResponse && <pre className="mia-response">{miaResponse}</pre>}
         {error && <div className="notice danger">{error}</div>}
         {comments.map((comment) => (
           <div className="comment" key={comment.id}>

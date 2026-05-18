@@ -922,21 +922,6 @@ button {
   white-space: normal;
 }
 
-.mia-response {
-  overflow: auto;
-  max-height: 360px;
-  margin: 0;
-  padding: 16px;
-  border: 1px solid #e2e3e8;
-  border-radius: 8px;
-  color: #343540;
-  background: #fbfbfc;
-  font-family: "SFMono-Regular", Consolas, monospace;
-  font-size: 14px;
-  line-height: 1.7;
-  white-space: pre-wrap;
-}
-
 .markdown-preview .mdxeditor {
   background: transparent;
 }
@@ -1022,6 +1007,90 @@ button {
 .comment-form {
   display: grid;
   gap: 10px;
+}
+
+.mia-output {
+  display: grid;
+  min-height: 112px;
+  margin: 0 0 18px;
+  padding: 18px;
+  border: 1px solid #e2e3e8;
+  border-radius: 8px;
+  background: #ffffff;
+  animation: mia-output-enter 180ms ease-out;
+}
+
+.mia-output pre {
+  margin: 0;
+  white-space: pre-wrap;
+  color: #30323a;
+  font-family: inherit;
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+.mia-output.loading {
+  place-items: center;
+}
+
+.mia-loader {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  color: #6d6f79;
+}
+
+.mia-loader img {
+  width: 116px;
+  height: auto;
+  animation: mia-logo-pulse 1.2s ease-in-out infinite;
+}
+
+.mia-action-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.ask-mia-button {
+  min-width: 240px;
+  padding: 0 22px;
+}
+
+.mia-quick-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  min-width: 0;
+}
+
+.mia-quick-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0 20px;
+  border: 1px solid #dfe1e7;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #2e3037;
+  font-weight: 800;
+}
+
+.mia-quick-action:hover {
+  border-color: #c7c9d1;
+  background: #fbfbfc;
+}
+
+.mia-quick-action:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+.mia-form-error {
+  color: #8a1f2a;
+  font-size: 13px;
 }
 
 .comment-form textarea,
@@ -1256,6 +1325,31 @@ textarea:focus {
   }
 }
 
+@keyframes mia-output-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes mia-logo-pulse {
+  0%,
+  100% {
+    opacity: 0.72;
+    transform: scale(0.98);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
 @media (max-width: 1180px) {
   .shell {
     grid-template-columns: 250px minmax(0, 1fr);
@@ -1317,6 +1411,18 @@ textarea:focus {
   .note-meta-bottom {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .mia-action-row,
+  .mia-quick-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+    width: 100%;
+  }
+
+  .ask-mia-button,
+  .mia-quick-action {
+    width: 100%;
   }
 
   .row-spacer {
