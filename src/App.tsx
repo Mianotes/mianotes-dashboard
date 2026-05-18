@@ -1106,7 +1106,7 @@ function NotePanel({
   const noteMarkdownBody = noteBodyMarkdown(note.text ?? "");
 
   return (
-    <section className="note-panel">
+    <section className={`note-panel ${isEditing ? "editing" : ""}`}>
       <div className="note-document-header">
         <button className="back-square-button" onClick={onClose} aria-label="Back to notes">
           <ChevronLeft size={16} />

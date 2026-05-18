@@ -751,6 +751,10 @@ button {
   background: #ffffff;
 }
 
+.note-panel.editing {
+  width: min(100%, 1380px);
+}
+
 .note-document-header {
   display: grid;
   grid-template-columns: 34px minmax(0, 1fr) auto;
