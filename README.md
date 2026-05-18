@@ -1,5 +1,7 @@
 # Mianotes Dashboard
 
+[![CI](https://github.com/Mianotes/mianotes-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/Mianotes/mianotes-dashboard/actions/workflows/ci.yml)
+
 React dashboard for browsing and creating Mianotes notes.
 
 ## Run locally
