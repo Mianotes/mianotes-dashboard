@@ -166,29 +166,10 @@ button {
   border-top: 1px solid #e3e4e8;
 }
 
-.sidebar-links {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 7px;
+.sidebar-reserved-space {
   margin-top: auto;
-  padding: 18px 18px 24px;
+  min-height: 74px;
   border-top: 1px solid #e3e4e8;
-  color: #797a83;
-  font-size: 12px;
-}
-
-.sidebar-links button {
-  border: 0;
-  padding: 0;
-  color: #555762;
-  background: transparent;
-  font-size: 12px;
-  font-weight: 650;
-}
-
-.sidebar-links button:hover {
-  color: #18191f;
 }
 
 .storage-meter div:first-child {
@@ -297,7 +278,7 @@ button {
   display: flex;
   align-items: center;
   gap: 10px;
-  width: min(360px, 32vw);
+  width: min(300px, 28vw);
   height: 36px;
   padding: 0 12px;
   border: 1px solid #e0e1e7;
@@ -420,6 +401,104 @@ button {
   white-space: nowrap;
 }
 
+.account-menu {
+  position: relative;
+  flex-shrink: 0;
+}
+
+.account-avatar-button {
+  display: inline-grid;
+  place-items: center;
+  width: 38px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+}
+
+.account-avatar-button .avatar {
+  width: 34px;
+  height: 34px;
+  font-size: 12px;
+}
+
+.account-avatar-button:hover .avatar {
+  box-shadow: 0 0 0 3px #f1f1f3;
+}
+
+.account-popover {
+  position: absolute;
+  top: calc(100% + 12px);
+  right: 0;
+  z-index: 20;
+  width: 260px;
+  overflow: hidden;
+  border: 1px solid #e1e2e7;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 16px 36px rgba(20, 20, 24, 0.14);
+}
+
+.account-popover-header {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 16px;
+  border-bottom: 1px solid #e7e8ec;
+}
+
+.account-popover-header strong {
+  min-width: 0;
+  overflow: hidden;
+  color: #4a4c55;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.account-popover-avatar {
+  width: 38px;
+  height: 38px;
+  flex-shrink: 0;
+}
+
+.account-popover-group {
+  display: grid;
+  gap: 2px;
+  padding: 8px;
+  border-bottom: 1px solid #e7e8ec;
+}
+
+.account-popover-group:last-child {
+  border-bottom: 0;
+}
+
+.account-popover button {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  min-height: 38px;
+  padding: 0 8px;
+  border: 0;
+  border-radius: 6px;
+  color: #565863;
+  background: transparent;
+  font-size: 13px;
+  text-align: left;
+}
+
+.account-popover button:hover {
+  background: #f7f7f8;
+}
+
+.account-popover button.danger {
+  color: #e73535;
+}
+
 .user-select-button {
   width: 124px;
 }
@@ -540,6 +619,10 @@ button {
   background: #9ee8dd;
   font-size: 0.78rem;
   font-weight: 850;
+}
+
+.avatar-photo {
+  object-fit: cover;
 }
 
 .inline-meta {

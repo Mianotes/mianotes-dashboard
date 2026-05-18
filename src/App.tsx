@@ -1,4 +1,5 @@
 import {
+  Activity,
   Bot,
   ChevronDown,
   ChevronLeft,
@@ -13,11 +14,13 @@ import {
   Home,
   Image,
   Link,
+  LogOut,
   Loader2,
   MessageCircle,
   MoreVertical,
   Plus,
   Search,
+  Settings,
   Share2,
   Star,
   Tags,
@@ -39,6 +42,7 @@ type UserRecord = {
   name: string;
   username: string;
   is_admin: boolean;
+  photo_url?: string | null;
 };
 
 type ProjectRecord = {
@@ -213,6 +217,30 @@ function availableStoragePercent(storage: StorageCapacityRecord | null) {
   return (storage.free_bytes / storage.total_bytes) * 100;
 }
 
+function userInitials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  }
+  return (parts[0] ?? "?").slice(0, 2).toUpperCase();
+}
+
+function UserAvatar({
+  user,
+  name,
+  className = ""
+}: {
+  user?: Pick<UserRecord, "name" | "photo_url"> | null;
+  name?: string;
+  className?: string;
+}) {
+  const displayName = user?.name ?? name ?? "User";
+  if (user?.photo_url) {
+    return <img className={`avatar avatar-photo ${className}`} src={user.photo_url} alt={displayName} />;
+  }
+  return <span className={`avatar ${className}`}>{userInitials(displayName)}</span>;
+}
+
 export function App() {
   const [currentUser, setCurrentUser] = useState<UserRecord | null>(null);
   const [users, setUsers] = useState<UserRecord[]>([]);
@@ -229,6 +257,7 @@ export function App() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isAccountOpen, setIsAccountOpen] = useState(false);
 
   useEffect(() => {
     void bootstrap();
@@ -390,13 +419,7 @@ export function App() {
             </div>
           </div>
 
-          <div className="sidebar-links" aria-label="Account links">
-            <button type="button">Profile</button>
-            <span>|</span>
-            <button type="button">Settings</button>
-            <span>|</span>
-            <button type="button" onClick={() => void logout(setCurrentUser)}>Sign out</button>
-          </div>
+          <div className="sidebar-reserved-space" aria-hidden="true" />
         </aside>
 
         <section className="workspace">
@@ -462,6 +485,53 @@ export function App() {
                   </select>
                   <ChevronDown className="select-button-chevron" size={12} />
                 </label>
+                <div className="account-menu">
+                  <button
+                    className="account-avatar-button"
+                    type="button"
+                    aria-expanded={isAccountOpen}
+                    aria-haspopup="menu"
+                    onClick={() => setIsAccountOpen((value) => !value)}
+                  >
+                    <UserAvatar user={currentUser} />
+                  </button>
+                  {isAccountOpen && (
+                    <div className="account-popover" role="menu">
+                      <div className="account-popover-header">
+                        <UserAvatar user={currentUser} className="account-popover-avatar" />
+                        <strong>{currentUser.name}</strong>
+                      </div>
+                      <div className="account-popover-group">
+                        <button type="button" role="menuitem">
+                          <User size={16} />
+                          <span>Profile</span>
+                        </button>
+                        <button type="button" role="menuitem">
+                          <Settings size={16} />
+                          <span>Settings</span>
+                        </button>
+                        <button type="button" role="menuitem">
+                          <Activity size={16} />
+                          <span>Activity</span>
+                        </button>
+                      </div>
+                      <div className="account-popover-group">
+                        <button
+                          className="danger"
+                          type="button"
+                          role="menuitem"
+                          onClick={() => {
+                            setIsAccountOpen(false);
+                            void logout(setCurrentUser);
+                          }}
+                        >
+                          <LogOut size={16} />
+                          <span>Sign out</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </header>
           )}
@@ -670,7 +740,7 @@ function NoteRow({ note, onClick }: { note: NoteRecord; onClick: () => void }) {
         <h2>{note.title}</h2>
         <p>{noteExcerpt(note)}</p>
         <div className="note-meta-bottom">
-          <span className="avatar">{owner.slice(0, 2).toUpperCase()}</span>
+          <UserAvatar user={note.user} name={owner} />
           <strong>{owner}</strong>
           {tags.slice(0, 2).map((tag) => (
             <span key={tag.id} className="inline-meta"><Tags size={15} />{tag.name}</span>
@@ -875,7 +945,7 @@ function NotePanel({
         </div>
       </div>
       <div className="note-document-meta">
-        <span className="avatar note-author-avatar">{authorName.slice(0, 2).toUpperCase()}</span>
+        <UserAvatar user={note.user} name={authorName} className="note-author-avatar" />
         <div className="note-author-details">
           <strong>{authorName}</strong>
           <span>{noteDate}</span>
