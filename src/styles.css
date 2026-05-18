@@ -1,4 +1,7 @@
 :root {
+  --slate-2: #f5f5f7;
+  --slate-8: #858691;
+
   color: #18181c;
   background: #f7f7f8;
   font-size: 14px;
@@ -1082,12 +1085,13 @@ button {
 .mianotes-rich-content [class*="codeMirrorWrapper"] .cm-editor,
 .mianotes-rich-editor [class*="codeMirrorWrapper"],
 .mianotes-rich-editor [class*="codeMirrorWrapper"] .cm-editor {
+  background-color: var(--slate-2);
   font-size: 13px;
 }
 
 .mdxeditor .cm-gutters {
   background: transparent;
-  color: #ccc;
+  color: var(--slate-8);
   font-size: 13px;
 }
 
