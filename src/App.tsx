@@ -720,7 +720,7 @@ export function App() {
             {openedNote ? (
               <NotePanel
                 note={openedNote}
-                view={selectedView}
+                projectLabel={selectedProject?.name ?? "All projects"}
                 onClose={() => setOpenedNoteId(null)}
                 onRefresh={async () => {
                   const fullNote = await apiFetch<NoteRecord>(`/api/notes/${openedNote.id}`);
@@ -965,13 +965,13 @@ function NoteRow({
 
 function NotePanel({
   note,
-  view,
+  projectLabel,
   onClose,
   onRefresh,
   onDeleted
 }: {
   note: NoteRecord;
-  view: "recent" | "starred";
+  projectLabel: string;
   onClose: () => void;
   onRefresh: () => Promise<void>;
   onDeleted: () => Promise<void>;
@@ -1106,7 +1106,6 @@ function NotePanel({
     }
   }
 
-  const viewLabel = view === "starred" ? "Starred" : "Recent";
   const noteDate = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(new Date(note.created_at));
   const authorName = note.user?.name ?? "Unknown";
   const hasLoadedNoteText = typeof note.text === "string";
@@ -1120,9 +1119,7 @@ function NotePanel({
         </button>
         <div className="note-document-breadcrumb">
           <img className="breadcrumb-mark" src={logoMarkUrl} alt="" />
-          <span className="breadcrumb-root">{viewLabel}</span>
-          <ChevronRight size={14} />
-          <span>{note.project?.name ?? "Project"}</span>
+          <span className="breadcrumb-root">{projectLabel}</span>
           <ChevronRight size={14} />
           <strong>{note.title}</strong>
         </div>
