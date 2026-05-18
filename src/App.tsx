@@ -11,7 +11,6 @@ import {
   FileText,
   Folder,
   History,
-  Home,
   Image,
   Link,
   LogOut,
@@ -32,6 +31,7 @@ import {
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import logoUrl from "./assets/logo_small.png";
+import logoMarkUrl from "./assets/mianotes_mark.svg";
 
 const MarkdownViewer = lazy(() => import("./MarkdownViewer"));
 const MarkdownEditor = lazy(() => import("./MarkdownViewer").then((module) => ({ default: module.MarkdownEditor })));
@@ -598,7 +598,7 @@ export function App() {
           {!openedNote && (
             <header className="toolbar">
               <div className="breadcrumb">
-                <Home className="breadcrumb-home" size={14} />
+                <img className="breadcrumb-mark" src={logoMarkUrl} alt="" />
                 <span className="breadcrumb-root">
                   {selectedView === "starred" ? "Starred" : "Recent"}
                 </span>
@@ -982,6 +982,7 @@ function NotePanel({
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [isApplyingMia, setIsApplyingMia] = useState(false);
 
   useEffect(() => {
     setMiaResponse(null);
@@ -990,6 +991,7 @@ function NotePanel({
     setIsEditing(false);
     setDraftText(noteBodyMarkdown(note.text ?? ""));
     setIsActionsOpen(false);
+    setIsApplyingMia(false);
   }, [note?.id]);
 
   async function saveMarkdown() {
@@ -1042,6 +1044,38 @@ function NotePanel({
     await submitMiaPrompt(commentBody, true);
   }
 
+  async function copyMiaResponse() {
+    if (!miaResponse) return;
+    await navigator.clipboard?.writeText(miaResponse);
+  }
+
+  async function applyMiaResponse(mode: "append" | "replace") {
+    if (!miaResponse) return;
+    if (mode === "replace") {
+      const confirmed = window.confirm("Replace this note with Mia's response?");
+      if (!confirmed) return;
+    }
+
+    const currentText = noteMarkdownBody.trim();
+    const miaText = miaResponse.trim();
+    const nextText = mode === "append" && currentText ? `${currentText}\n\n${miaText}` : miaText;
+
+    setIsApplyingMia(true);
+    setError(null);
+    try {
+      await apiFetch<NoteRecord>(`/api/notes/${note.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ text: nextText })
+      });
+      setDraftText(nextText);
+      await onRefresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not update note");
+    } finally {
+      setIsApplyingMia(false);
+    }
+  }
+
   async function copyShareLink() {
     const shareUrl = note.note_url ? new URL(note.note_url, window.location.origin).toString() : window.location.href;
     await navigator.clipboard?.writeText(shareUrl);
@@ -1075,7 +1109,7 @@ function NotePanel({
           <ChevronLeft size={16} />
         </button>
         <div className="note-document-breadcrumb">
-          <Home className="breadcrumb-home" size={14} />
+          <img className="breadcrumb-mark" src={logoMarkUrl} alt="" />
           <span className="breadcrumb-root">{viewLabel}</span>
           <ChevronRight size={14} />
           <span>{note.project?.name ?? "Project"}</span>
@@ -1185,14 +1219,27 @@ function NotePanel({
       <section className="comments-box">
         <h3>Ask Mia</h3>
         {(isLoading || miaResponse) && (
-          <div className={`mia-output ${isLoading ? "loading" : ""}`} aria-live="polite">
+          <div className={`mia-output ${isLoading ? "loading" : "result"}`} aria-live="polite">
             {isLoading ? (
               <div className="mia-loader">
                 <img src={logoUrl} alt="" />
                 <Loader2 className="spin" size={18} />
               </div>
             ) : (
-              <pre>{miaResponse}</pre>
+              <>
+                <div className="mia-output-scroll">
+                  <pre>{miaResponse}</pre>
+                </div>
+                <div className="mia-output-actions">
+                  <button type="button" onClick={() => void copyMiaResponse()}>Copy</button>
+                  <button type="button" disabled={isApplyingMia} onClick={() => void applyMiaResponse("append")}>
+                    {isApplyingMia ? "Saving..." : "Append"}
+                  </button>
+                  <button type="button" disabled={isApplyingMia} onClick={() => void applyMiaResponse("replace")}>
+                    Replace
+                  </button>
+                </div>
+              </>
             )}
           </div>
         )}

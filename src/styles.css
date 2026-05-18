@@ -227,9 +227,15 @@ button {
   font-size: 13px;
 }
 
-.breadcrumb-home {
+.breadcrumb-home,
+.breadcrumb-mark {
   margin-right: 4px;
   flex-shrink: 0;
+}
+
+.breadcrumb-mark {
+  width: 14px;
+  height: 14px;
 }
 
 .breadcrumb span {
@@ -1044,12 +1050,19 @@ button {
 .mia-output {
   display: grid;
   min-height: 112px;
+  max-height: 280px;
   margin: 0 0 18px;
-  padding: 18px;
   border: 1px solid #e2e3e8;
   border-radius: 8px;
   background: #ffffff;
+  overflow: hidden;
   animation: mia-output-enter 180ms ease-out;
+}
+
+.mia-output-scroll {
+  min-height: 0;
+  overflow: auto;
+  padding: 18px;
 }
 
 .mia-output pre {
@@ -1063,6 +1076,42 @@ button {
 
 .mia-output.loading {
   place-items: center;
+  padding: 18px;
+}
+
+.mia-output.result {
+  grid-template-rows: minmax(0, 1fr) auto;
+  height: 280px;
+}
+
+.mia-output-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  padding: 10px 12px;
+  border-top: 1px solid #e8e9ed;
+  background: #fbfbfc;
+}
+
+.mia-output-actions button {
+  min-height: 30px;
+  padding: 0 11px;
+  border: 1px solid #dfe1e7;
+  border-radius: 7px;
+  color: #42444d;
+  background: #ffffff;
+  font-size: 12px;
+}
+
+.mia-output-actions button:hover {
+  border-color: #c8cad2;
+  color: #1f2026;
+}
+
+.mia-output-actions button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
 }
 
 .mia-loader {
