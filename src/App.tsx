@@ -120,10 +120,12 @@ type DashboardUiState = {
   selectedTag: string | "all";
   openedNoteId: string | null;
   searchQuery: string;
+  currentPage: number;
 };
 
 const apiBase = import.meta.env.VITE_API_BASE_URL ?? "";
 const dashboardUiStateKey = "mianotes.dashboard.uiState";
+const notesPerPage = 10;
 
 const defaultDashboardUiState: DashboardUiState = {
   selectedView: "recent",
@@ -131,7 +133,8 @@ const defaultDashboardUiState: DashboardUiState = {
   selectedProjectId: "all",
   selectedTag: "all",
   openedNoteId: null,
-  searchQuery: ""
+  searchQuery: "",
+  currentPage: 1
 };
 
 const miaQuickActions = [
@@ -182,7 +185,10 @@ function readDashboardUiState(): DashboardUiState {
       selectedProjectId: typeof value.selectedProjectId === "string" ? value.selectedProjectId : "all",
       selectedTag: typeof value.selectedTag === "string" ? value.selectedTag : "all",
       openedNoteId: typeof value.openedNoteId === "string" ? value.openedNoteId : null,
-      searchQuery: typeof value.searchQuery === "string" ? value.searchQuery : ""
+      searchQuery: typeof value.searchQuery === "string" ? value.searchQuery : "",
+      currentPage: typeof value.currentPage === "number" && value.currentPage > 0
+        ? Math.floor(value.currentPage)
+        : 1
     };
   } catch {
     return defaultDashboardUiState;
@@ -305,6 +311,7 @@ export function App() {
   const [selectedTag, setSelectedTag] = useState<string | "all">(initialUiState.selectedTag);
   const [openedNoteId, setOpenedNoteId] = useState<string | null>(initialUiState.openedNoteId);
   const [searchQuery, setSearchQuery] = useState(initialUiState.searchQuery);
+  const [currentPage, setCurrentPage] = useState(initialUiState.currentPage);
   const [isLoading, setIsLoading] = useState(true);
   const [isWorkspaceLoaded, setIsWorkspaceLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -318,21 +325,25 @@ export function App() {
 
   function selectView(view: "recent" | "starred") {
     clearSearch();
+    setCurrentPage(1);
     setSelectedView(view);
   }
 
   function selectProject(projectId: string) {
     clearSearch();
+    setCurrentPage(1);
     setSelectedProjectId(projectId);
   }
 
   function selectUser(userId: string) {
     clearSearch();
+    setCurrentPage(1);
     setSelectedUserId(userId);
   }
 
   function clearSelectedTag() {
     clearSearch();
+    setCurrentPage(1);
     setSelectedTag("all");
   }
 
@@ -436,7 +447,6 @@ export function App() {
   const selectedTagRecord = selectedTag === "all" ? null : tags.find((tag) => tag.slug === selectedTag) ?? null;
   const selectedUser = selectedUserId === "all" ? null : users.find((user) => user.id === selectedUserId) ?? null;
   const breadcrumbItems = [
-    selectedProject?.name,
     selectedUser?.name
   ].filter(Boolean);
   const tagSuggestions = useMemo(() => {
@@ -477,8 +487,20 @@ export function App() {
       return noteSearchText(note).includes(query);
     });
   }, [notes, searchQuery, selectedProjectId, selectedTag, selectedUserId, selectedView]);
+  const totalPages = Math.max(1, Math.ceil(filteredNotes.length / notesPerPage));
+  const clampedPage = Math.min(currentPage, totalPages);
+  const pageStartIndex = (clampedPage - 1) * notesPerPage;
+  const paginatedNotes = filteredNotes.slice(pageStartIndex, pageStartIndex + notesPerPage);
+  const visibleStart = filteredNotes.length === 0 ? 0 : pageStartIndex + 1;
+  const visibleEnd = Math.min(pageStartIndex + paginatedNotes.length, filteredNotes.length);
 
   const openedNote = notes.find((note) => note.id === openedNoteId) ?? null;
+
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(totalPages);
+    }
+  }, [currentPage, totalPages]);
 
   useEffect(() => {
     if (!currentUser || !isWorkspaceLoaded) return;
@@ -506,9 +528,11 @@ export function App() {
       selectedProjectId,
       selectedTag,
       openedNoteId,
-      searchQuery
+      searchQuery,
+      currentPage: clampedPage
     });
   }, [
+    clampedPage,
     currentUser,
     isWorkspaceLoaded,
     openedNoteId,
@@ -599,7 +623,7 @@ export function App() {
               <div className="breadcrumb">
                 <img className="breadcrumb-mark" src={logoMarkUrl} alt="" />
                 <span className="breadcrumb-root">
-                  {selectedView === "starred" ? "Starred" : "Recent"}
+                  {selectedProject?.name ?? "All projects"}
                 </span>
                 {breadcrumbItems.map((item, index) => (
                   <span key={`${item}-${index}`} className={index === breadcrumbItems.length - 1 ? "current" : undefined}>
@@ -620,7 +644,10 @@ export function App() {
                     <Search size={18} />
                     <input
                       value={searchQuery}
-                      onChange={(event) => setSearchQuery(event.target.value)}
+                      onChange={(event) => {
+                        setCurrentPage(1);
+                        setSearchQuery(event.target.value);
+                      }}
                       placeholder="Search notes..."
                     />
                   </label>
@@ -634,6 +661,7 @@ export function App() {
                             type="button"
                             onClick={() => {
                               setSelectedTag(tag.slug);
+                              setCurrentPage(1);
                               setSearchQuery("");
                             }}
                           >
@@ -739,7 +767,7 @@ export function App() {
                   {filteredNotes.length === 0 ? (
                     <EmptyState onAdd={openAddNote} />
                   ) : (
-                    filteredNotes.map((note) => (
+                    paginatedNotes.map((note) => (
                       <NoteRow
                         key={note.id}
                         note={note}
@@ -761,9 +789,25 @@ export function App() {
                 </section>
                 {filteredNotes.length > 0 && (
                   <footer className="list-pagination" aria-label="Note list pagination">
-                    <span className="result-count">{filteredNotes.length} notes</span>
-                    <button className="icon-button" aria-label="Previous page"><ChevronLeft size={18} /></button>
-                    <button className="icon-button" aria-label="Next page"><ChevronRight size={18} /></button>
+                    <span className="result-count">
+                      {visibleStart}-{visibleEnd} notes of {filteredNotes.length}
+                    </span>
+                    <button
+                      className="icon-button"
+                      aria-label="Previous page"
+                      disabled={clampedPage <= 1}
+                      onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                    >
+                      <ChevronLeft size={18} />
+                    </button>
+                    <button
+                      className="icon-button"
+                      aria-label="Next page"
+                      disabled={clampedPage >= totalPages}
+                      onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                    >
+                      <ChevronRight size={18} />
+                    </button>
                   </footer>
                 )}
               </>

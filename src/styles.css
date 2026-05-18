@@ -249,6 +249,7 @@ button {
 .breadcrumb-mark {
   width: 24px;
   height: 24px;
+  margin-bottom: 2px;
 }
 
 .breadcrumb span {
@@ -544,6 +545,13 @@ button {
 .icon-button:hover {
   color: #202128;
   border-color: #c8c9d0;
+}
+
+.icon-button:disabled {
+  cursor: default;
+  color: #c4c6ce;
+  border-color: #ececf0;
+  background: #ffffff;
 }
 
 .content-surface {
