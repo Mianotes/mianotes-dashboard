@@ -10,6 +10,7 @@ import {
   FileText,
   Folder,
   History,
+  Home,
   Image,
   Link,
   Loader2,
@@ -411,6 +412,7 @@ export function App() {
           {!openedNote && (
             <header className="toolbar">
               <div className="breadcrumb">
+                <Home size={14} />
                 <span className="breadcrumb-root">
                   {selectedView === "starred" ? "Starred" : "Recent"}
                 </span>
@@ -795,6 +797,7 @@ function NotePanel({
           <ChevronLeft size={16} />
         </button>
         <div className="note-document-breadcrumb">
+          <Home size={14} />
           <span className="breadcrumb-root">{viewLabel}</span>
           <ChevronRight size={14} />
           <span>{note.project?.name ?? "Project"}</span>
