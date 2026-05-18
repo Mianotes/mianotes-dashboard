@@ -313,6 +313,35 @@ export function App() {
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const accountMenuRef = useRef<HTMLDivElement | null>(null);
 
+  function clearSearch() {
+    setSearchQuery("");
+  }
+
+  function selectView(view: "recent" | "starred") {
+    clearSearch();
+    setSelectedView(view);
+  }
+
+  function selectProject(projectId: string) {
+    clearSearch();
+    setSelectedProjectId(projectId);
+  }
+
+  function selectUser(userId: string) {
+    clearSearch();
+    setSelectedUserId(userId);
+  }
+
+  function clearSelectedTag() {
+    clearSearch();
+    setSelectedTag("all");
+  }
+
+  function openAddNote() {
+    clearSearch();
+    setIsAddOpen(true);
+  }
+
   useEffect(() => {
     void bootstrap();
   }, []);
@@ -493,17 +522,17 @@ export function App() {
     <main className="screen">
       <section className="shell" aria-label="Mianotes dashboard">
         <aside className="sidebar">
-          <button className="add-note-button" onClick={() => setIsAddOpen(true)}>
+          <button className="add-note-button" onClick={openAddNote}>
             <Plus size={19} />
             <span>Add Note</span>
           </button>
 
           <nav className="nav-group" aria-label="Note filters">
-            <button className={`nav-item ${selectedView === "recent" ? "active" : ""}`} onClick={() => setSelectedView("recent")}>
+            <button className={`nav-item ${selectedView === "recent" ? "active" : ""}`} onClick={() => selectView("recent")}>
               <History size={20} />
               <span>Recent</span>
             </button>
-            <button className={`nav-item ${selectedView === "starred" ? "active" : ""}`} onClick={() => setSelectedView("starred")}>
+            <button className={`nav-item ${selectedView === "starred" ? "active" : ""}`} onClick={() => selectView("starred")}>
               <Star size={20} />
               <span>Starred</span>
             </button>
@@ -517,7 +546,7 @@ export function App() {
               <button
                 key={project.id}
                 className={`nav-item ${selectedProjectId === project.id ? "active-soft" : ""}`}
-                onClick={() => setSelectedProjectId(project.id)}
+                onClick={() => selectProject(project.id)}
               >
                 <Folder size={19} />
                 <span>{project.name}</span>
@@ -557,7 +586,7 @@ export function App() {
                   </span>
                 ))}
                 {selectedTagRecord && (
-                  <button className="breadcrumb-filter-chip" type="button" onClick={() => setSelectedTag("all")}>
+                  <button className="breadcrumb-filter-chip" type="button" onClick={clearSelectedTag}>
                     {selectedTagRecord.name}
                     <X size={12} />
                   </button>
@@ -597,7 +626,7 @@ export function App() {
                 <label className="select-button user-select-button">
                   <User className="select-button-icon" size={16} />
                   <span className="select-button-label">{selectedUser?.name ?? "Users"}</span>
-                  <select value={selectedUserId} onChange={(event) => setSelectedUserId(event.target.value)}>
+                  <select value={selectedUserId} onChange={(event) => selectUser(event.target.value)}>
                     <option value="all">Users</option>
                     {users.map((person) => (
                       <option value={person.id} key={person.id}>{person.name}</option>
@@ -677,7 +706,7 @@ export function App() {
               <>
                 <section className="note-list" aria-label="Notes">
                   {filteredNotes.length === 0 ? (
-                    <EmptyState onAdd={() => setIsAddOpen(true)} />
+                    <EmptyState onAdd={openAddNote} />
                   ) : (
                     filteredNotes.map((note) => (
                       <NoteRow
