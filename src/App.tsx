@@ -206,6 +206,11 @@ function formatGigabytes(bytes: number) {
   return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
 }
 
+function availableStoragePercent(storage: StorageCapacityRecord | null) {
+  if (!storage || storage.total_bytes <= 0) return 0;
+  return (storage.free_bytes / storage.total_bytes) * 100;
+}
+
 export function App() {
   const [currentUser, setCurrentUser] = useState<UserRecord | null>(null);
   const [users, setUsers] = useState<UserRecord[]>([]);
@@ -388,7 +393,7 @@ export function App() {
             <div className="meter-track">
               <div
                 className="meter-fill"
-                style={{ width: `${Math.min(storageCapacity?.used_percent ?? 0, 100)}%` }}
+                style={{ width: `${Math.min(availableStoragePercent(storageCapacity), 100)}%` }}
               />
             </div>
           </div>
