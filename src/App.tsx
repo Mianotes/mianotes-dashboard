@@ -74,6 +74,7 @@ type NoteRecord = {
   is_published: boolean;
   created_at: string;
   updated_at: string;
+  summary?: string;
   text?: string;
   note_url?: string;
   comments_count?: number;
@@ -158,7 +159,7 @@ function relativeTime(value: string) {
 }
 
 function noteExcerpt(note: NoteRecord) {
-  const clean = noteBodyMarkdown(note.text ?? "")
+  const clean = (note.summary ?? noteBodyMarkdown(note.text ?? ""))
     .replace(/^# .+$/m, "")
     .replace(/Created: .+$/m, "")
     .replace(/[#>*_`-]/g, " ")
@@ -250,11 +251,10 @@ export function App() {
     ]);
     const activeProjects = nextProjects.filter((project) => !project.archived_at);
     const hydrated = hydrateNotes(nextNotes, nextUsers, activeProjects);
-    const detailed = await loadNoteDetails(hydrated);
     setUsers(nextUsers);
     setProjects(activeProjects);
     setTags(nextTags);
-    setNotes(detailed);
+    setNotes(hydrated);
     setStorageCapacity(nextStorageCapacity);
   }
 
@@ -265,9 +265,8 @@ export function App() {
     const queryString = params.toString();
     const nextNotes = await apiFetch<NoteRecord[]>(`/api/notes${queryString ? `?${queryString}` : ""}`);
     const hydrated = hydrateNotes(nextNotes, users, projects);
-    const detailed = await loadNoteDetails(hydrated);
-    setNotes(detailed);
-    setOpenedNoteId((current) => current && detailed.some((note) => note.id === current) ? current : null);
+    setNotes(hydrated);
+    setOpenedNoteId((current) => current && hydrated.some((note) => note.id === current) ? current : null);
   }
 
   useEffect(() => {
@@ -291,7 +290,7 @@ export function App() {
 
     const tagMap = new Map<string, TagRecord>();
     notes.forEach((note) => {
-      const haystack = `${note.title} ${note.text ?? ""} ${note.project?.name ?? ""} ${note.user?.name ?? ""}`.toLowerCase();
+      const haystack = `${note.title} ${note.summary ?? ""} ${note.text ?? ""} ${note.project?.name ?? ""} ${note.user?.name ?? ""}`.toLowerCase();
       const noteMatches = haystack.includes(query);
       note.tags?.forEach((tag) => {
         const tagMatches = `${tag.name} ${tag.slug}`.toLowerCase().includes(query);
@@ -311,7 +310,7 @@ export function App() {
       const tagMatch = selectedTag === "all" || note.tags?.some((tag) => tag.slug === selectedTag);
       if (!tagMatch) return false;
       if (!query) return true;
-      return `${note.title} ${note.text ?? ""} ${note.project?.name ?? ""} ${note.user?.name ?? ""}`
+      return `${note.title} ${note.summary ?? ""} ${note.text ?? ""} ${note.project?.name ?? ""} ${note.user?.name ?? ""}`
         .toLowerCase()
         .includes(query);
     });
@@ -1032,15 +1031,6 @@ function hydrateNotes(notes: NoteRecord[], users: UserRecord[], projects: Projec
 
 function isMiaPrompt(value: CommentRecord | MiaPromptRecord): value is MiaPromptRecord {
   return "type" in value && value.type === "prompt";
-}
-
-async function loadNoteDetails(notes: NoteRecord[]) {
-  return Promise.all(
-    notes.map((note) => {
-      if (note.text) return note;
-      return apiFetch<NoteRecord>(`/api/notes/${note.id}`).catch(() => note);
-    })
-  );
 }
 
 async function logout(setCurrentUser: (user: UserRecord | null) => void) {
