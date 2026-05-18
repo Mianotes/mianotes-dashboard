@@ -14,6 +14,8 @@ import {
   directivesPlugin,
   type EditorInFocus,
   headingsPlugin,
+  imagePlugin,
+  InsertImage,
   InsertAdmonition,
   InsertCodeBlock,
   InsertTable,
@@ -90,6 +92,7 @@ function richMarkdownPlugins() {
     quotePlugin(),
     linkPlugin(),
     linkDialogPlugin(),
+    imagePlugin({ disableImageResize: true }),
     tablePlugin(),
     thematicBreakPlugin(),
     directivesPlugin({ directiveDescriptors: [AdmonitionDirectiveDescriptor] }),
@@ -138,6 +141,7 @@ function richMarkdownEditorPlugins() {
                   <ListsToggle />
                   <Separator />
                   <CreateLink />
+                  <InsertImage />
                   <InsertTable />
                   <InsertThematicBreak />
                   <InsertAdmonition />

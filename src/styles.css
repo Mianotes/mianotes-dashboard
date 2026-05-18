@@ -796,6 +796,10 @@ button {
   border-bottom: 1px solid #e4e5e9;
 }
 
+.note-panel-notice {
+  margin: 18px 0 0;
+}
+
 .back-square-button {
   display: inline-grid;
   place-items: center;
@@ -1064,6 +1068,14 @@ button {
 
 .mianotes-rich-content h3 {
   font-size: 17px;
+}
+
+.mianotes-rich-content img {
+  display: block;
+  max-width: 100%;
+  height: auto;
+  margin: 1.25rem 0;
+  border-radius: 8px;
 }
 
 .mianotes-rich-content p,

@@ -1281,6 +1281,11 @@ function NotePanel({
           )}
         </div>
       </div>
+      {error && (
+        <div className="notice danger note-panel-notice" role="alert">
+          {error}
+        </div>
+      )}
       <div className="note-document-title">
         <h1>{note.title}</h1>
       </div>
@@ -1374,7 +1379,6 @@ function NotePanel({
             </div>
           </div>
         </form>
-        {error && <div className="notice danger">{error}</div>}
       </section>
       <section className="note-tags-section">
         <h3>Tags</h3>
