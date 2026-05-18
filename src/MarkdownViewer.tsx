@@ -44,7 +44,6 @@ import { StreamLanguage } from "@codemirror/language";
 import { csharp } from "@codemirror/legacy-modes/mode/clike";
 import { ruby } from "@codemirror/legacy-modes/mode/ruby";
 import { shell } from "@codemirror/legacy-modes/mode/shell";
-import "@mdxeditor/editor/style.css";
 
 const codeBlockLanguages = [
   { name: "Text", alias: ["text", "txt", "plain"] },
