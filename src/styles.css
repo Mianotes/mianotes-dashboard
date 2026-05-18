@@ -55,6 +55,10 @@ button {
   box-shadow: 0 18px 55px rgba(18, 18, 22, 0.05);
 }
 
+.shell:has(.note-panel.editing) {
+  max-width: 1960px;
+}
+
 .sidebar {
   display: flex;
   flex-direction: column;
@@ -752,7 +756,7 @@ button {
 }
 
 .note-panel.editing {
-  width: min(100%, 1380px);
+  width: min(100%, 1520px);
 }
 
 .note-document-header {
