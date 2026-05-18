@@ -422,14 +422,7 @@ export function App() {
         method: "PATCH",
         body: JSON.stringify({ is_starred: nextStarred })
       });
-      setNotes((items) => items.map((item) => item.id === note.id ? {
-        ...item,
-        ...updated,
-        user_id: updated.user_id ?? updated.user?.id ?? item.user_id,
-        project_id: updated.project_id ?? updated.project?.id ?? item.project_id,
-        user: updated.user ?? item.user,
-        project: updated.project ?? item.project
-      } : item));
+      setNotes((items) => items.map((item) => item.id === note.id ? mergeNoteRecord(item, updated) : item));
     } catch (err) {
       setNotes((items) => (
         items.map((item) => item.id === note.id ? { ...item, is_starred: note.is_starred } : item)
@@ -529,7 +522,9 @@ export function App() {
   useEffect(() => {
     if (!openedNote || openedNote.text) return;
     void apiFetch<NoteRecord>(`/api/notes/${openedNote.id}`)
-      .then((fullNote) => setNotes((items) => items.map((item) => item.id === openedNote.id ? fullNote : item)))
+      .then((fullNote) => setNotes((items) => (
+        items.map((item) => item.id === openedNote.id ? mergeNoteRecord(item, fullNote) : item)
+      )))
       .catch(() => undefined);
   }, [openedNote?.id]);
 
@@ -729,7 +724,9 @@ export function App() {
                 onClose={() => setOpenedNoteId(null)}
                 onRefresh={async () => {
                   const fullNote = await apiFetch<NoteRecord>(`/api/notes/${openedNote.id}`);
-                  setNotes((items) => items.map((item) => item.id === openedNote.id ? fullNote : item));
+                  setNotes((items) => (
+                    items.map((item) => item.id === openedNote.id ? mergeNoteRecord(item, fullNote) : item)
+                  ));
                 }}
                 onDeleted={async () => {
                   setOpenedNoteId(null);
@@ -750,7 +747,9 @@ export function App() {
                         onClick={async () => {
                           try {
                             const fullNote = note.text ? note : await apiFetch<NoteRecord>(`/api/notes/${note.id}`);
-                            setNotes((items) => items.map((item) => item.id === note.id ? fullNote : item));
+                            setNotes((items) => (
+                              items.map((item) => item.id === note.id ? mergeNoteRecord(item, fullNote) : item)
+                            ));
                             setOpenedNoteId(note.id);
                           } catch (err) {
                             setError(err instanceof Error ? err.message : "Could not open note");
@@ -1385,6 +1384,19 @@ function hydrateNotes(notes: NoteRecord[], users: UserRecord[], projects: Projec
     user: note.user ?? users.find((user) => user.id === note.user_id),
     project: note.project ?? projects.find((project) => project.id === note.project_id)
   }));
+}
+
+function mergeNoteRecord(current: NoteRecord, update: NoteRecord) {
+  return {
+    ...current,
+    ...update,
+    user_id: update.user_id ?? update.user?.id ?? current.user_id,
+    project_id: update.project_id ?? update.project?.id ?? current.project_id,
+    user: update.user ?? current.user,
+    project: update.project ?? current.project,
+    tags: update.tags ?? current.tags,
+    source_files: update.source_files ?? current.source_files
+  };
 }
 
 function noteSearchText(note: NoteRecord) {
