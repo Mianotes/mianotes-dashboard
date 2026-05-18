@@ -542,7 +542,7 @@ export function App() {
 
   return (
     <main className="screen">
-      <section className="shell" aria-label="Mianotes dashboard">
+      <section className={`shell ${openedNote ? "note-open" : ""}`} aria-label="Mianotes dashboard">
         <aside className="sidebar">
           <button className="add-note-button" onClick={openAddNote}>
             <Plus size={19} />

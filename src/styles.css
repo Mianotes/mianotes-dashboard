@@ -59,6 +59,15 @@ button {
   max-width: 1960px;
 }
 
+.shell.note-open {
+  grid-template-columns: minmax(0, 1fr);
+  max-width: 1960px;
+}
+
+.shell.note-open .sidebar {
+  display: none;
+}
+
 .sidebar {
   display: flex;
   flex-direction: column;
@@ -753,6 +762,10 @@ button {
   margin: 0 auto;
   padding: 22px 44px 52px;
   background: #ffffff;
+}
+
+.shell.note-open .note-panel {
+  width: min(100%, 1520px);
 }
 
 .note-panel.editing {
