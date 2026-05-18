@@ -347,10 +347,7 @@ export function App() {
           </button>
 
           <nav className="nav-group" aria-label="Note filters">
-            <button className={`nav-item ${selectedView === "recent" ? "active" : ""}`} onClick={() => {
-              setSelectedView("recent");
-              setSelectedProjectId("all");
-            }}>
+            <button className={`nav-item ${selectedView === "recent" ? "active" : ""}`} onClick={() => setSelectedView("recent")}>
               <History size={20} />
               <span>Recent</span>
             </button>
