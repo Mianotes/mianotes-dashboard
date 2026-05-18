@@ -121,38 +121,27 @@ function richMarkdownEditorPlugins() {
     diffSourcePlugin({ viewMode: "rich-text" }),
     toolbarPlugin({
       toolbarContents: () => (
-        <ConditionalContents
-          options={[
-            {
-              when: (editor) => editor?.editorType === "codeblock",
-              contents: () => <ChangeCodeMirrorLanguage />
-            },
-            {
-              fallback: () => (
-                <DiffSourceToggleWrapper options={["rich-text", "source"]} SourceToolbar={<SourceModeToolbar />}>
-                  <UndoRedo />
-                  <Separator />
-                  <ConditionalContents
-                    options={[
-                      { when: isAdmonition, contents: () => <ChangeAdmonitionType /> },
-                      { fallback: () => <BlockTypeSelect /> }
-                    ]}
-                  />
-                  <BoldItalicUnderlineToggles />
-                  <ListsToggle />
-                  <Separator />
-                  <CreateLink />
-                  <InsertImage />
-                  <InsertTable />
-                  <InsertThematicBreak />
-                  <InsertAdmonition />
-                  <InsertCodeBlock />
-                  <CodeToggle />
-                </DiffSourceToggleWrapper>
-              )
-            }
-          ]}
-        />
+        <DiffSourceToggleWrapper options={["rich-text", "source"]} SourceToolbar={<SourceModeToolbar />}>
+          <UndoRedo />
+          <Separator />
+          <ConditionalContents
+            options={[
+              { when: (editor) => editor?.editorType === "codeblock", contents: () => <ChangeCodeMirrorLanguage /> },
+              { when: isAdmonition, contents: () => <ChangeAdmonitionType /> },
+              { fallback: () => <BlockTypeSelect /> }
+            ]}
+          />
+          <BoldItalicUnderlineToggles />
+          <ListsToggle />
+          <Separator />
+          <CreateLink />
+          <InsertImage />
+          <InsertTable />
+          <InsertThematicBreak />
+          <InsertAdmonition />
+          <InsertCodeBlock />
+          <CodeToggle />
+        </DiffSourceToggleWrapper>
       )
     })
   ];
