@@ -1,5 +1,6 @@
 :root {
   --slate-2: #f5f5f7;
+  --slate-7: #a0a1aa;
   --slate-8: #858691;
 
   color: #18181c;
@@ -1115,7 +1116,7 @@ button {
 
 .mdxeditor .cm-gutters {
   background: transparent;
-  color: var(--slate-8);
+  color: var(--slate-7);
   font-size: 13px;
 }
 
@@ -1243,8 +1244,8 @@ button {
 
 .mia-output {
   display: grid;
-  min-height: 380px;
-  max-height: 380px;
+  min-height: 340px;
+  max-height: 340px;
   margin: 0 0 18px;
   border: 1px solid #e2e3e8;
   border-radius: 8px;
@@ -1275,7 +1276,7 @@ button {
 
 .mia-output.result {
   grid-template-rows: minmax(0, 1fr) auto;
-  max-height: 380px;
+  max-height: 340px;
 }
 
 .mia-output-actions {
@@ -1301,6 +1302,12 @@ button {
 .mia-output-actions button:hover {
   border-color: #c8cad2;
   color: #1f2026;
+}
+
+.mia-output-actions button:not(:disabled):active {
+  border-color: #17181d;
+  color: #ffffff;
+  background: #17181d;
 }
 
 .mia-output-actions button:disabled {
