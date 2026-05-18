@@ -1095,20 +1095,36 @@ button {
   color: #858895;
 }
 
-.mianotes-rich-editor [role="textbox"] {
+.mianotes-rich-editor [aria-label="Rich text"] {
+  display: none;
+}
+
+.mianotes-rich-editor > .mdxeditor-root-contenteditable > div > [role="textbox"] {
   min-height: 8rem;
   max-height: none;
   overflow: visible;
 }
 
-.mianotes-rich-editor table {
+.mianotes-rich-editor table [role="textbox"] {
+  min-height: 0;
+  max-height: none;
+  overflow: visible;
+}
+
+.mianotes-rich-editor table,
+.mianotes-rich-editor [class*="tableEditor"] {
   height: auto !important;
+  min-height: 0 !important;
 }
 
 .mianotes-rich-editor table tr,
 .mianotes-rich-editor table td,
-.mianotes-rich-editor table th {
+.mianotes-rich-editor table th,
+.mianotes-rich-editor [class*="tableEditor"] tr,
+.mianotes-rich-editor [class*="tableEditor"] td,
+.mianotes-rich-editor [class*="tableEditor"] th {
   height: auto !important;
+  min-height: 0 !important;
 }
 
 .mianotes-rich-editor table td,
