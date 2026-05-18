@@ -265,21 +265,11 @@ export function App() {
   }
 
   async function refreshNotes() {
-    const params = new URLSearchParams();
-    if (selectedUserId !== "all") params.set("user_id", selectedUserId);
-    if (selectedProjectId !== "all") params.set("project_id", selectedProjectId);
-    const queryString = params.toString();
-    const nextNotes = await apiFetch<NoteRecord[]>(`/api/notes${queryString ? `?${queryString}` : ""}`);
+    const nextNotes = await apiFetch<NoteRecord[]>("/api/notes");
     const hydrated = hydrateNotes(nextNotes, users, projects);
     setNotes(hydrated);
     setOpenedNoteId((current) => current && hydrated.some((note) => note.id === current) ? current : null);
   }
-
-  useEffect(() => {
-    if (currentUser) {
-      void refreshNotes();
-    }
-  }, [selectedUserId, selectedProjectId]);
 
   const notesByProject = useMemo(() => countBy(notes, (note) => note.project?.id ?? note.project_id ?? ""), [notes]);
   const selectedProject = selectedProjectId === "all" ? null : projects.find((project) => project.id === selectedProjectId) ?? null;
@@ -313,6 +303,10 @@ export function App() {
   const filteredNotes = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     return notes.filter((note) => {
+      const userMatch = selectedUserId === "all" || note.user_id === selectedUserId;
+      if (!userMatch) return false;
+      const projectMatch = selectedProjectId === "all" || note.project_id === selectedProjectId;
+      if (!projectMatch) return false;
       const tagMatch = selectedTag === "all" || note.tags?.some((tag) => tag.slug === selectedTag);
       if (!tagMatch) return false;
       if (!query) return true;
@@ -320,7 +314,7 @@ export function App() {
         .toLowerCase()
         .includes(query);
     });
-  }, [notes, searchQuery, selectedTag]);
+  }, [notes, searchQuery, selectedProjectId, selectedTag, selectedUserId]);
 
   const openedNote = notes.find((note) => note.id === openedNoteId) ?? null;
 
@@ -412,7 +406,7 @@ export function App() {
           {!openedNote && (
             <header className="toolbar">
               <div className="breadcrumb">
-                <Home size={14} />
+                <Home className="breadcrumb-home" size={14} />
                 <span className="breadcrumb-root">
                   {selectedView === "starred" ? "Starred" : "Recent"}
                 </span>
@@ -797,7 +791,7 @@ function NotePanel({
           <ChevronLeft size={16} />
         </button>
         <div className="note-document-breadcrumb">
-          <Home size={14} />
+          <Home className="breadcrumb-home" size={14} />
           <span className="breadcrumb-root">{viewLabel}</span>
           <ChevronRight size={14} />
           <span>{note.project?.name ?? "Project"}</span>

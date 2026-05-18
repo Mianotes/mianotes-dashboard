@@ -245,6 +245,11 @@ button {
   font-size: 13px;
 }
 
+.breadcrumb-home {
+  margin-right: 4px;
+  flex-shrink: 0;
+}
+
 .breadcrumb span {
   display: inline-flex;
   align-items: center;
