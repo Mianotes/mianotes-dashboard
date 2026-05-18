@@ -438,9 +438,6 @@ export function App() {
                   </select>
                   <ChevronDown className="select-button-chevron" size={12} />
                 </label>
-                <span className="result-count">{filteredNotes.length} notes</span>
-                <button className="icon-button" aria-label="Previous page"><ChevronLeft size={18} /></button>
-                <button className="icon-button" aria-label="Next page"><ChevronRight size={18} /></button>
               </div>
             </header>
           )}
@@ -463,27 +460,36 @@ export function App() {
                 }}
               />
             ) : (
-              <section className="note-list" aria-label="Notes">
-                {filteredNotes.length === 0 ? (
-                  <EmptyState onAdd={() => setIsAddOpen(true)} />
-                ) : (
-                  filteredNotes.map((note) => (
-                    <NoteRow
-                      key={note.id}
-                      note={note}
-                      onClick={async () => {
-                        try {
-                          const fullNote = note.text ? note : await apiFetch<NoteRecord>(`/api/notes/${note.id}`);
-                          setNotes((items) => items.map((item) => item.id === note.id ? fullNote : item));
-                          setOpenedNoteId(note.id);
-                        } catch (err) {
-                          setError(err instanceof Error ? err.message : "Could not open note");
-                        }
-                      }}
-                    />
-                  ))
+              <>
+                <section className="note-list" aria-label="Notes">
+                  {filteredNotes.length === 0 ? (
+                    <EmptyState onAdd={() => setIsAddOpen(true)} />
+                  ) : (
+                    filteredNotes.map((note) => (
+                      <NoteRow
+                        key={note.id}
+                        note={note}
+                        onClick={async () => {
+                          try {
+                            const fullNote = note.text ? note : await apiFetch<NoteRecord>(`/api/notes/${note.id}`);
+                            setNotes((items) => items.map((item) => item.id === note.id ? fullNote : item));
+                            setOpenedNoteId(note.id);
+                          } catch (err) {
+                            setError(err instanceof Error ? err.message : "Could not open note");
+                          }
+                        }}
+                      />
+                    ))
+                  )}
+                </section>
+                {filteredNotes.length > 0 && (
+                  <footer className="list-pagination" aria-label="Note list pagination">
+                    <span className="result-count">{filteredNotes.length} notes</span>
+                    <button className="icon-button" aria-label="Previous page"><ChevronLeft size={18} /></button>
+                    <button className="icon-button" aria-label="Next page"><ChevronRight size={18} /></button>
+                  </footer>
                 )}
-              </section>
+              </>
             )}
           </div>
         </section>

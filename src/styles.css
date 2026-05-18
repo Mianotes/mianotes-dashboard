@@ -169,9 +169,10 @@ button {
 .sidebar-links {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 7px;
   margin-top: auto;
-  padding: 18px 26px 24px;
+  padding: 18px 18px 24px;
   border-top: 1px solid #e3e4e8;
   color: #797a83;
   font-size: 12px;
@@ -423,6 +424,17 @@ button {
 
 .note-list {
   min-height: 0;
+}
+
+.list-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  min-height: 70px;
+  padding: 0 26px;
+  border-top: 1px solid #e1e2e6;
+  background: #ffffff;
 }
 
 .note-row {
