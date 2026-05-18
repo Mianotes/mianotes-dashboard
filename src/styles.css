@@ -198,8 +198,13 @@ button {
   color: #747581;
 }
 
+.storage-meter span {
+  font-weight: 750;
+}
+
 .storage-meter strong {
-  color: #2f3037;
+  color: #747581;
+  font-weight: 500;
 }
 
 .meter-track {

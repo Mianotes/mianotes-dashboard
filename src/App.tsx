@@ -383,7 +383,7 @@ export function App() {
 
           <div className="storage-meter">
             <div>
-              <span>Local storage</span>
+              <span>Storage</span>
               <strong>{storageCapacity ? `${formatGigabytes(storageCapacity.free_bytes)} available` : "Checking..."}</strong>
             </div>
             <div className="meter-track">
