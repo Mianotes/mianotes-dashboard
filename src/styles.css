@@ -234,8 +234,8 @@ button {
 }
 
 .breadcrumb-mark {
-  width: 14px;
-  height: 14px;
+  width: 18px;
+  height: 18px;
 }
 
 .breadcrumb span {
@@ -1049,8 +1049,8 @@ button {
 
 .mia-output {
   display: grid;
-  min-height: 112px;
-  max-height: 280px;
+  min-height: 380px;
+  max-height: 380px;
   margin: 0 0 18px;
   border: 1px solid #e2e3e8;
   border-radius: 8px;
@@ -1081,7 +1081,7 @@ button {
 
 .mia-output.result {
   grid-template-rows: minmax(0, 1fr) auto;
-  height: 280px;
+  max-height: 380px;
 }
 
 .mia-output-actions {
@@ -1115,15 +1115,15 @@ button {
 }
 
 .mia-loader {
-  display: inline-flex;
+  display: grid;
+  place-items: center;
   align-items: center;
-  gap: 12px;
   color: #6d6f79;
 }
 
 .mia-loader img {
-  width: 116px;
-  height: auto;
+  width: 46px;
+  height: 46px;
   animation: mia-logo-pulse 1.2s ease-in-out infinite;
 }
 

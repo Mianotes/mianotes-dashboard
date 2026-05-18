@@ -1226,8 +1226,7 @@ function NotePanel({
           <div className={`mia-output ${isLoading ? "loading" : "result"}`} aria-live="polite">
             {isLoading ? (
               <div className="mia-loader">
-                <img src={logoUrl} alt="" />
-                <Loader2 className="spin" size={18} />
+                <img src={logoMarkUrl} alt="" />
               </div>
             ) : (
               <>
