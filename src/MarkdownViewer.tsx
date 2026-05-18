@@ -74,6 +74,15 @@ function isAdmonition(editorInFocus: EditorInFocus | null) {
   return ["note", "tip", "danger", "info", "caution"].includes(directiveName ?? "");
 }
 
+function SourceModeToolbar() {
+  return (
+    <span className="source-mode-toolbar">
+      <span>Markdown source</span>
+      <span className="source-mode-hint">Use the toggle to return to rich text.</span>
+    </span>
+  );
+}
+
 function richMarkdownPlugins() {
   return [
     headingsPlugin(),
@@ -116,7 +125,7 @@ function richMarkdownEditorPlugins() {
             },
             {
               fallback: () => (
-                <DiffSourceToggleWrapper options={["rich-text", "source"]}>
+                <DiffSourceToggleWrapper options={["rich-text", "source"]} SourceToolbar={<SourceModeToolbar />}>
                   <UndoRedo />
                   <Separator />
                   <ConditionalContents

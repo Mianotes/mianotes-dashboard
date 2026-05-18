@@ -1078,6 +1078,23 @@ button {
   background: #ffffff;
 }
 
+.source-mode-toolbar {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  color: #6f7280;
+  font-size: 13px;
+}
+
+.source-mode-toolbar > span:first-child {
+  color: #30313a;
+  font-weight: 600;
+}
+
+.source-mode-hint {
+  color: #858895;
+}
+
 .mianotes-rich-editor [role="textbox"] {
   min-height: 8rem;
   max-height: none;
@@ -1523,6 +1540,10 @@ textarea:focus {
 }
 
 @media (max-width: 780px) {
+  .source-mode-hint {
+    display: none;
+  }
+
   .screen {
     padding: 18px 0 0;
     background: #eaf0f8;
