@@ -1078,6 +1078,22 @@ button {
   border-radius: 8px;
 }
 
+.mianotes-rich-content [class*="codeMirrorWrapper"],
+.mianotes-rich-content [class*="codeMirrorWrapper"] .cm-editor,
+.mianotes-rich-editor [class*="codeMirrorWrapper"],
+.mianotes-rich-editor [class*="codeMirrorWrapper"] .cm-editor {
+  font-size: 14px;
+}
+
+.mianotes-rich-content .cm-activeLineGutter,
+.mianotes-rich-editor .cm-activeLineGutter {
+  background-color: transparent !important;
+}
+
+.mianotes-rich-viewer [class*="codeMirrorToolbar"] {
+  display: none;
+}
+
 .mianotes-rich-content p,
 .mianotes-rich-content ul,
 .mianotes-rich-content ol,

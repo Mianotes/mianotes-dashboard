@@ -109,6 +109,7 @@ export default function MarkdownViewer({ id, updatedAt, markdown }: { id: string
       markdown={markdown}
       readOnly
       plugins={richMarkdownPlugins()}
+      className="mianotes-rich-viewer"
       contentEditableClassName="mianotes-rich-content"
     />
   );
