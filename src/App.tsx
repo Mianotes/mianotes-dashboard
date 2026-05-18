@@ -749,6 +749,7 @@ export function App() {
               <NotePanel
                 note={openedNote}
                 projectLabel={selectedProject?.name ?? "All projects"}
+                currentUser={currentUser}
                 onClose={() => setOpenedNoteId(null)}
                 onRefresh={async () => {
                   const fullNote = await apiFetch<NoteRecord>(`/api/notes/${openedNote.id}`);
@@ -1010,12 +1011,14 @@ function NoteRow({
 function NotePanel({
   note,
   projectLabel,
+  currentUser,
   onClose,
   onRefresh,
   onDeleted
 }: {
   note: NoteRecord;
   projectLabel: string;
+  currentUser: UserRecord;
   onClose: () => void;
   onRefresh: () => Promise<void>;
   onDeleted: () => Promise<void>;
@@ -1025,7 +1028,9 @@ function NotePanel({
   const [isEditing, setIsEditing] = useState(false);
   const [draftText, setDraftText] = useState(noteBodyMarkdown(note.text ?? ""));
   const [isActionsOpen, setIsActionsOpen] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [noteError, setNoteError] = useState<string | null>(null);
+  const [miaError, setMiaError] = useState<string | null>(null);
+  const [tagError, setTagError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -1034,7 +1039,9 @@ function NotePanel({
 
   useEffect(() => {
     setMiaResponse(null);
-    setError(null);
+    setNoteError(null);
+    setMiaError(null);
+    setTagError(null);
     setCommentBody("");
     setIsEditing(false);
     setDraftText(noteBodyMarkdown(note.text ?? ""));
@@ -1075,9 +1082,11 @@ function NotePanel({
     };
   }, [isActionsOpen]);
 
+  const canChangeNote = currentUser.is_admin || note.user_id === currentUser.id || note.user?.id === currentUser.id;
+
   async function saveMarkdown() {
     setIsSaving(true);
-    setError(null);
+    setNoteError(null);
     try {
       await apiFetch<NoteRecord>(`/api/notes/${note.id}`, {
         method: "PATCH",
@@ -1086,7 +1095,7 @@ function NotePanel({
       setIsEditing(false);
       await onRefresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not save note");
+      setNoteError(err instanceof Error ? err.message : "Could not save note");
     } finally {
       setIsSaving(false);
     }
@@ -1096,7 +1105,7 @@ function NotePanel({
     if (!note) return;
     const trimmedInstructions = instructions.trim();
     if (!trimmedInstructions) {
-      setError("Please provide instructions for Mia.");
+      setMiaError("Please provide instructions for Mia.");
       return;
     }
     const body = trimmedInstructions.toLowerCase().startsWith("@mia")
@@ -1104,7 +1113,7 @@ function NotePanel({
       : `@mia ${trimmedInstructions}`;
     setIsLoading(true);
     setMiaResponse(null);
-    setError(null);
+    setMiaError(null);
     try {
       const result = await apiFetch<MiaPromptRecord>(`/api/notes/${note.id}/comments`, {
         method: "POST",
@@ -1114,7 +1123,7 @@ function NotePanel({
       if (clearInput) setCommentBody("");
       await onRefresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not send comment");
+      setMiaError(err instanceof Error ? err.message : "Could not send comment");
     } finally {
       setIsLoading(false);
     }
@@ -1132,6 +1141,10 @@ function NotePanel({
 
   async function applyMiaResponse(mode: "append" | "replace") {
     if (!miaResponse) return;
+    if (!canChangeNote) {
+      setMiaError("Only the note owner or an admin can update this note.");
+      return;
+    }
     if (mode === "replace") {
       const confirmed = window.confirm("Replace this note with Mia's response?");
       if (!confirmed) return;
@@ -1142,7 +1155,7 @@ function NotePanel({
     const nextText = mode === "append" && currentText ? `${currentText}\n\n${miaText}` : miaText;
 
     setIsApplyingMia(true);
-    setError(null);
+    setMiaError(null);
     try {
       await apiFetch<NoteRecord>(`/api/notes/${note.id}`, {
         method: "PATCH",
@@ -1151,7 +1164,7 @@ function NotePanel({
       setDraftText(nextText);
       await onRefresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not update note");
+      setMiaError(err instanceof Error ? err.message : "Could not update note");
     } finally {
       setIsApplyingMia(false);
     }
@@ -1167,12 +1180,12 @@ function NotePanel({
     const confirmed = window.confirm(`Delete "${note.title}"? This cannot be undone.`);
     if (!confirmed) return;
     setIsDeleting(true);
-    setError(null);
+    setNoteError(null);
     try {
       await apiFetch(`/api/notes/${note.id}`, { method: "DELETE" });
       await onDeleted();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not delete note");
+      setNoteError(err instanceof Error ? err.message : "Could not delete note");
     } finally {
       setIsDeleting(false);
     }
@@ -1187,7 +1200,7 @@ function NotePanel({
     if (!normalizedTagName) return;
 
     const nextTags = Array.from(new Set([...existingTags.map((tag) => tag.name), normalizedTagName])).slice(0, 5);
-    setError(null);
+    setTagError(null);
     try {
       await apiFetch<NoteRecord>(`/api/notes/${note.id}/tags`, {
         method: "PUT",
@@ -1195,7 +1208,7 @@ function NotePanel({
       });
       await onRefresh();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not add tag");
+      setTagError(err instanceof Error ? err.message : "Could not add tag");
     }
   }
 
@@ -1281,9 +1294,9 @@ function NotePanel({
           )}
         </div>
       </div>
-      {error && (
+      {noteError && (
         <div className="notice danger note-panel-notice" role="alert">
-          {error}
+          {noteError}
         </div>
       )}
       <div className="note-document-title">
@@ -1353,8 +1366,8 @@ function NotePanel({
             value={commentBody}
             onChange={(event) => {
               setCommentBody(event.target.value);
-              if (error === "Please provide instructions for Mia.") {
-                setError(null);
+              if (miaError === "Please provide instructions for Mia.") {
+                setMiaError(null);
               }
             }}
             placeholder="Ask Mia anything about this note."
@@ -1379,6 +1392,11 @@ function NotePanel({
             </div>
           </div>
         </form>
+        {miaError && (
+          <div className="notice danger section-notice" role="alert">
+            {miaError}
+          </div>
+        )}
       </section>
       <section className="note-tags-section">
         <h3>Tags</h3>
@@ -1392,6 +1410,11 @@ function NotePanel({
             </button>
           )}
         </div>
+        {tagError && (
+          <div className="notice danger section-notice" role="alert">
+            {tagError}
+          </div>
+        )}
       </section>
     </section>
   );
