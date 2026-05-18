@@ -46,7 +46,7 @@ button {
 .shell {
   display: grid;
   grid-template-columns: minmax(240px, 270px) minmax(0, 1fr);
-  max-width: 1720px;
+  max-width: 1280px;
   margin: 0 auto;
   overflow: visible;
   border: 1px solid #dedfe5;
@@ -56,7 +56,7 @@ button {
 }
 
 .shell:has(.note-panel.editing) {
-  max-width: 1960px;
+  max-width: 1280px;
 }
 
 .shell.note-open {
@@ -824,6 +824,19 @@ button {
   text-overflow: ellipsis;
 }
 
+.note-document-title {
+  padding: 30px 0 22px;
+}
+
+.note-document-title h1 {
+  max-width: 980px;
+  margin: 0;
+  color: #1f2026;
+  font-size: 20px;
+  line-height: 1.3;
+  letter-spacing: 0;
+}
+
 .panel-actions {
   display: inline-flex;
   align-items: center;
@@ -908,10 +921,10 @@ button {
 
 .note-document-meta {
   display: grid;
-  grid-template-columns: 34px minmax(0, 1fr) auto;
+  grid-template-columns: 34px minmax(0, 1fr);
   align-items: center;
   column-gap: 14px;
-  padding: 26px 0 24px;
+  padding: 0 0 26px;
   border-bottom: 1px solid #e4e5e9;
 }
 
@@ -948,7 +961,8 @@ button {
 .note-document-tags {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: flex-start;
+  flex-wrap: wrap;
   gap: 8px;
   min-width: 0;
 }
@@ -967,6 +981,22 @@ button {
   font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.tag-add-button {
+  display: inline-grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid #e2e3e8;
+  border-radius: 999px;
+  color: #676976;
+  background: #ffffff;
+}
+
+.tag-add-button:hover {
+  border-color: #c9cbd3;
+  color: #202128;
 }
 
 .markdown-preview {
@@ -1048,6 +1078,27 @@ button {
   overflow: visible;
 }
 
+.mianotes-rich-editor table {
+  height: auto !important;
+}
+
+.mianotes-rich-editor table tr,
+.mianotes-rich-editor table td,
+.mianotes-rich-editor table th {
+  height: auto !important;
+}
+
+.mianotes-rich-editor table td,
+.mianotes-rich-editor table th {
+  vertical-align: top;
+}
+
+.mianotes-rich-editor table td p,
+.mianotes-rich-editor table th p {
+  margin: 0;
+  line-height: 1.35;
+}
+
 .editor-loading {
   color: #777985;
   font-size: 13px;
@@ -1061,6 +1112,18 @@ button {
 
 .comments-box h3 {
   margin: 20px 0 12px;
+  font-size: 1.08rem;
+}
+
+.note-tags-section {
+  margin: 34px 0 0;
+  padding: 32px 0 0;
+  border-top: 1px solid #e4e5e9;
+}
+
+.note-tags-section h3 {
+  margin: 0 0 18px;
+  color: #202128;
   font-size: 1.08rem;
 }
 
@@ -1455,14 +1518,22 @@ textarea:focus {
 
 @media (max-width: 780px) {
   .screen {
-    padding: 0;
+    padding: 18px 0 0;
+    background: #eaf0f8;
   }
 
   .shell {
-    min-height: 100vh;
+    min-height: auto;
     border: 0;
     border-radius: 0;
     grid-template-columns: 1fr;
+  }
+
+  .shell.note-open {
+    width: min(100%, 648px);
+    margin: 0 auto;
+    border-left: 1px solid #dedfe5;
+    border-right: 1px solid #dedfe5;
   }
 
   .sidebar {
@@ -1491,6 +1562,70 @@ textarea:focus {
     flex-direction: column;
   }
 
+  .note-panel {
+    width: 100%;
+    padding: 32px clamp(22px, 10vw, 60px) 52px;
+  }
+
+  .note-document-header {
+    grid-template-columns: 34px minmax(0, 1fr) auto;
+    gap: 18px;
+    min-height: 52px;
+    padding-bottom: 22px;
+  }
+
+  .note-document-breadcrumb {
+    font-size: 14px;
+  }
+
+  .note-panel:not(.editing) .secondary-action-button {
+    display: none;
+  }
+
+  .note-document-title {
+    padding: 32px 0 28px;
+  }
+
+  .note-document-title h1 {
+    font-size: 19px;
+    line-height: 1.2;
+  }
+
+  .note-document-meta {
+    padding-bottom: 34px;
+  }
+
+  .note-author-avatar {
+    width: 36px;
+    height: 36px;
+  }
+
+  .markdown-preview {
+    margin-top: 34px;
+  }
+
+  .mianotes-rich-content {
+    font-size: 16px;
+    line-height: 1.58;
+  }
+
+  .mianotes-rich-content h1 {
+    font-size: 28px;
+  }
+
+  .mianotes-rich-content h2 {
+    font-size: 21px;
+  }
+
+  .comments-box h3,
+  .note-tags-section h3 {
+    font-size: 18px;
+  }
+
+  .comment-form textarea {
+    min-height: 92px;
+  }
+
   .mia-action-row,
   .mia-quick-actions {
     display: grid;
@@ -1498,9 +1633,22 @@ textarea:focus {
     width: 100%;
   }
 
+  .mia-action-row {
+    gap: 14px;
+  }
+
+  .mia-quick-actions {
+    gap: 12px;
+  }
+
   .ask-mia-button,
   .mia-quick-action {
     width: 100%;
+  }
+
+  .note-tags-section {
+    margin-top: 38px;
+    padding-top: 34px;
   }
 
   .row-spacer {

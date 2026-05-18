@@ -9,6 +9,8 @@ import {
   codeMirrorPlugin,
   ConditionalContents,
   CreateLink,
+  diffSourcePlugin,
+  DiffSourceToggleWrapper,
   directivesPlugin,
   type EditorInFocus,
   headingsPlugin,
@@ -103,6 +105,7 @@ export default function MarkdownViewer({ id, updatedAt, markdown }: { id: string
 function richMarkdownEditorPlugins() {
   return [
     ...richMarkdownPlugins(),
+    diffSourcePlugin({ viewMode: "rich-text" }),
     toolbarPlugin({
       toolbarContents: () => (
         <ConditionalContents
@@ -113,7 +116,7 @@ function richMarkdownEditorPlugins() {
             },
             {
               fallback: () => (
-                <>
+                <DiffSourceToggleWrapper options={["rich-text", "source"]}>
                   <UndoRedo />
                   <Separator />
                   <ConditionalContents
@@ -131,7 +134,7 @@ function richMarkdownEditorPlugins() {
                   <InsertAdmonition />
                   <InsertCodeBlock />
                   <CodeToggle />
-                </>
+                </DiffSourceToggleWrapper>
               )
             }
           ]}

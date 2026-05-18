@@ -1106,10 +1106,32 @@ function NotePanel({
     }
   }
 
+  async function addTag() {
+    const existingTags = note.tags ?? [];
+    if (existingTags.length >= 5) return;
+
+    const tagName = window.prompt("Add tag");
+    const normalizedTagName = tagName?.trim();
+    if (!normalizedTagName) return;
+
+    const nextTags = Array.from(new Set([...existingTags.map((tag) => tag.name), normalizedTagName])).slice(0, 5);
+    setError(null);
+    try {
+      await apiFetch<NoteRecord>(`/api/notes/${note.id}/tags`, {
+        method: "PUT",
+        body: JSON.stringify({ tags: nextTags })
+      });
+      await onRefresh();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not add tag");
+    }
+  }
+
   const noteDate = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(new Date(note.created_at));
   const authorName = note.user?.name ?? "Unknown";
   const hasLoadedNoteText = typeof note.text === "string";
   const noteMarkdownBody = noteBodyMarkdown(note.text ?? "");
+  const noteTags = note.tags ?? [];
 
   return (
     <section className={`note-panel ${isEditing ? "editing" : ""}`}>
@@ -1120,8 +1142,6 @@ function NotePanel({
         <div className="note-document-breadcrumb">
           <img className="breadcrumb-mark" src={logoMarkUrl} alt="" />
           <span className="breadcrumb-root">{projectLabel}</span>
-          <ChevronRight size={14} />
-          <strong>{note.title}</strong>
         </div>
         <div className="panel-actions">
           {isEditing ? (
@@ -1189,16 +1209,14 @@ function NotePanel({
           )}
         </div>
       </div>
+      <div className="note-document-title">
+        <h1>{note.title}</h1>
+      </div>
       <div className="note-document-meta">
         <UserAvatar user={note.user} name={authorName} className="note-author-avatar" />
         <div className="note-author-details">
           <strong>{authorName}</strong>
           <span>{noteDate}</span>
-        </div>
-        <div className="note-document-tags">
-          {(note.tags ?? []).map((tag) => (
-            <span className="tag-pill" key={tag.id}>{tag.name}</span>
-          ))}
         </div>
       </div>
       {isEditing ? (
@@ -1285,6 +1303,19 @@ function NotePanel({
           </div>
         </form>
         {error && <div className="notice danger">{error}</div>}
+      </section>
+      <section className="note-tags-section">
+        <h3>Tags</h3>
+        <div className="note-document-tags">
+          {noteTags.map((tag) => (
+            <span className="tag-pill" key={tag.id}>{tag.name}</span>
+          ))}
+          {noteTags.length < 5 && (
+            <button className="tag-add-button" type="button" aria-label="Add tag" onClick={() => void addTag()}>
+              <Plus size={14} />
+            </button>
+          )}
+        </div>
       </section>
     </section>
   );
