@@ -884,6 +884,13 @@ button {
   border-color: #c8c9d0;
 }
 
+.secondary-action-button:disabled {
+  cursor: not-allowed;
+  color: #a7a9b2;
+  border-color: #ececf0;
+  background: #ffffff;
+}
+
 .note-actions-menu {
   position: relative;
 }
@@ -926,11 +933,21 @@ button {
   background: #f3f3f5;
 }
 
+.note-actions-popover button:disabled {
+  cursor: not-allowed;
+  color: #aaacb5;
+  background: transparent;
+}
+
 .note-actions-popover .danger-action {
   color: #d42b32;
 }
 
-.note-actions-popover .danger-action:hover {
+.note-actions-popover .danger-action:disabled {
+  color: #d99ba0;
+}
+
+.note-actions-popover .danger-action:not(:disabled):hover {
   background: #fff0f1;
 }
 
@@ -1018,6 +1035,13 @@ button {
 .tag-add-button:hover {
   border-color: #c9cbd3;
   color: #202128;
+}
+
+.tag-add-button:disabled {
+  cursor: not-allowed;
+  color: #bbbcc4;
+  border-color: #ececf0;
+  background: #ffffff;
 }
 
 .markdown-preview {

@@ -1082,9 +1082,15 @@ function NotePanel({
     };
   }, [isActionsOpen]);
 
+  const authorName = note.user?.name ?? "Unknown";
   const canChangeNote = currentUser.is_admin || note.user_id === currentUser.id || note.user?.id === currentUser.id;
+  const cannotChangeNoteMessage = `Only ${authorName} or an admin can change this note.`;
 
   async function saveMarkdown() {
+    if (!canChangeNote) {
+      setNoteError(cannotChangeNoteMessage);
+      return;
+    }
     setIsSaving(true);
     setNoteError(null);
     try {
@@ -1142,7 +1148,7 @@ function NotePanel({
   async function applyMiaResponse(mode: "append" | "replace") {
     if (!miaResponse) return;
     if (!canChangeNote) {
-      setMiaError("Only the note owner or an admin can update this note.");
+      setMiaError(cannotChangeNoteMessage);
       return;
     }
     if (mode === "replace") {
@@ -1177,6 +1183,10 @@ function NotePanel({
   }
 
   async function deleteNote() {
+    if (!canChangeNote) {
+      setNoteError(cannotChangeNoteMessage);
+      return;
+    }
     const confirmed = window.confirm(`Delete "${note.title}"? This cannot be undone.`);
     if (!confirmed) return;
     setIsDeleting(true);
@@ -1192,6 +1202,10 @@ function NotePanel({
   }
 
   async function addTag() {
+    if (!canChangeNote) {
+      setTagError(cannotChangeNoteMessage);
+      return;
+    }
     const existingTags = note.tags ?? [];
     if (existingTags.length >= 5) return;
 
@@ -1213,7 +1227,6 @@ function NotePanel({
   }
 
   const noteDate = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(new Date(note.created_at));
-  const authorName = note.user?.name ?? "Unknown";
   const hasLoadedNoteText = typeof note.text === "string";
   const noteMarkdownBody = noteBodyMarkdown(note.text ?? "");
   const noteTags = note.tags ?? [];
@@ -1248,7 +1261,13 @@ function NotePanel({
             </>
           ) : (
             <>
-              <button className="secondary-action-button" type="button" onClick={() => setIsEditing(true)}>
+              <button
+                className="secondary-action-button"
+                type="button"
+                disabled={!canChangeNote}
+                title={!canChangeNote ? cannotChangeNoteMessage : undefined}
+                onClick={() => setIsEditing(true)}
+              >
                 <Edit3 size={16} />
                 Edit
               </button>
@@ -1263,10 +1282,16 @@ function NotePanel({
                 </button>
                 {isActionsOpen && (
                   <div className="note-actions-popover" role="menu">
-                    <button type="button" role="menuitem" onClick={() => {
-                      setIsEditing(true);
-                      setIsActionsOpen(false);
-                    }}>
+                    <button
+                      type="button"
+                      role="menuitem"
+                      disabled={!canChangeNote}
+                      title={!canChangeNote ? cannotChangeNoteMessage : undefined}
+                      onClick={() => {
+                        setIsEditing(true);
+                        setIsActionsOpen(false);
+                      }}
+                    >
                       <Edit3 size={15} />
                       Edit
                     </button>
@@ -1283,7 +1308,14 @@ function NotePanel({
                       <span>No source file</span>
                     )}
                     <div className="note-actions-divider" />
-                    <button className="danger-action" type="button" role="menuitem" disabled={isDeleting} onClick={() => void deleteNote()}>
+                    <button
+                      className="danger-action"
+                      type="button"
+                      role="menuitem"
+                      disabled={isDeleting || !canChangeNote}
+                      title={!canChangeNote ? cannotChangeNoteMessage : undefined}
+                      onClick={() => void deleteNote()}
+                    >
                       {isDeleting ? <Loader2 size={15} className="spin" /> : <Trash2 size={15} />}
                       Delete
                     </button>
@@ -1350,10 +1382,20 @@ function NotePanel({
                 </div>
                 <div className="mia-output-actions">
                   <button type="button" onClick={() => void copyMiaResponse()}>Copy</button>
-                  <button type="button" disabled={isApplyingMia} onClick={() => void applyMiaResponse("append")}>
+                  <button
+                    type="button"
+                    disabled={isApplyingMia || !canChangeNote}
+                    title={!canChangeNote ? cannotChangeNoteMessage : undefined}
+                    onClick={() => void applyMiaResponse("append")}
+                  >
                     {isApplyingMia ? "Saving..." : "Append"}
                   </button>
-                  <button type="button" disabled={isApplyingMia} onClick={() => void applyMiaResponse("replace")}>
+                  <button
+                    type="button"
+                    disabled={isApplyingMia || !canChangeNote}
+                    title={!canChangeNote ? cannotChangeNoteMessage : undefined}
+                    onClick={() => void applyMiaResponse("replace")}
+                  >
                     Replace
                   </button>
                 </div>
@@ -1405,7 +1447,14 @@ function NotePanel({
             <span className="tag-pill" key={tag.id}>{tag.name}</span>
           ))}
           {noteTags.length < 5 && (
-            <button className="tag-add-button" type="button" aria-label="Add tag" onClick={() => void addTag()}>
+            <button
+              className="tag-add-button"
+              type="button"
+              aria-label="Add tag"
+              disabled={!canChangeNote}
+              title={!canChangeNote ? cannotChangeNoteMessage : undefined}
+              onClick={() => void addTag()}
+            >
               <Plus size={14} />
             </button>
           )}
