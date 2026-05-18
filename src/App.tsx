@@ -29,7 +29,7 @@ import {
   User,
   X
 } from "lucide-react";
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
 import logoUrl from "./assets/logo_small.png";
 
@@ -258,10 +258,38 @@ export function App() {
   const [error, setError] = useState<string | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
+  const accountMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     void bootstrap();
   }, []);
+
+  useEffect(() => {
+    if (!isAccountOpen) return;
+
+    function closeAccountMenu(event: PointerEvent) {
+      if (
+        event.target instanceof Node
+        && accountMenuRef.current
+        && !accountMenuRef.current.contains(event.target)
+      ) {
+        setIsAccountOpen(false);
+      }
+    }
+
+    function closeAccountMenuOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsAccountOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", closeAccountMenu);
+    document.addEventListener("keydown", closeAccountMenuOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeAccountMenu);
+      document.removeEventListener("keydown", closeAccountMenuOnEscape);
+    };
+  }, [isAccountOpen]);
 
   async function bootstrap() {
     setIsLoading(true);
@@ -394,10 +422,7 @@ export function App() {
               <button
                 key={project.id}
                 className={`nav-item ${selectedProjectId === project.id ? "active-soft" : ""}`}
-                onClick={() => {
-                  setSelectedView("recent");
-                  setSelectedProjectId(project.id);
-                }}
+                onClick={() => setSelectedProjectId(project.id)}
               >
                 <Folder size={19} />
                 <span>{project.name}</span>
@@ -485,7 +510,7 @@ export function App() {
                   </select>
                   <ChevronDown className="select-button-chevron" size={12} />
                 </label>
-                <div className="account-menu">
+                <div className="account-menu" ref={accountMenuRef}>
                   <button
                     className="account-avatar-button"
                     type="button"
