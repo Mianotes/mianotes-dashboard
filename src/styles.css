@@ -322,8 +322,7 @@ button {
   padding-top: 6px;
 }
 
-.tag-suggestions button,
-.active-tag-filter {
+.tag-suggestions button {
   display: inline-flex;
   align-items: center;
   gap: 7px;
@@ -336,8 +335,7 @@ button {
   font-size: 12px;
 }
 
-.tag-suggestions button:hover,
-.active-tag-filter:hover {
+.tag-suggestions button:hover {
   color: #202128;
   border-color: #c8c9d0;
   background: #f7f7f8;

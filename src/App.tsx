@@ -427,13 +427,6 @@ export function App() {
                     </div>
                   )}
                 </div>
-                {selectedTagRecord && (
-                  <button className="active-tag-filter" type="button" onClick={() => setSelectedTag("all")}>
-                    <Tags size={14} />
-                    {selectedTagRecord.name}
-                    <X size={14} />
-                  </button>
-                )}
                 <label className="select-button user-select-button">
                   <User className="select-button-icon" size={16} />
                   <span className="select-button-label">{selectedUser?.name ?? "Users"}</span>
