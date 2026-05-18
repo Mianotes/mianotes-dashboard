@@ -675,9 +675,9 @@ export function App() {
                 </div>
                 <label className="select-button user-select-button">
                   <User className="select-button-icon" size={16} />
-                  <span className="select-button-label">{selectedUser?.name ?? "Users"}</span>
+                  <span className="select-button-label">{selectedUser?.name ?? "All users"}</span>
                   <select value={selectedUserId} onChange={(event) => selectUser(event.target.value)}>
-                    <option value="all">Users</option>
+                    <option value="all">All users</option>
                     {users.map((person) => (
                       <option value={person.id} key={person.id}>{person.name}</option>
                     ))}
