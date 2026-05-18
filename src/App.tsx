@@ -592,11 +592,11 @@ function AuthScreen({ onSignedIn }: { onSignedIn: () => void }) {
         <div className="auth-brand">
           <img className="brand-logo" src={logoUrl} alt="Mianotes" />
         </div>
-        <h1>{step === "email" ? "Open your local knowledge base" : step === "join" ? "Create your profile" : "Welcome back"}</h1>
+        <h1>Sign in</h1>
         <p>
           {isFirstUser
             ? "This is a new Mianotes instance. The password you choose will be used as the master password by all users who sign in to this instance."
-            : "Sign in to browse notes, projects, sources, comments, and Mia prompts."}
+            : "Sign in to browse notes, projects, sources, comments, and talk to Mia."}
         </p>
         {step === "email" ? (
           <form onSubmit={checkEmail} className="form-stack">
