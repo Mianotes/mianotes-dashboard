@@ -1,8 +1,19 @@
 import {
+  AdmonitionDirectiveDescriptor,
   BlockTypeSelect,
   BoldItalicUnderlineToggles,
+  ChangeAdmonitionType,
+  ChangeCodeMirrorLanguage,
+  CodeToggle,
+  codeBlockPlugin,
+  codeMirrorPlugin,
+  ConditionalContents,
   CreateLink,
+  directivesPlugin,
+  type EditorInFocus,
   headingsPlugin,
+  InsertAdmonition,
+  InsertCodeBlock,
   InsertTable,
   InsertThematicBreak,
   linkDialogPlugin,
@@ -18,7 +29,40 @@ import {
   toolbarPlugin,
   UndoRedo
 } from "@mdxeditor/editor";
+import { cpp } from "@codemirror/lang-cpp";
+import { css } from "@codemirror/lang-css";
+import { java } from "@codemirror/lang-java";
+import { javascript } from "@codemirror/lang-javascript";
+import { php } from "@codemirror/lang-php";
+import { python } from "@codemirror/lang-python";
+import { sql } from "@codemirror/lang-sql";
+import { StreamLanguage } from "@codemirror/language";
+import { csharp } from "@codemirror/legacy-modes/mode/clike";
+import { ruby } from "@codemirror/legacy-modes/mode/ruby";
+import { shell } from "@codemirror/legacy-modes/mode/shell";
 import "@mdxeditor/editor/style.css";
+
+const codeBlockLanguages = [
+  { name: "Text", alias: ["text", "txt", "plain"] },
+  { name: "Bash", alias: ["bash", "sh", "shell"], support: StreamLanguage.define(shell) },
+  { name: "JavaScript", alias: ["js", "javascript"], support: javascript() },
+  { name: "CSS", alias: ["css"], support: css() },
+  { name: "TypeScript", alias: ["ts", "typescript"], support: javascript({ typescript: true }) },
+  { name: "Python", alias: ["python", "py"], support: python() },
+  { name: "Ruby", alias: ["ruby", "rb"], support: StreamLanguage.define(ruby) },
+  { name: "PHP", alias: ["php"], support: php({ plain: true }) },
+  { name: "Java", alias: ["java"], support: java() },
+  { name: "C++", alias: ["cpp", "c++", "cc", "cxx"], support: cpp() },
+  { name: "C#", alias: ["csharp", "c#", "cs"], support: StreamLanguage.define(csharp) },
+  { name: "SQL", alias: ["sql"], support: sql() }
+];
+
+function isAdmonition(editorInFocus: EditorInFocus | null) {
+  const node = editorInFocus?.rootNode;
+  if (!node || node.getType() !== "directive") return false;
+  const directiveName = (node as unknown as { getMdastNode?: () => { name?: string } }).getMdastNode?.().name;
+  return ["note", "tip", "danger", "info", "caution"].includes(directiveName ?? "");
+}
 
 function richMarkdownPlugins() {
   return [
@@ -29,6 +73,9 @@ function richMarkdownPlugins() {
     linkDialogPlugin(),
     tablePlugin(),
     thematicBreakPlugin(),
+    directivesPlugin({ directiveDescriptors: [AdmonitionDirectiveDescriptor] }),
+    codeBlockPlugin({ defaultCodeBlockLanguage: "text" }),
+    codeMirrorPlugin({ codeBlockLanguages, autoLoadLanguageSupport: false }),
     markdownShortcutPlugin()
   ];
 }
@@ -50,17 +97,37 @@ function richMarkdownEditorPlugins() {
     ...richMarkdownPlugins(),
     toolbarPlugin({
       toolbarContents: () => (
-        <>
-          <UndoRedo />
-          <Separator />
-          <BlockTypeSelect />
-          <BoldItalicUnderlineToggles />
-          <ListsToggle />
-          <Separator />
-          <CreateLink />
-          <InsertTable />
-          <InsertThematicBreak />
-        </>
+        <ConditionalContents
+          options={[
+            {
+              when: (editor) => editor?.editorType === "codeblock",
+              contents: () => <ChangeCodeMirrorLanguage />
+            },
+            {
+              fallback: () => (
+                <>
+                  <UndoRedo />
+                  <Separator />
+                  <ConditionalContents
+                    options={[
+                      { when: isAdmonition, contents: () => <ChangeAdmonitionType /> },
+                      { fallback: () => <BlockTypeSelect /> }
+                    ]}
+                  />
+                  <BoldItalicUnderlineToggles />
+                  <ListsToggle />
+                  <Separator />
+                  <CreateLink />
+                  <InsertTable />
+                  <InsertThematicBreak />
+                  <InsertAdmonition />
+                  <InsertCodeBlock />
+                  <CodeToggle />
+                </>
+              )
+            }
+          ]}
+        />
       )
     })
   ];
