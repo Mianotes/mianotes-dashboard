@@ -120,7 +120,26 @@ type EmailCheckResponse = {
   master_password_owner_name?: string | null;
 };
 
+type DashboardUiState = {
+  selectedView: "recent" | "starred";
+  selectedUserId: string | "all";
+  selectedProjectId: string | "all";
+  selectedTag: string | "all";
+  openedNoteId: string | null;
+  searchQuery: string;
+};
+
 const apiBase = import.meta.env.VITE_API_BASE_URL ?? "";
+const dashboardUiStateKey = "mianotes.dashboard.uiState";
+
+const defaultDashboardUiState: DashboardUiState = {
+  selectedView: "recent",
+  selectedUserId: "all",
+  selectedProjectId: "all",
+  selectedTag: "all",
+  openedNoteId: null,
+  searchQuery: ""
+};
 
 function apiPath(path: string) {
   return `${apiBase}${path}`;
@@ -150,6 +169,30 @@ async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> 
     return undefined as T;
   }
   return response.json() as Promise<T>;
+}
+
+function readDashboardUiState(): DashboardUiState {
+  if (typeof window === "undefined") return defaultDashboardUiState;
+  try {
+    const raw = window.localStorage.getItem(dashboardUiStateKey);
+    if (!raw) return defaultDashboardUiState;
+    const value = JSON.parse(raw) as Partial<DashboardUiState>;
+    return {
+      selectedView: value.selectedView === "starred" ? "starred" : "recent",
+      selectedUserId: typeof value.selectedUserId === "string" ? value.selectedUserId : "all",
+      selectedProjectId: typeof value.selectedProjectId === "string" ? value.selectedProjectId : "all",
+      selectedTag: typeof value.selectedTag === "string" ? value.selectedTag : "all",
+      openedNoteId: typeof value.openedNoteId === "string" ? value.openedNoteId : null,
+      searchQuery: typeof value.searchQuery === "string" ? value.searchQuery : ""
+    };
+  } catch {
+    return defaultDashboardUiState;
+  }
+}
+
+function writeDashboardUiState(state: DashboardUiState) {
+  if (typeof window === "undefined") return;
+  window.localStorage.setItem(dashboardUiStateKey, JSON.stringify(state));
 }
 
 function relativeTime(value: string) {
@@ -242,19 +285,21 @@ function UserAvatar({
 }
 
 export function App() {
+  const initialUiState = useMemo(() => readDashboardUiState(), []);
   const [currentUser, setCurrentUser] = useState<UserRecord | null>(null);
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
   const [tags, setTags] = useState<TagRecord[]>([]);
   const [notes, setNotes] = useState<NoteRecord[]>([]);
   const [storageCapacity, setStorageCapacity] = useState<StorageCapacityRecord | null>(null);
-  const [selectedView, setSelectedView] = useState<"recent" | "starred">("recent");
-  const [selectedUserId, setSelectedUserId] = useState<string | "all">("all");
-  const [selectedProjectId, setSelectedProjectId] = useState<string | "all">("all");
-  const [selectedTag, setSelectedTag] = useState<string | "all">("all");
-  const [openedNoteId, setOpenedNoteId] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedView, setSelectedView] = useState<"recent" | "starred">(initialUiState.selectedView);
+  const [selectedUserId, setSelectedUserId] = useState<string | "all">(initialUiState.selectedUserId);
+  const [selectedProjectId, setSelectedProjectId] = useState<string | "all">(initialUiState.selectedProjectId);
+  const [selectedTag, setSelectedTag] = useState<string | "all">(initialUiState.selectedTag);
+  const [openedNoteId, setOpenedNoteId] = useState<string | null>(initialUiState.openedNoteId);
+  const [searchQuery, setSearchQuery] = useState(initialUiState.searchQuery);
   const [isLoading, setIsLoading] = useState(true);
+  const [isWorkspaceLoaded, setIsWorkspaceLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
@@ -293,6 +338,7 @@ export function App() {
 
   async function bootstrap() {
     setIsLoading(true);
+    setIsWorkspaceLoaded(false);
     setError(null);
     try {
       const session = await apiFetch<{ user: UserRecord }>("/api/auth/session");
@@ -320,6 +366,7 @@ export function App() {
     setTags(nextTags);
     setNotes(hydrated);
     setStorageCapacity(nextStorageCapacity);
+    setIsWorkspaceLoaded(true);
   }
 
   async function refreshNotes() {
@@ -374,6 +421,45 @@ export function App() {
   }, [notes, searchQuery, selectedProjectId, selectedTag, selectedUserId]);
 
   const openedNote = notes.find((note) => note.id === openedNoteId) ?? null;
+
+  useEffect(() => {
+    if (!currentUser || !isWorkspaceLoaded) return;
+
+    setSelectedUserId((current) => (
+      current === "all" || users.some((user) => user.id === current) ? current : "all"
+    ));
+    setSelectedProjectId((current) => (
+      current === "all" || projects.some((project) => project.id === current) ? current : "all"
+    ));
+    setSelectedTag((current) => (
+      current === "all" || tags.some((tag) => tag.slug === current) ? current : "all"
+    ));
+    setOpenedNoteId((current) => (
+      current === null || notes.some((note) => note.id === current) ? current : null
+    ));
+  }, [currentUser, isWorkspaceLoaded, notes, projects, tags, users]);
+
+  useEffect(() => {
+    if (!currentUser || !isWorkspaceLoaded) return;
+
+    writeDashboardUiState({
+      selectedView,
+      selectedUserId,
+      selectedProjectId,
+      selectedTag,
+      openedNoteId,
+      searchQuery
+    });
+  }, [
+    currentUser,
+    isWorkspaceLoaded,
+    openedNoteId,
+    searchQuery,
+    selectedProjectId,
+    selectedTag,
+    selectedUserId,
+    selectedView
+  ]);
 
   useEffect(() => {
     if (!openedNote || openedNote.text) return;
