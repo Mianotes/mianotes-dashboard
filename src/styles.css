@@ -1126,47 +1126,12 @@ button {
   resize: vertical;
 }
 
-.prompt-history {
-  margin-top: 24px;
-}
-
-.prompt-history h4 {
-  margin: 0 0 10px;
-  padding-top: 24px;
-  color: #1f2026;
-  font-size: 14px;
-}
-
 .comment,
 .notice {
   margin-top: 12px;
   padding: 11px 13px;
   border-radius: 8px;
   background: #f5f5f7;
-}
-
-.comment-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-
-.comment-header button {
-  display: inline-grid;
-  place-items: center;
-  width: 28px;
-  height: 28px;
-  border: 0;
-  border-radius: 6px;
-  padding: 0;
-  color: #696b75;
-  background: transparent;
-}
-
-.comment-header button:hover {
-  color: #1f2026;
-  background: #ececf0;
 }
 
 .comment p {

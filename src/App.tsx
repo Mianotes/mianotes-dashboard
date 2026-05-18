@@ -5,7 +5,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock3,
-  Copy,
   Edit3,
   Eye,
   File,
@@ -92,17 +91,9 @@ type NoteRecord = {
   job_status?: string | null;
 };
 
-type CommentRecord = {
-  id: string;
-  body: string;
-  created_at: string;
-  user?: UserRecord | null;
-};
-
 type MiaPromptRecord = {
   type: "prompt";
   text: string;
-  comment?: CommentRecord;
 };
 
 type StorageCapacityRecord = {
@@ -223,10 +214,6 @@ function noteExcerpt(note: NoteRecord) {
     .replace(/\s+/g, " ")
     .trim();
   return clean || "Open this note to see its generated Markdown content.";
-}
-
-function displayCommentBody(body: string) {
-  return body.trim().toLowerCase().startsWith("@mia") ? body.trim().slice(4).trim() : body;
 }
 
 function noteBodyMarkdown(markdown: string) {
@@ -986,7 +973,6 @@ function NotePanel({
   onRefresh: () => Promise<void>;
   onDeleted: () => Promise<void>;
 }) {
-  const [comments, setComments] = useState<CommentRecord[]>([]);
   const [commentBody, setCommentBody] = useState("");
   const [miaResponse, setMiaResponse] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
@@ -1004,8 +990,6 @@ function NotePanel({
     setIsEditing(false);
     setDraftText(noteBodyMarkdown(note.text ?? ""));
     setIsActionsOpen(false);
-    if (!note) return;
-    void apiFetch<CommentRecord[]>(`/api/notes/${note.id}/comments`).then(setComments).catch(() => setComments([]));
   }, [note?.id]);
 
   async function saveMarkdown() {
@@ -1039,22 +1023,13 @@ function NotePanel({
     setMiaResponse(null);
     setError(null);
     try {
-      const result = await apiFetch<CommentRecord | MiaPromptRecord>(`/api/notes/${note.id}/comments`, {
+      const result = await apiFetch<MiaPromptRecord>(`/api/notes/${note.id}/comments`, {
         method: "POST",
         body: JSON.stringify({ body })
       });
-      if (isMiaPrompt(result)) {
-        setMiaResponse(result.text);
-        if (result.comment) {
-          setComments((items) => [...items, result.comment!]);
-        }
-        if (clearInput) setCommentBody("");
-        await onRefresh();
-      } else {
-        setComments((items) => [...items, result]);
-        if (clearInput) setCommentBody("");
-        await onRefresh();
-      }
+      setMiaResponse(result.text);
+      if (clearInput) setCommentBody("");
+      await onRefresh();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not send comment");
     } finally {
@@ -1253,27 +1228,6 @@ function NotePanel({
           </div>
         </form>
         {error && <div className="notice danger">{error}</div>}
-        {comments.length > 0 && (
-          <div className="prompt-history">
-            <h4>Past prompts</h4>
-            {comments.map((comment) => (
-              <div className="comment" key={comment.id}>
-                <div className="comment-header">
-                  <strong>{comment.user?.name ?? "User"}</strong>
-                  <button
-                    type="button"
-                    aria-label="Copy prompt"
-                    title="Copy prompt"
-                    onClick={() => void navigator.clipboard?.writeText(displayCommentBody(comment.body))}
-                  >
-                    <Copy size={14} />
-                  </button>
-                </div>
-                <p>{displayCommentBody(comment.body)}</p>
-              </div>
-            ))}
-          </div>
-        )}
       </section>
     </section>
   );
@@ -1393,10 +1347,6 @@ function noteSearchText(note: NoteRecord) {
     note.user?.name,
     tagsText
   ].filter(Boolean).join(" ").toLowerCase();
-}
-
-function isMiaPrompt(value: CommentRecord | MiaPromptRecord): value is MiaPromptRecord {
-  return "type" in value && value.type === "prompt";
 }
 
 async function logout(setCurrentUser: (user: UserRecord | null) => void) {
