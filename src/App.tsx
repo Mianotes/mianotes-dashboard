@@ -191,7 +191,11 @@ function readDashboardUiState(): DashboardUiState {
 
 function writeDashboardUiState(state: DashboardUiState) {
   if (typeof window === "undefined") return;
-  window.localStorage.setItem(dashboardUiStateKey, JSON.stringify(state));
+  try {
+    window.localStorage.setItem(dashboardUiStateKey, JSON.stringify(state));
+  } catch {
+    // Ignore storage failures so private browsing or quota issues never break the app.
+  }
 }
 
 function relativeTime(value: string) {
