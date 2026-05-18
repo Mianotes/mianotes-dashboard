@@ -394,7 +394,6 @@ button {
   overflow: hidden;
   color: #5e606b;
   font-size: 13px;
-  font-weight: 700;
   line-height: 1;
   pointer-events: none;
   text-overflow: ellipsis;
@@ -564,10 +563,17 @@ button {
 
 .star {
   color: #878892;
+  cursor: pointer;
+  line-height: 0;
 }
 
 .star.on {
   color: #d59200;
+}
+
+.star:focus-visible {
+  outline: 2px solid #8bb8ff;
+  outline-offset: 4px;
 }
 
 .note-body {

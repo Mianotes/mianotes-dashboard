@@ -77,6 +77,7 @@ type NoteRecord = {
   source_type: string;
   revision_number: number;
   is_published: boolean;
+  is_starred: boolean;
   created_at: string;
   updated_at: string;
   summary?: string;
@@ -413,6 +414,25 @@ export function App() {
     setOpenedNoteId((current) => current && hydrated.some((note) => note.id === current) ? current : null);
   }
 
+  async function toggleNoteStar(note: NoteRecord) {
+    const nextStarred = !note.is_starred;
+    setNotes((items) => (
+      items.map((item) => item.id === note.id ? { ...item, is_starred: nextStarred } : item)
+    ));
+    try {
+      const updated = await apiFetch<NoteRecord>(`/api/notes/${note.id}/star`, {
+        method: "PATCH",
+        body: JSON.stringify({ is_starred: nextStarred })
+      });
+      setNotes((items) => items.map((item) => item.id === note.id ? updated : item));
+    } catch (err) {
+      setNotes((items) => (
+        items.map((item) => item.id === note.id ? { ...item, is_starred: note.is_starred } : item)
+      ));
+      setError(err instanceof Error ? err.message : "Could not update starred note");
+    }
+  }
+
   const notesByProject = useMemo(() => countBy(notes, (note) => note.project?.id ?? note.project_id ?? ""), [notes]);
   const selectedProject = selectedProjectId === "all" ? null : projects.find((project) => project.id === selectedProjectId) ?? null;
   const selectedTagRecord = selectedTag === "all" ? null : tags.find((tag) => tag.slug === selectedTag) ?? null;
@@ -427,6 +447,7 @@ export function App() {
 
     const tagMap = new Map<string, TagRecord>();
     notes.forEach((note) => {
+      if (selectedView === "starred" && !note.is_starred) return;
       const userMatch = selectedUserId === "all" || note.user_id === selectedUserId;
       if (!userMatch) return;
       const projectMatch = selectedProjectId === "all" || note.project_id === selectedProjectId;
@@ -443,10 +464,11 @@ export function App() {
     return Array.from(tagMap.values())
       .sort((first, second) => first.name.localeCompare(second.name))
       .slice(0, 6);
-  }, [notes, searchQuery, selectedProjectId, selectedTag, selectedUserId]);
+  }, [notes, searchQuery, selectedProjectId, selectedTag, selectedUserId, selectedView]);
   const filteredNotes = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     return notes.filter((note) => {
+      if (selectedView === "starred" && !note.is_starred) return false;
       const userMatch = selectedUserId === "all" || note.user_id === selectedUserId;
       if (!userMatch) return false;
       const projectMatch = selectedProjectId === "all" || note.project_id === selectedProjectId;
@@ -456,7 +478,7 @@ export function App() {
       if (!query) return true;
       return noteSearchText(note).includes(query);
     });
-  }, [notes, searchQuery, selectedProjectId, selectedTag, selectedUserId]);
+  }, [notes, searchQuery, selectedProjectId, selectedTag, selectedUserId, selectedView]);
 
   const openedNote = notes.find((note) => note.id === openedNoteId) ?? null;
 
@@ -712,6 +734,7 @@ export function App() {
                       <NoteRow
                         key={note.id}
                         note={note}
+                        onToggleStar={() => void toggleNoteStar(note)}
                         onClick={async () => {
                           try {
                             const fullNote = note.text ? note : await apiFetch<NoteRecord>(`/api/notes/${note.id}`);
@@ -870,7 +893,15 @@ function SidebarSection({ title, action, children }: { title: string; action?: R
   );
 }
 
-function NoteRow({ note, onClick }: { note: NoteRecord; onClick: () => void }) {
+function NoteRow({
+  note,
+  onClick,
+  onToggleStar
+}: {
+  note: NoteRecord;
+  onClick: () => void;
+  onToggleStar: () => void;
+}) {
   const Icon = sourceIcon(note.source_type);
   const projectName = note.project?.name ?? "Unassigned";
   const owner = note.user?.name ?? "Unknown";
@@ -879,7 +910,25 @@ function NoteRow({ note, onClick }: { note: NoteRecord; onClick: () => void }) {
 
   return (
     <button className="note-row" onClick={onClick}>
-      <span className="star"><Star size={21} /></span>
+      <span
+        className={`star ${note.is_starred ? "on" : ""}`}
+        role="button"
+        tabIndex={0}
+        aria-label={note.is_starred ? "Remove from starred" : "Add to starred"}
+        aria-pressed={note.is_starred}
+        onClick={(event) => {
+          event.stopPropagation();
+          onToggleStar();
+        }}
+        onKeyDown={(event) => {
+          if (event.key !== "Enter" && event.key !== " ") return;
+          event.preventDefault();
+          event.stopPropagation();
+          onToggleStar();
+        }}
+      >
+        <Star size={21} fill={note.is_starred ? "currentColor" : "none"} />
+      </span>
       <div className="note-body">
         <div className="note-meta-top">
           <span className="project-name">{projectName}</span>
