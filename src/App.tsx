@@ -97,6 +97,17 @@ type MiaPromptRecord = {
   comment?: CommentRecord;
 };
 
+type StorageCapacityRecord = {
+  data_dir: string;
+  total_bytes: number;
+  used_bytes: number;
+  free_bytes: number;
+  used_percent: number;
+  cache_seconds: number;
+  refreshed_at: string;
+  cache_expires_at: string;
+};
+
 type EmailCheckResponse = {
   user_id: string | null;
   is_first_user?: boolean;
@@ -190,12 +201,17 @@ function badgeTone(type: string) {
   return "neutral";
 }
 
+function formatGigabytes(bytes: number) {
+  return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
+}
+
 export function App() {
   const [currentUser, setCurrentUser] = useState<UserRecord | null>(null);
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [projects, setProjects] = useState<ProjectRecord[]>([]);
   const [tags, setTags] = useState<TagRecord[]>([]);
   const [notes, setNotes] = useState<NoteRecord[]>([]);
+  const [storageCapacity, setStorageCapacity] = useState<StorageCapacityRecord | null>(null);
   const [selectedView, setSelectedView] = useState<"recent" | "starred">("recent");
   const [selectedUserId, setSelectedUserId] = useState<string | "all">("all");
   const [selectedProjectId, setSelectedProjectId] = useState<string | "all">("all");
@@ -225,11 +241,12 @@ export function App() {
   }
 
   async function loadWorkspace() {
-    const [nextUsers, nextProjects, nextTags, nextNotes] = await Promise.all([
+    const [nextUsers, nextProjects, nextTags, nextNotes, nextStorageCapacity] = await Promise.all([
       apiFetch<UserRecord[]>("/api/users"),
       apiFetch<ProjectRecord[]>("/api/projects"),
       apiFetch<TagRecord[]>("/api/tags"),
-      apiFetch<NoteRecord[]>("/api/notes")
+      apiFetch<NoteRecord[]>("/api/notes"),
+      apiFetch<StorageCapacityRecord>("/api/storage").catch(() => null)
     ]);
     const activeProjects = nextProjects.filter((project) => !project.archived_at);
     const hydrated = hydrateNotes(nextNotes, nextUsers, activeProjects);
@@ -238,6 +255,7 @@ export function App() {
     setProjects(activeProjects);
     setTags(nextTags);
     setNotes(detailed);
+    setStorageCapacity(nextStorageCapacity);
   }
 
   async function refreshNotes() {
@@ -365,11 +383,14 @@ export function App() {
 
           <div className="storage-meter">
             <div>
-              <span>Storage</span>
-              <strong>Local</strong>
+              <span>Local storage</span>
+              <strong>{storageCapacity ? `${formatGigabytes(storageCapacity.free_bytes)} available` : "Checking..."}</strong>
             </div>
             <div className="meter-track">
-              <div className="meter-fill" />
+              <div
+                className="meter-fill"
+                style={{ width: `${Math.min(storageCapacity?.used_percent ?? 0, 100)}%` }}
+              />
             </div>
           </div>
 
