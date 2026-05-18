@@ -926,7 +926,7 @@ function AuthScreen({ onSignedIn }: { onSignedIn: () => void }) {
                 placeholder="Confirm password"
               />
             )}
-            <button className="primary-button">{step === "join" ? "Join Mianotes" : "Sign in"}</button>
+            <button className="primary-button">{step === "join" ? "Create account" : "Sign in"}</button>
             <button className="text-button" type="button" onClick={() => setStep("email")}>Use another email</button>
           </form>
         )}
