@@ -1071,6 +1071,11 @@ button {
   min-height: 420px;
 }
 
+.empty-state-button {
+  min-width: 188px;
+  justify-content: center;
+}
+
 .brand-footer {
   display: flex;
   align-items: center;

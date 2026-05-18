@@ -398,8 +398,11 @@ export function App() {
 
     const tagMap = new Map<string, TagRecord>();
     notes.forEach((note) => {
-      const haystack = `${note.title} ${note.summary ?? ""} ${note.text ?? ""} ${note.project?.name ?? ""} ${note.user?.name ?? ""}`.toLowerCase();
-      const noteMatches = haystack.includes(query);
+      const userMatch = selectedUserId === "all" || note.user_id === selectedUserId;
+      if (!userMatch) return;
+      const projectMatch = selectedProjectId === "all" || note.project_id === selectedProjectId;
+      if (!projectMatch) return;
+      const noteMatches = noteSearchText(note).includes(query);
       note.tags?.forEach((tag) => {
         const tagMatches = `${tag.name} ${tag.slug}`.toLowerCase().includes(query);
         if ((noteMatches || tagMatches) && tag.slug !== selectedTag) {
@@ -411,7 +414,7 @@ export function App() {
     return Array.from(tagMap.values())
       .sort((first, second) => first.name.localeCompare(second.name))
       .slice(0, 6);
-  }, [notes, searchQuery, selectedTag]);
+  }, [notes, searchQuery, selectedProjectId, selectedTag, selectedUserId]);
   const filteredNotes = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     return notes.filter((note) => {
@@ -422,9 +425,7 @@ export function App() {
       const tagMatch = selectedTag === "all" || note.tags?.some((tag) => tag.slug === selectedTag);
       if (!tagMatch) return false;
       if (!query) return true;
-      return `${note.title} ${note.summary ?? ""} ${note.text ?? ""} ${note.project?.name ?? ""} ${note.user?.name ?? ""}`
-        .toLowerCase()
-        .includes(query);
+      return noteSearchText(note).includes(query);
     });
   }, [notes, searchQuery, selectedProjectId, selectedTag, selectedUserId]);
 
@@ -1208,8 +1209,8 @@ function EmptyState({ onAdd }: { onAdd: () => void }) {
     <div className="empty-state">
       <Bot size={34} />
       <h2>No notes found</h2>
-      <p>Add a note, upload a file, or paste a link and Mia will turn it into Markdown.</p>
-      <button className="primary-button" onClick={onAdd}><Plus size={17} />Add Note</button>
+      <p>Add a note, upload a file, or paste a link and Mia will add it to your knowledge hub.</p>
+      <button className="primary-button empty-state-button" onClick={onAdd}><Plus size={17} />Add Note</button>
     </div>
   );
 }
@@ -1228,6 +1229,18 @@ function hydrateNotes(notes: NoteRecord[], users: UserRecord[], projects: Projec
     user: note.user ?? users.find((user) => user.id === note.user_id),
     project: note.project ?? projects.find((project) => project.id === note.project_id)
   }));
+}
+
+function noteSearchText(note: NoteRecord) {
+  const tagsText = note.tags?.map((tag) => `${tag.name} ${tag.slug}`).join(" ") ?? "";
+  return [
+    note.title,
+    note.summary,
+    note.text,
+    note.project?.name,
+    note.user?.name,
+    tagsText
+  ].filter(Boolean).join(" ").toLowerCase();
 }
 
 function isMiaPrompt(value: CommentRecord | MiaPromptRecord): value is MiaPromptRecord {
