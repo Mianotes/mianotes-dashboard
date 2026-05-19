@@ -37,6 +37,7 @@ button {
 .screen {
   min-height: 100vh;
   padding: 18px clamp(18px, 4vw, 54px) 30px;
+  overflow-x: hidden;
   background:
     radial-gradient(circle at 25% 0%, rgba(48, 134, 255, 0.07), transparent 24rem),
     linear-gradient(180deg, #fbfbfc 0%, #f4f4f5 100%);
@@ -1649,6 +1650,10 @@ button {
 .auth-screen {
   display: grid;
   place-items: center;
+  height: 100vh;
+  min-height: 100vh;
+  padding: 16px;
+  overflow: hidden;
 }
 
 .auth-panel,
@@ -1659,6 +1664,22 @@ button {
   border-radius: 8px;
   background: #ffffff;
   box-shadow: 0 18px 55px rgba(18, 18, 22, 0.08);
+}
+
+.auth-panel {
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+}
+
+@supports (height: 100dvh) {
+  .auth-screen {
+    height: 100dvh;
+    min-height: 100dvh;
+  }
+
+  .auth-panel {
+    max-height: calc(100dvh - 32px);
+  }
 }
 
 .auth-brand {
@@ -2159,12 +2180,26 @@ textarea:focus {
   }
 
   .toolbar-actions {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(98px, 124px) 38px;
     flex: 1 1 100%;
-    justify-content: flex-start;
+    gap: 8px;
+    justify-content: stretch;
+    width: 100%;
+  }
+
+  .search-area {
+    width: 100%;
   }
 
   .search-box {
-    width: 200px;
+    width: 100%;
+    min-width: 0;
+  }
+
+  .user-select-button {
+    width: 100%;
+    min-width: 0;
   }
 
   .add-note-button {
