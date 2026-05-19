@@ -1787,7 +1787,13 @@ function NotePanel({
             ) : (
               <>
                 <div className="mia-output-scroll">
-                  <pre>{miaResponse}</pre>
+                  <Suspense fallback={<div className="editor-loading">Rendering Mia response...</div>}>
+                    <MarkdownViewer
+                      id={`${note.id}-mia-response`}
+                      updatedAt={miaResponse ?? ""}
+                      markdown={miaResponse ?? ""}
+                    />
+                  </Suspense>
                 </div>
                 <div className="mia-output-actions">
                   <button type="button" onClick={() => void copyMiaResponse()}>Copy</button>

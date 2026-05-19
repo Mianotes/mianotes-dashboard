@@ -1494,15 +1494,6 @@ button {
   padding: 18px;
 }
 
-.mia-output pre {
-  margin: 0;
-  white-space: pre-wrap;
-  color: #30323a;
-  font-family: inherit;
-  font-size: 15px;
-  line-height: 1.55;
-}
-
 .mia-output.loading {
   place-items: center;
   padding: 18px;
@@ -1547,6 +1538,18 @@ button {
 .mia-output-actions button:disabled {
   opacity: 0.55;
   cursor: not-allowed;
+}
+
+.mia-output .mianotes-rich-viewer {
+  min-height: 100%;
+}
+
+.mia-output .mianotes-rich-content {
+  padding: 0;
+}
+
+.mia-output .mianotes-rich-content > :first-child {
+  margin-top: 0;
 }
 
 .mia-loader {
