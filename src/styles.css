@@ -157,7 +157,7 @@ button {
   border-radius: 6px;
   color: #5b5b5b;
   background: #fff;
-  font-size: 12px;
+  font-size: 11px;
   text-align: center;
 }
 
@@ -335,6 +335,7 @@ button {
   min-width: 190px;
   color: #777781;
   font-size: 13px;
+  overflow: hidden;
 }
 
 .breadcrumb-home,
@@ -353,6 +354,10 @@ button {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .breadcrumb .current {
@@ -2059,7 +2064,7 @@ textarea:focus {
   }
 
   .screen {
-    padding: 18px 0 0;
+    padding: 0;
     background: #eaf0f8;
   }
 
@@ -2088,12 +2093,13 @@ textarea:focus {
     height: 100vh;
     border-right: 1px solid #dedfe5;
     border-bottom: 0;
-    box-shadow: 16px 0 32px rgba(20, 20, 24, 0.14);
+    box-shadow: none;
     transform: translateX(-100%);
     transition: transform 0.25s ease;
   }
 
   .sidebar.is-open {
+    box-shadow: 16px 0 32px rgba(20, 20, 24, 0.14);
     transform: translateX(0);
   }
 
@@ -2130,6 +2136,22 @@ textarea:focus {
   .breadcrumb {
     flex: 1 1 calc(100% - 52px);
     min-width: 0;
+  }
+
+  .breadcrumb span {
+    flex: 0 1 auto;
+    max-width: 42vw;
+  }
+
+  .breadcrumb span:first-child {
+    flex: 0 0 auto;
+  }
+
+  .breadcrumb-filter-chip {
+    max-width: 32vw;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .toolbar-actions {
