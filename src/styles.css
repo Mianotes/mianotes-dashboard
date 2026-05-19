@@ -166,13 +166,11 @@ button {
 }
 
 .project-nav-item:hover .project-note-count,
-.project-nav-item:focus-within .project-note-count,
 .project-actions-menu:has(.project-actions-popover) .project-note-count {
   display: none;
 }
 
 .project-nav-item:hover .project-more-button,
-.project-nav-item:focus-within .project-more-button,
 .project-actions-menu:has(.project-actions-popover) .project-more-button {
   display: inline-grid;
 }
