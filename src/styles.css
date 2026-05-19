@@ -193,14 +193,22 @@ button {
   background: #ffffff;
 }
 
-.project-nav-item:hover .project-note-count,
 .project-actions-menu:has(.project-actions-popover) .project-note-count {
   display: none;
 }
 
-.project-nav-item:hover .project-more-button,
 .project-actions-menu:has(.project-actions-popover) .project-more-button {
   display: inline-grid;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .project-nav-item:hover .project-note-count {
+    display: none;
+  }
+
+  .project-nav-item:hover .project-more-button {
+    display: inline-grid;
+  }
 }
 
 .project-actions-popover {
