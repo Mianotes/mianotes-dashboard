@@ -680,6 +680,11 @@ export function App() {
       .catch(() => undefined);
   }, [openedNote?.id]);
 
+  useEffect(() => {
+    if (!openedNoteId) return;
+    window.scrollTo(0, 0);
+  }, [openedNoteId]);
+
   if (isLoading) {
     return (
       <main className="screen centered">
