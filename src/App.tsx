@@ -953,6 +953,10 @@ export function App() {
           selectedProjectId={selectedProjectId}
           onClose={() => setIsAddOpen(false)}
           onCreated={async (note, shouldEdit) => {
+            setSelectedView("recent");
+            setSearchQuery("");
+            setSelectedTag("all");
+            setCurrentPage(1);
             setNotes((items) => {
               const hydratedNote = hydrateNotes([note], users, projects)[0] ?? note;
               return items.some((item) => item.id === note.id)
@@ -1333,7 +1337,7 @@ function NotePanel({
     try {
       const result = await apiFetch<MiaPromptRecord>(`/api/notes/${note.id}/comments`, {
         method: "POST",
-        body: JSON.stringify({ body })
+        body: JSON.stringify({ body, markdown: isEditing ? draftText : undefined })
       });
       setMiaResponse(result.text);
       if (clearInput) setCommentBody("");
@@ -1368,7 +1372,7 @@ function NotePanel({
 
     const currentText = noteMarkdownBody.trim();
     const miaText = miaResponse.trim();
-    const nextText = mode === "append" && currentText ? `${currentText}\n\n${miaText}` : miaText;
+    const nextText = mode === "append" && currentText ? `${currentText}\n\n---\n\n${miaText}` : miaText;
 
     setIsApplyingMia(true);
     setMiaError(null);
