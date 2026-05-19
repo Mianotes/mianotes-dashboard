@@ -2270,7 +2270,7 @@ textarea:focus {
 
   .note-panel {
     width: 100%;
-    padding: 32px clamp(22px, 10vw, 60px) 52px;
+    padding: 16px;
   }
 
   .note-document-header {
@@ -2281,7 +2281,7 @@ textarea:focus {
   }
 
   .note-document-breadcrumb {
-    font-size: 14px;
+    font-size: 13px;
   }
 
   .note-panel:not(.editing) .secondary-action-button {
