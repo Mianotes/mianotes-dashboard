@@ -1214,7 +1214,6 @@ function NoteRow({
           ))}
           <span className="row-spacer" />
           <span className="inline-meta"><Clock3 size={16} />{relativeTime(note.updated_at ?? note.created_at)}</span>
-          <span className="inline-meta"><MessageCircle size={16} />{note.comments_count ?? 0}</span>
         </div>
       </div>
     </button>
@@ -1903,7 +1902,7 @@ function AddNoteDialog({
         <div className="project-modal-header">
           <div>
             <h2>Add note</h2>
-            <p>Create a Mianote, index a link, or upload a .pdf, .docx, .xls, .csv, .png, .jpg, or .mp3 file.</p>
+            <p>Create a note, index a link, or upload a .pdf, .docx, .xls, .csv, .png, .jpg, or .mp3 file.</p>
           </div>
           <button className="icon-button" type="button" onClick={onClose} aria-label="Close"><X size={20} /></button>
         </div>
