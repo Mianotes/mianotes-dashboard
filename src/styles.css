@@ -135,11 +135,11 @@ button {
 .nav-item small {
   min-width: 24px;
   padding: 3px 7px;
-  border-radius: 99px;
-  color: #ffffff;
-  background: #18191f;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  color: #5b5b5b;
+  background: #fff;
   font-size: 12px;
-  font-weight: 800;
   text-align: center;
 }
 
@@ -348,7 +348,8 @@ button {
   gap: 5px;
   min-height: 26px;
   margin-left: 8px;
-  padding: 0 9px 0 10px;
+  margin-top: 2px;
+  padding: 0 8px 0 10px;
   border: 1px solid #e1e2e7;
   border-radius: 999px;
   color: #565863;
@@ -467,6 +468,10 @@ button {
   background: #ffffff;
   color: #5e606b;
   overflow: hidden;
+}
+
+.select-button:hover {
+  border-color: #c7c9d1;
 }
 
 .select-button select {
@@ -814,7 +819,7 @@ button {
   min-height: 24px;
   padding: 3px 9px;
   border-radius: 999px;
-  font-size: 0.78rem;
+  font-size: 0.70rem;
   font-weight: 850;
   text-transform: uppercase;
 }
@@ -1707,6 +1712,10 @@ textarea:focus {
   background: #17181d;
 }
 
+.primary-button:not(:disabled):hover {
+  background: #07080b;
+}
+
 .primary-button.small {
   min-height: 38px;
 }
@@ -1719,6 +1728,10 @@ textarea:focus {
 .text-button {
   color: #4e505a;
   background: transparent;
+}
+
+.text-button:not(:disabled):hover {
+  color: #17181d;
 }
 
 .notice.danger {
@@ -1802,6 +1815,10 @@ textarea:focus {
   background: #ffffff;
 }
 
+.checkbox-card:hover {
+  border-color: #c7c9d1;
+}
+
 .checkbox-card input {
   width: 18px;
   height: 18px;
@@ -1867,6 +1884,10 @@ textarea:focus {
   border-color: #9b9da8;
 }
 
+.file-picker:hover {
+  border-color: #c7c9d1;
+}
+
 .file-picker input {
   position: absolute;
   width: 1px;
@@ -1890,6 +1911,11 @@ textarea:focus {
   font-size: 13px;
   font-weight: 600;
   white-space: nowrap;
+}
+
+.file-picker:hover .file-picker-button {
+  border-color: #c7c9d1;
+  color: #24262d;
 }
 
 .file-picker-name {
@@ -1929,6 +1955,12 @@ textarea:focus {
   border-radius: 8px;
   color: #5b5d68;
   background: #ffffff;
+}
+
+.segmented button:not(.selected):hover {
+  border-color: #c7c9d1;
+  color: #24262d;
+  background: #fbfbfc;
 }
 
 .segmented button.selected {
