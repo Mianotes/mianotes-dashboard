@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180" role="img" aria-label="Mianotes">
+  <rect width="180" height="180" rx="36" fill="#ffffff"/>
+  <defs>
+    <linearGradient id="mianotes-mark-a" x1="38" x2="78" y1="34" y2="146" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ff1495"/>
+      <stop offset="1" stop-color="#7b1bff"/>
+    </linearGradient>
+    <linearGradient id="mianotes-mark-b" x1="80" x2="122" y1="34" y2="146" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#ff42d2"/>
+      <stop offset="1" stop-color="#2239ff"/>
+    </linearGradient>
+    <linearGradient id="mianotes-mark-c" x1="123" x2="164" y1="34" y2="146" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#15c7ff"/>
+      <stop offset="1" stop-color="#0a35be"/>
+    </linearGradient>
+  </defs>
+  <path fill="url(#mianotes-mark-a)" d="M34 29 78 75v77L34 108z"/>
+  <path fill="url(#mianotes-mark-b)" d="M76 29 121 75v77l-45-44z"/>
+  <path fill="url(#mianotes-mark-c)" d="M119 29 164 75v77l-45-44z"/>
+</svg>
