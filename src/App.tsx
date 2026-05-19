@@ -1054,6 +1054,8 @@ function NotePanel({
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isApplyingMia, setIsApplyingMia] = useState(false);
+  const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [titleDraft, setTitleDraft] = useState(note.title);
   const noteActionsMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -1066,7 +1068,15 @@ function NotePanel({
     setDraftText(noteBodyMarkdown(note.text ?? ""));
     setIsActionsOpen(false);
     setIsApplyingMia(false);
+    setIsEditingTitle(false);
+    setTitleDraft(note.title);
   }, [note?.id]);
+
+  useEffect(() => {
+    if (!isEditingTitle) {
+      setTitleDraft(note.title);
+    }
+  }, [isEditingTitle, note.title]);
 
   useEffect(() => {
     if (!isEditing) {
@@ -1121,6 +1131,40 @@ function NotePanel({
       await onRefresh();
     } catch (err) {
       setNoteError(err instanceof Error ? err.message : "Could not save note");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function saveTitle() {
+    if (!canChangeNote) {
+      setNoteError(cannotChangeNoteMessage);
+      setIsEditingTitle(false);
+      return;
+    }
+
+    const nextTitle = titleDraft.trim();
+    if (!nextTitle) {
+      setNoteError("Note title cannot be empty.");
+      return;
+    }
+
+    if (nextTitle === note.title) {
+      setIsEditingTitle(false);
+      return;
+    }
+
+    setIsSaving(true);
+    setNoteError(null);
+    try {
+      await apiFetch<NoteRecord>(`/api/notes/${note.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ title: nextTitle })
+      });
+      setIsEditingTitle(false);
+      await onRefresh();
+    } catch (err) {
+      setNoteError(err instanceof Error ? err.message : "Could not save note title");
     } finally {
       setIsSaving(false);
     }
@@ -1351,7 +1395,38 @@ function NotePanel({
         </div>
       )}
       <div className="note-document-title">
-        <h1>{note.title}</h1>
+        {isEditingTitle ? (
+          <input
+            className="note-title-input"
+            value={titleDraft}
+            autoFocus
+            onChange={(event) => setTitleDraft(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                void saveTitle();
+              }
+              if (event.key === "Escape") {
+                setTitleDraft(note.title);
+                setIsEditingTitle(false);
+                setNoteError(null);
+              }
+            }}
+          />
+        ) : (
+          <h1
+            className={canChangeNote ? "editable-note-title" : undefined}
+            title={canChangeNote ? "Click to edit title" : cannotChangeNoteMessage}
+            onClick={() => {
+              if (!canChangeNote) return;
+              setNoteError(null);
+              setTitleDraft(note.title);
+              setIsEditingTitle(true);
+            }}
+          >
+            {note.title}
+          </h1>
+        )}
       </div>
       <div className="note-document-meta">
         <UserAvatar user={note.user} name={authorName} className="note-author-avatar" />
