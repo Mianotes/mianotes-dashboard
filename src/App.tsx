@@ -15,6 +15,7 @@ import {
   Link,
   LogOut,
   Loader2,
+  Menu,
   MessageCircle,
   MoreVertical,
   Pin,
@@ -321,6 +322,7 @@ export function App() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isProjectOpen, setIsProjectOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [openProjectMenuId, setOpenProjectMenuId] = useState<string | null>(null);
   const [renamingProject, setRenamingProject] = useState<ProjectRecord | null>(null);
   const [noteIdToEditOnOpen, setNoteIdToEditOnOpen] = useState<string | null>(null);
@@ -340,12 +342,14 @@ export function App() {
     clearSearch();
     setCurrentPage(1);
     setSelectedView(view);
+    setIsSidebarOpen(false);
   }
 
   function selectProject(projectId: string) {
     clearSearch();
     setCurrentPage(1);
     setSelectedProjectId(projectId);
+    setIsSidebarOpen(false);
   }
 
   function selectUser(userId: string) {
@@ -362,11 +366,13 @@ export function App() {
 
   function openAddNote() {
     clearSearch();
+    setIsSidebarOpen(false);
     setIsAddOpen(true);
   }
 
   function openAddProject() {
     clearSearch();
+    setIsSidebarOpen(false);
     setIsProjectOpen(true);
   }
 
@@ -427,6 +433,25 @@ export function App() {
       document.removeEventListener("keydown", closeProjectMenuOnEscape);
     };
   }, [openProjectMenuId]);
+
+  useEffect(() => {
+    if (!isSidebarOpen) return;
+
+    function closeSidebarOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsSidebarOpen(false);
+      }
+    }
+
+    document.addEventListener("keydown", closeSidebarOnEscape);
+    return () => document.removeEventListener("keydown", closeSidebarOnEscape);
+  }, [isSidebarOpen]);
+
+  useEffect(() => {
+    if (openedNoteId) {
+      setIsSidebarOpen(false);
+    }
+  }, [openedNoteId]);
 
   async function updateProject(project: ProjectRecord, update: Partial<Pick<ProjectRecord, "name" | "is_pinned">>) {
     setError(null);
@@ -699,8 +724,15 @@ export function App() {
 
   return (
     <main className="screen">
+      <button
+        className="sidebar-backdrop"
+        type="button"
+        aria-label="Close sidebar"
+        aria-hidden={!isSidebarOpen}
+        onClick={() => setIsSidebarOpen(false)}
+      />
       <section className={`shell ${openedNote ? "note-open" : ""}`} aria-label="Mianotes dashboard">
-        <aside className="sidebar">
+        <aside className={`sidebar ${isSidebarOpen ? "is-open" : ""}`}>
           <button className="add-note-button" onClick={openAddNote}>
             <Plus size={19} />
             <span>Add Note</span>
@@ -800,6 +832,15 @@ export function App() {
         <section className="workspace">
           {!openedNote && (
             <header className="toolbar">
+              <button
+                className="mobile-sidebar-toggle"
+                type="button"
+                aria-label="Open sidebar"
+                aria-expanded={isSidebarOpen}
+                onClick={() => setIsSidebarOpen(true)}
+              >
+                <Menu size={20} />
+              </button>
               <div className="breadcrumb">
                 <span>Project</span>
                 <span className={breadcrumbItems.length === 0 && !selectedTagRecord ? "current" : undefined}>
