@@ -331,6 +331,11 @@ export function App() {
     setSearchQuery("");
   }
 
+  function changePage(nextPage: number) {
+    setCurrentPage(nextPage);
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }
+
   function selectView(view: "recent" | "starred") {
     clearSearch();
     setCurrentPage(1);
@@ -924,7 +929,7 @@ export function App() {
                       className="icon-button"
                       aria-label="Previous page"
                       disabled={clampedPage <= 1}
-                      onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                      onClick={() => changePage(Math.max(1, clampedPage - 1))}
                     >
                       <ChevronLeft size={18} />
                     </button>
@@ -932,7 +937,7 @@ export function App() {
                       className="icon-button"
                       aria-label="Next page"
                       disabled={clampedPage >= totalPages}
-                      onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                      onClick={() => changePage(Math.min(totalPages, clampedPage + 1))}
                     >
                       <ChevronRight size={18} />
                     </button>
@@ -1807,7 +1812,7 @@ function AddNoteDialog({
     && (
       (mode === "text" && cleanTitle.length > 0)
       || (mode === "link" && cleanTitle.length > 0 && cleanUrl.length > 0)
-      || (mode === "file" && Boolean(file))
+      || (mode === "file" && cleanTitle.length > 0 && Boolean(file))
     );
 
   async function submit(event: FormEvent) {
@@ -1832,7 +1837,7 @@ function AddNoteDialog({
       } else if (file) {
         const formData = new FormData();
         formData.set("project_id", projectId);
-        if (title) formData.set("title", title);
+        formData.set("title", cleanTitle);
         formData.set("file", file);
         createdNote = await apiFetch<NoteRecord>("/api/notes/from-file", { method: "POST", body: formData });
       } else {
@@ -1852,7 +1857,7 @@ function AddNoteDialog({
         <div className="project-modal-header">
           <div>
             <h2>Add note</h2>
-            <p>Create a note, index a link, or upload a file into your knowledge base.</p>
+            <p>Create a Mianote, index a link, or upload a .pdf, .docx, .xls, .csv, .png, .jpg, or .mp3 file.</p>
           </div>
           <button className="icon-button" type="button" onClick={onClose} aria-label="Close"><X size={20} /></button>
         </div>
@@ -1872,13 +1877,12 @@ function AddNoteDialog({
             </label>
           )}
           <label className="field-label">
-            <span>Title{mode === "file" ? " (optional)" : ""}</span>
+            <span>Title</span>
             <input
               autoFocus
-              required={mode !== "file"}
+              required
               value={title}
               onChange={(event) => setTitle(event.target.value)}
-              placeholder={mode === "file" ? "Use the file name" : undefined}
             />
           </label>
           {mode === "text" && (
@@ -1895,10 +1899,17 @@ function AddNoteDialog({
             </label>
           )}
           {mode === "file" && (
-            <label className="field-label">
+            <div className="field-label">
               <span>File</span>
-              <input required type="file" onChange={(event) => setFile(event.target.files?.[0] ?? null)} />
-            </label>
+              <label className="file-picker">
+                <input required type="file" onChange={(event) => setFile(event.target.files?.[0] ?? null)} />
+                <span className="file-picker-button">
+                  <Upload size={16} />
+                  Choose file
+                </span>
+                <span className={`file-picker-name${file ? "" : " is-empty"}`}>{file?.name ?? "No file selected"}</span>
+              </label>
+            </div>
           )}
         </div>
         <div className="project-modal-actions">

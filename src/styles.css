@@ -1839,6 +1839,58 @@ textarea:focus {
   line-height: 1.4;
 }
 
+.file-picker {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 44px;
+  padding: 7px;
+  border: 1px solid #dedfe5;
+  border-radius: 8px;
+  background: #ffffff;
+  cursor: pointer;
+}
+
+.file-picker:focus-within {
+  border-color: #9b9da8;
+}
+
+.file-picker input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.file-picker-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 12px;
+  border-radius: 7px;
+  color: #ffffff;
+  background: #17181d;
+  font-size: 13px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.file-picker-name {
+  min-width: 0;
+  overflow: hidden;
+  color: #4e505a;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-picker-name.is-empty {
+  color: #858791;
+}
+
 .modal-notice {
   padding: 10px 12px;
   border-radius: 8px;
