@@ -101,6 +101,7 @@ button {
 }
 
 .nav-item {
+  position: relative;
   display: grid;
   grid-template-columns: 20px minmax(0, 1fr) auto;
   align-items: center;
@@ -115,6 +116,10 @@ button {
   font-size: 13px;
   font-weight: 400;
   text-align: left;
+}
+
+.project-nav-item {
+  cursor: pointer;
 }
 
 .nav-item span {
@@ -136,6 +141,77 @@ button {
   font-size: 12px;
   font-weight: 800;
   text-align: center;
+}
+
+.project-actions-menu {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+}
+
+.project-more-button {
+  display: none;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 6px;
+  color: #70717b;
+  background: transparent;
+}
+
+.project-more-button:hover {
+  color: #202128;
+  background: #ffffff;
+}
+
+.project-nav-item:hover .project-note-count,
+.project-nav-item:focus-within .project-note-count,
+.project-actions-menu:has(.project-actions-popover) .project-note-count {
+  display: none;
+}
+
+.project-nav-item:hover .project-more-button,
+.project-nav-item:focus-within .project-more-button,
+.project-actions-menu:has(.project-actions-popover) .project-more-button {
+  display: inline-grid;
+}
+
+.project-actions-popover {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 30;
+  display: grid;
+  min-width: 168px;
+  padding: 8px;
+  border: 1px solid #e1e2e7;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 16px 32px rgba(20, 20, 24, 0.14);
+}
+
+.project-actions-popover button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 36px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 6px;
+  color: #565863;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 400;
+  text-align: left;
+}
+
+.project-actions-popover button:hover {
+  background: #f7f7f8;
+}
+
+.project-actions-popover .danger-action {
+  color: #e73535;
 }
 
 .nav-item.active,

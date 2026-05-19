@@ -320,7 +320,9 @@ export function App() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isProjectOpen, setIsProjectOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
+  const [openProjectMenuId, setOpenProjectMenuId] = useState<string | null>(null);
   const accountMenuRef = useRef<HTMLDivElement | null>(null);
+  const projectActionsMenuRef = useRef<HTMLDivElement | null>(null);
 
   function clearSearch() {
     setSearchQuery("");
@@ -390,6 +392,69 @@ export function App() {
       document.removeEventListener("keydown", closeAccountMenuOnEscape);
     };
   }, [isAccountOpen]);
+
+  useEffect(() => {
+    if (!openProjectMenuId) return;
+
+    function closeProjectMenu(event: PointerEvent) {
+      if (
+        event.target instanceof Node
+        && projectActionsMenuRef.current
+        && !projectActionsMenuRef.current.contains(event.target)
+      ) {
+        setOpenProjectMenuId(null);
+      }
+    }
+
+    function closeProjectMenuOnEscape(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        setOpenProjectMenuId(null);
+      }
+    }
+
+    document.addEventListener("pointerdown", closeProjectMenu);
+    document.addEventListener("keydown", closeProjectMenuOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeProjectMenu);
+      document.removeEventListener("keydown", closeProjectMenuOnEscape);
+    };
+  }, [openProjectMenuId]);
+
+  async function updateProject(project: ProjectRecord, update: Partial<Pick<ProjectRecord, "name" | "is_pinned">>) {
+    setError(null);
+    try {
+      await apiFetch<ProjectRecord>(`/api/projects/${project.id}`, {
+        method: "PATCH",
+        body: JSON.stringify(update)
+      });
+      setOpenProjectMenuId(null);
+      await loadWorkspace();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not update project");
+    }
+  }
+
+  async function renameProject(project: ProjectRecord) {
+    const nextName = window.prompt("Rename project", project.name)?.trim();
+    if (!nextName || nextName === project.name) return;
+    await updateProject(project, { name: nextName });
+  }
+
+  async function deleteProject(project: ProjectRecord) {
+    const confirmed = window.confirm(`Delete "${project.name}"? Notes are kept, but the project is archived.`);
+    if (!confirmed) return;
+    setError(null);
+    try {
+      await apiFetch(`/api/projects/${project.id}`, { method: "DELETE" });
+      setOpenProjectMenuId(null);
+      if (selectedProjectId === project.id) {
+        setSelectedProjectId("all");
+      }
+      await loadWorkspace();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not delete project");
+    }
+  }
 
   async function bootstrap() {
     setIsLoading(true);
@@ -597,15 +662,55 @@ export function App() {
             action={<button className="icon-button" aria-label="Add project" onClick={openAddProject}><Plus size={15} /></button>}
           >
             {projects.map((project) => (
-              <button
+              <div
                 key={project.id}
-                className={`nav-item ${selectedProjectId === project.id ? "active-soft" : ""}`}
+                className={`nav-item project-nav-item ${selectedProjectId === project.id ? "active-soft" : ""}`}
+                role="button"
+                tabIndex={0}
                 onClick={() => selectProject(project.id)}
+                onKeyDown={(event) => {
+                  if (event.key !== "Enter" && event.key !== " ") return;
+                  event.preventDefault();
+                  selectProject(project.id);
+                }}
               >
                 {project.is_pinned ? <Pin size={18} /> : <Folder size={19} />}
                 <span>{project.name}</span>
-                <small>{notesByProject[project.id] ?? 0}</small>
-              </button>
+                <div
+                  className="project-actions-menu"
+                  ref={openProjectMenuId === project.id ? projectActionsMenuRef : null}
+                  onClick={(event) => event.stopPropagation()}
+                  onKeyDown={(event) => event.stopPropagation()}
+                >
+                  <small className="project-note-count">{notesByProject[project.id] ?? 0}</small>
+                  <button
+                    className="project-more-button"
+                    type="button"
+                    aria-label={`Project actions for ${project.name}`}
+                    aria-expanded={openProjectMenuId === project.id}
+                    onClick={() => setOpenProjectMenuId((current) => current === project.id ? null : project.id)}
+                  >
+                    <MoreVertical size={17} />
+                  </button>
+                  {openProjectMenuId === project.id && (
+                    <div className="project-actions-popover" role="menu">
+                      <button type="button" role="menuitem" onClick={() => void updateProject(project, { is_pinned: !project.is_pinned })}>
+                        <Pin size={15} />
+                        {project.is_pinned ? "Unpin" : "Pin to top"}
+                      </button>
+                      <button type="button" role="menuitem" onClick={() => void renameProject(project)}>
+                        <Edit3 size={15} />
+                        Rename
+                      </button>
+                      <div className="note-actions-divider" />
+                      <button className="danger-action" type="button" role="menuitem" onClick={() => void deleteProject(project)}>
+                        <Trash2 size={15} />
+                        Delete
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
             ))}
           </SidebarSection>
 
@@ -757,7 +862,7 @@ export function App() {
             {openedNote ? (
               <NotePanel
                 note={openedNote}
-                projectLabel={selectedProject?.name ?? "All projects"}
+                projectLabel={openedNote.project?.name ?? selectedProject?.name ?? "All projects"}
                 currentUser={currentUser}
                 onClose={() => setOpenedNoteId(null)}
                 onRefresh={async () => {
@@ -833,6 +938,7 @@ export function App() {
       {isAddOpen && (
         <AddNoteDialog
           projects={projects}
+          selectedProjectId={selectedProjectId}
           onClose={() => setIsAddOpen(false)}
           onCreated={async () => {
             setIsAddOpen(false);
@@ -1307,10 +1413,6 @@ function NotePanel({
             <ChevronRight size={14} />
             {projectLabel}
           </span>
-          <strong>
-            <ChevronRight size={14} />
-            {note.title}
-          </strong>
         </div>
         <div className="panel-actions">
           {isEditing ? (
@@ -1573,17 +1675,20 @@ function NotePanel({
 
 function AddNoteDialog({
   projects,
+  selectedProjectId,
   onClose,
   onCreated,
   onError
 }: {
   projects: ProjectRecord[];
+  selectedProjectId: string | "all";
   onClose: () => void;
   onCreated: () => Promise<void>;
   onError: (message: string | null) => void;
 }) {
   const [mode, setMode] = useState<"text" | "link" | "file">("text");
-  const [projectId, setProjectId] = useState(projects[0]?.id ?? "");
+  const shouldChooseProject = selectedProjectId === "all";
+  const [projectId, setProjectId] = useState(shouldChooseProject ? "" : selectedProjectId);
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
   const [url, setUrl] = useState("");
@@ -1632,9 +1737,15 @@ function AddNoteDialog({
           <button type="button" className={mode === "link" ? "selected" : ""} onClick={() => setMode("link")}><Link size={17} />Link</button>
           <button type="button" className={mode === "file" ? "selected" : ""} onClick={() => setMode("file")}><Upload size={17} />File</button>
         </div>
-        <select value={projectId} onChange={(event) => setProjectId(event.target.value)} required>
-          {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
-        </select>
+        {shouldChooseProject && (
+          <label className="field-label">
+            <span>Project</span>
+            <select value={projectId} onChange={(event) => setProjectId(event.target.value)} required>
+              <option value="">Choose a project</option>
+              {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+            </select>
+          </label>
+        )}
         <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Title, optional" />
         {mode === "text" && <textarea required value={text} onChange={(event) => setText(event.target.value)} placeholder="Paste notes, agent output, or rough thoughts" />}
         {mode === "link" && <input required type="url" value={url} onChange={(event) => setUrl(event.target.value)} placeholder="https://example.com/article" />}
