@@ -18,6 +18,8 @@
     "@codemirror/lang-sql": "^6.10.0",
     "@codemirror/language": "^6.12.3",
     "@codemirror/legacy-modes": "^6.5.3",
+    "@codemirror/state": "^6.6.0",
+    "@lezer/highlight": "^1.2.3",
     "@mdxeditor/editor": "^4.0.0",
     "lucide-react": "^0.468.0",
     "react": "^18.3.1",

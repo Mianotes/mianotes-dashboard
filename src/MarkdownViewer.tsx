@@ -40,10 +40,12 @@ import { javascript } from "@codemirror/lang-javascript";
 import { php } from "@codemirror/lang-php";
 import { python } from "@codemirror/lang-python";
 import { sql } from "@codemirror/lang-sql";
-import { StreamLanguage } from "@codemirror/language";
+import { StreamLanguage, syntaxHighlighting, HighlightStyle } from "@codemirror/language";
 import { csharp } from "@codemirror/legacy-modes/mode/clike";
+import { Prec } from "@codemirror/state";
 import { ruby } from "@codemirror/legacy-modes/mode/ruby";
 import { shell } from "@codemirror/legacy-modes/mode/shell";
+import { tags as highlightTags } from "@lezer/highlight";
 
 const codeBlockLanguages = [
   { name: "Text", alias: ["text", "txt", "plain"] },
@@ -58,6 +60,55 @@ const codeBlockLanguages = [
   { name: "C++", alias: ["cpp", "c++", "cc", "cxx"], support: cpp() },
   { name: "C#", alias: ["csharp", "c#", "cs"], support: StreamLanguage.define(csharp) },
   { name: "SQL", alias: ["sql"], support: sql() }
+];
+
+const openAiCodeHighlight = HighlightStyle.define([
+  {
+    tag: [
+      highlightTags.keyword,
+      highlightTags.definitionKeyword,
+      highlightTags.moduleKeyword,
+      highlightTags.operatorKeyword,
+      highlightTags.controlKeyword
+    ],
+    color: "#0f74b8"
+  },
+  {
+    tag: [highlightTags.string, highlightTags.special(highlightTags.string)],
+    color: "#008f6b"
+  },
+  {
+    tag: [highlightTags.propertyName, highlightTags.attributeName],
+    color: "#e71d73"
+  },
+  {
+    tag: [
+      highlightTags.function(highlightTags.variableName),
+      highlightTags.function(highlightTags.propertyName)
+    ],
+    color: "#b75e00"
+  },
+  {
+    tag: [highlightTags.number, highlightTags.bool, highlightTags.null, highlightTags.atom],
+    color: "#8b5cf6"
+  },
+  {
+    tag: [highlightTags.className, highlightTags.typeName, highlightTags.namespace],
+    color: "#6d4fc2"
+  },
+  {
+    tag: highlightTags.comment,
+    color: "#8a8c95",
+    fontStyle: "italic"
+  },
+  {
+    tag: [highlightTags.operator, highlightTags.punctuation, highlightTags.bracket],
+    color: "#30323a"
+  }
+]);
+
+const codeMirrorThemeExtensions = [
+  Prec.highest(syntaxHighlighting(openAiCodeHighlight))
 ];
 
 function contentKey(value: string) {
@@ -96,7 +147,11 @@ function richMarkdownPlugins() {
     thematicBreakPlugin(),
     directivesPlugin({ directiveDescriptors: [AdmonitionDirectiveDescriptor] }),
     codeBlockPlugin({ defaultCodeBlockLanguage: "text" }),
-    codeMirrorPlugin({ codeBlockLanguages, autoLoadLanguageSupport: false }),
+    codeMirrorPlugin({
+      codeBlockLanguages,
+      autoLoadLanguageSupport: false,
+      codeMirrorExtensions: codeMirrorThemeExtensions
+    }),
     markdownShortcutPlugin()
   ];
 }
@@ -117,7 +172,7 @@ export default function MarkdownViewer({ id, updatedAt, markdown }: { id: string
 function richMarkdownEditorPlugins() {
   return [
     ...richMarkdownPlugins(),
-    diffSourcePlugin({ viewMode: "rich-text" }),
+    diffSourcePlugin({ viewMode: "rich-text", codeMirrorExtensions: codeMirrorThemeExtensions }),
     toolbarPlugin({
       toolbarContents: () => (
         <DiffSourceToggleWrapper options={["rich-text", "source"]} SourceToolbar={<SourceModeToolbar />}>
