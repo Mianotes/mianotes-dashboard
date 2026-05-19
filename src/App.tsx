@@ -577,6 +577,10 @@ export function App() {
   const visibleEnd = Math.min(pageStartIndex + paginatedNotes.length, filteredNotes.length);
 
   const openedNote = notes.find((note) => note.id === openedNoteId) ?? null;
+  const hasPendingNotes = useMemo(
+    () => notes.some((note) => ["pending_parse", "parsing"].includes(note.status)),
+    [notes]
+  );
 
   useEffect(() => {
     if (currentPage > totalPages) {
@@ -600,6 +604,48 @@ export function App() {
       current === null || notes.some((note) => note.id === current) ? current : null
     ));
   }, [currentUser, isWorkspaceLoaded, notes, projects, tags, users]);
+
+  useEffect(() => {
+    if (!currentUser || !isWorkspaceLoaded || !hasPendingNotes) return;
+
+    let cancelled = false;
+
+    async function pollPendingNotes() {
+      try {
+        const nextNotes = await apiFetch<NoteRecord[]>("/api/notes");
+        if (cancelled) return;
+
+        const hydrated = hydrateNotes(nextNotes, users, projects);
+        setNotes((items) => (
+          hydrated.map((note) => {
+            const current = items.find((item) => item.id === note.id);
+            return current ? mergeNoteRecord(current, note) : note;
+          })
+        ));
+
+        if (openedNoteId && hydrated.some((note) => note.id === openedNoteId)) {
+          const fullNote = await apiFetch<NoteRecord>(`/api/notes/${openedNoteId}`);
+          if (cancelled) return;
+
+          setNotes((items) => (
+            items.map((item) => item.id === openedNoteId ? mergeNoteRecord(item, fullNote) : item)
+          ));
+        }
+      } catch {
+        // Keep the current draft visible; explicit user actions surface their own errors.
+      }
+    }
+
+    void pollPendingNotes();
+    const intervalId = window.setInterval(() => {
+      void pollPendingNotes();
+    }, 2500);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [currentUser, hasPendingNotes, isWorkspaceLoaded, openedNoteId, projects, users]);
 
   useEffect(() => {
     if (!currentUser || !isWorkspaceLoaded) return;
