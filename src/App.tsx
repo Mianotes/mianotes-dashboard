@@ -31,6 +31,7 @@ import {
 } from "lucide-react";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent, ReactNode } from "react";
+import type { MDXEditorMethods } from "@mdxeditor/editor";
 import logoUrl from "./assets/logo_small.png";
 import logoMarkUrl from "./assets/mianotes_mark.svg";
 
@@ -1204,6 +1205,7 @@ function NotePanel({
   const [isTagDialogOpen, setIsTagDialogOpen] = useState(false);
   const [titleDraft, setTitleDraft] = useState(note.title);
   const noteActionsMenuRef = useRef<HTMLDivElement | null>(null);
+  const markdownEditorRef = useRef<MDXEditorMethods | null>(null);
 
   useEffect(() => {
     setMiaResponse(null);
@@ -1266,6 +1268,11 @@ function NotePanel({
   const canChangeNote = currentUser.is_admin || note.user_id === currentUser.id || note.user?.id === currentUser.id;
   const cannotChangeNoteMessage = `Only ${authorName} or an admin can change this note.`;
 
+  function currentEditorMarkdown() {
+    if (!isEditing) return noteMarkdownBody;
+    return markdownEditorRef.current?.getMarkdown() ?? draftText;
+  }
+
   async function saveMarkdown() {
     if (!canChangeNote) {
       setNoteError(cannotChangeNoteMessage);
@@ -1273,12 +1280,16 @@ function NotePanel({
     }
     setIsSaving(true);
     setNoteError(null);
+    const nextText = currentEditorMarkdown();
     try {
       await apiFetch<NoteRecord>(`/api/notes/${note.id}`, {
         method: "PATCH",
-        body: JSON.stringify({ text: draftText })
+        body: JSON.stringify({ text: nextText })
       });
+      setDraftText(nextText);
       setIsEditing(false);
+      setMiaResponse(null);
+      setMiaError(null);
       await onRefresh();
     } catch (err) {
       setNoteError(err instanceof Error ? err.message : "Could not save note");
@@ -1334,10 +1345,11 @@ function NotePanel({
     setIsLoading(true);
     setMiaResponse(null);
     setMiaError(null);
+    const markdown = isEditing ? currentEditorMarkdown() : undefined;
     try {
       const result = await apiFetch<MiaPromptRecord>(`/api/notes/${note.id}/comments`, {
         method: "POST",
-        body: JSON.stringify({ body, markdown: isEditing ? draftText : undefined })
+        body: JSON.stringify({ body, markdown })
       });
       setMiaResponse(result.text);
       if (clearInput) setCommentBody("");
@@ -1370,7 +1382,7 @@ function NotePanel({
       if (!confirmed) return;
     }
 
-    const currentText = noteMarkdownBody.trim();
+    const currentText = currentEditorMarkdown().trim();
     const miaText = miaResponse.trim();
     const nextText = mode === "append" && currentText ? `${currentText}\n\n---\n\n${miaText}` : miaText;
 
@@ -1382,6 +1394,8 @@ function NotePanel({
         body: JSON.stringify({ text: nextText })
       });
       setDraftText(nextText);
+      setMiaResponse(null);
+      setMiaError(null);
       await onRefresh();
     } catch (err) {
       setMiaError(err instanceof Error ? err.message : "Could not update note");
@@ -1614,6 +1628,7 @@ function NotePanel({
         <div className="markdown-preview">
           <Suspense fallback={<div className="editor-loading">Loading editor...</div>}>
             <MarkdownEditor
+              ref={markdownEditorRef}
               id={note.id}
               markdown={draftText}
               onChange={setDraftText}

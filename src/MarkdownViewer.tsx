@@ -26,6 +26,7 @@ import {
   ListsToggle,
   markdownShortcutPlugin,
   MDXEditor,
+  type MDXEditorMethods,
   quotePlugin,
   Separator,
   tablePlugin,
@@ -33,6 +34,7 @@ import {
   toolbarPlugin,
   UndoRedo
 } from "@mdxeditor/editor";
+import { forwardRef } from "react";
 import { cpp } from "@codemirror/lang-cpp";
 import { css } from "@codemirror/lang-css";
 import { java } from "@codemirror/lang-java";
@@ -211,17 +213,23 @@ function richMarkdownEditorPlugins() {
   ];
 }
 
-export function MarkdownEditor({
-  id,
-  markdown,
-  onChange
-}: {
+type MarkdownEditorProps = {
   id: string;
   markdown: string;
   onChange: (markdown: string) => void;
-}) {
+};
+
+export const MarkdownEditor = forwardRef<MDXEditorMethods, MarkdownEditorProps>(function MarkdownEditor(
+  {
+    id,
+    markdown,
+    onChange
+  },
+  ref
+) {
   return (
     <MDXEditor
+      ref={ref}
       key={`${id}-editing`}
       markdown={markdown}
       onChange={(nextMarkdown) => onChange(nextMarkdown)}
@@ -230,4 +238,4 @@ export function MarkdownEditor({
       contentEditableClassName="mianotes-rich-content"
     />
   );
-}
+});
