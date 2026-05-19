@@ -1548,6 +1548,95 @@ textarea:focus {
   margin: 0;
 }
 
+.project-modal {
+  width: min(520px, calc(100vw - 32px));
+  padding: 0;
+  gap: 0;
+  overflow: hidden;
+}
+
+.project-modal-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 22px 24px;
+  border-bottom: 1px solid #e0e1e7;
+  background: #f7f7f8;
+}
+
+.project-modal-header h2 {
+  margin: 0;
+  font-size: 20px;
+  line-height: 1.2;
+}
+
+.project-modal-header p {
+  margin: 7px 0 0;
+  color: #686a75;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.project-modal-body {
+  display: grid;
+  gap: 16px;
+  padding: 24px;
+}
+
+.field-label {
+  display: grid;
+  gap: 8px;
+}
+
+.field-label span {
+  color: #4c4e58;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.checkbox-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #dedfe5;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.checkbox-card input {
+  width: 18px;
+  height: 18px;
+  margin-top: 2px;
+  accent-color: #17181d;
+}
+
+.checkbox-card span {
+  display: grid;
+  gap: 3px;
+}
+
+.checkbox-card strong {
+  color: #222329;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.checkbox-card small {
+  color: #72747e;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.project-modal-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 18px 24px 24px;
+}
+
 .segmented {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

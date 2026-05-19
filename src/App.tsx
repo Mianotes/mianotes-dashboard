@@ -17,6 +17,7 @@ import {
   Loader2,
   MessageCircle,
   MoreVertical,
+  Pin,
   Plus,
   Search,
   Settings,
@@ -50,6 +51,7 @@ type ProjectRecord = {
   user_id: string;
   name: string;
   slug: string;
+  is_pinned: boolean;
   archived_at: string | null;
 };
 
@@ -316,6 +318,7 @@ export function App() {
   const [isWorkspaceLoaded, setIsWorkspaceLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isProjectOpen, setIsProjectOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const accountMenuRef = useRef<HTMLDivElement | null>(null);
 
@@ -350,6 +353,11 @@ export function App() {
   function openAddNote() {
     clearSearch();
     setIsAddOpen(true);
+  }
+
+  function openAddProject() {
+    clearSearch();
+    setIsProjectOpen(true);
   }
 
   useEffect(() => {
@@ -586,7 +594,7 @@ export function App() {
 
           <SidebarSection
             title="Projects"
-            action={<button className="icon-button" aria-label="Add project"><Plus size={15} /></button>}
+            action={<button className="icon-button" aria-label="Add project" onClick={openAddProject}><Plus size={15} /></button>}
           >
             {projects.map((project) => (
               <button
@@ -594,7 +602,7 @@ export function App() {
                 className={`nav-item ${selectedProjectId === project.id ? "active-soft" : ""}`}
                 onClick={() => selectProject(project.id)}
               >
-                <Folder size={19} />
+                {project.is_pinned ? <Pin size={18} /> : <Folder size={19} />}
                 <span>{project.name}</span>
                 <small>{notesByProject[project.id] ?? 0}</small>
               </button>
@@ -828,6 +836,17 @@ export function App() {
           onCreated={async () => {
             setIsAddOpen(false);
             await refreshNotes();
+          }}
+          onError={setError}
+        />
+      )}
+      {isProjectOpen && (
+        <AddProjectDialog
+          onClose={() => setIsProjectOpen(false)}
+          onCreated={async (project) => {
+            setIsProjectOpen(false);
+            await loadWorkspace();
+            setSelectedProjectId(project.id);
           }}
           onError={setError}
         />
@@ -1541,6 +1560,81 @@ function AddNoteDialog({
           {isSaving ? <Loader2 className="spin" size={17} /> : <Plus size={17} />}
           Create note
         </button>
+      </form>
+    </div>
+  );
+}
+
+function AddProjectDialog({
+  onClose,
+  onCreated,
+  onError
+}: {
+  onClose: () => void;
+  onCreated: (project: ProjectRecord) => Promise<void>;
+  onError: (message: string | null) => void;
+}) {
+  const [name, setName] = useState("");
+  const [isPinned, setIsPinned] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    setIsSaving(true);
+    onError(null);
+    try {
+      const project = await apiFetch<ProjectRecord>("/api/projects", {
+        method: "POST",
+        body: JSON.stringify({ name, is_pinned: isPinned })
+      });
+      await onCreated(project);
+    } catch (err) {
+      onError(err instanceof Error ? err.message : "Could not add project");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  return (
+    <div className="modal-backdrop" role="dialog" aria-modal="true">
+      <form className="modal project-modal" onSubmit={submit}>
+        <div className="project-modal-header">
+          <div>
+            <h2>Add project</h2>
+            <p>Create a shared space for notes, sources, and Mia output.</p>
+          </div>
+          <button className="icon-button" type="button" onClick={onClose} aria-label="Close"><X size={20} /></button>
+        </div>
+        <div className="project-modal-body">
+          <label className="field-label">
+            <span>Project name</span>
+            <input
+              autoFocus
+              required
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              placeholder="Research, Mallorca trip, Product notes..."
+            />
+          </label>
+          <label className="checkbox-card">
+            <input
+              type="checkbox"
+              checked={isPinned}
+              onChange={(event) => setIsPinned(event.target.checked)}
+            />
+            <span>
+              <strong>Pin to top</strong>
+              <small>Keep this project above the rest of the list.</small>
+            </span>
+          </label>
+        </div>
+        <div className="project-modal-actions">
+          <button className="primary-button" disabled={isSaving || !name.trim()}>
+            {isSaving ? <Loader2 className="spin" size={17} /> : <Plus size={17} />}
+            Create project
+          </button>
+          <button className="text-button" type="button" onClick={onClose}>Cancel</button>
+        </div>
       </form>
     </div>
   );
