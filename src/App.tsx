@@ -1511,6 +1511,7 @@ function NotePanel({
             value={titleDraft}
             autoFocus
             onChange={(event) => setTitleDraft(event.target.value)}
+            onBlur={() => void saveTitle()}
             onKeyDown={(event) => {
               if (event.key === "Enter") {
                 event.preventDefault();
@@ -1525,10 +1526,10 @@ function NotePanel({
           />
         ) : (
           <h1
-            className={canChangeNote ? "editable-note-title" : undefined}
-            title={canChangeNote ? "Click to edit title" : cannotChangeNoteMessage}
+            className={isEditing && canChangeNote ? "editable-note-title" : undefined}
+            title={isEditing && canChangeNote ? "Click to edit title" : undefined}
             onClick={() => {
-              if (!canChangeNote) return;
+              if (!isEditing || !canChangeNote) return;
               setNoteError(null);
               setTitleDraft(note.title);
               setIsEditingTitle(true);
