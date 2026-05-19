@@ -1577,6 +1577,7 @@ function AddProjectDialog({
   const [name, setName] = useState("");
   const [isPinned, setIsPinned] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const canCreateProject = name.trim().length >= 3;
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -1601,7 +1602,7 @@ function AddProjectDialog({
         <div className="project-modal-header">
           <div>
             <h2>Add project</h2>
-            <p>Create a shared space for notes, sources, and Mia output.</p>
+            <p>Anyone signed in can view this project and add notes to it.</p>
           </div>
           <button className="icon-button" type="button" onClick={onClose} aria-label="Close"><X size={20} /></button>
         </div>
@@ -1613,7 +1614,6 @@ function AddProjectDialog({
               required
               value={name}
               onChange={(event) => setName(event.target.value)}
-              placeholder="Research, Mallorca trip, Product notes..."
             />
           </label>
           <label className="checkbox-card">
@@ -1629,7 +1629,7 @@ function AddProjectDialog({
           </label>
         </div>
         <div className="project-modal-actions">
-          <button className="primary-button" disabled={isSaving || !name.trim()}>
+          <button className="primary-button create-project-button" disabled={isSaving || !canCreateProject}>
             {isSaving ? <Loader2 className="spin" size={17} /> : <Plus size={17} />}
             Create project
           </button>
