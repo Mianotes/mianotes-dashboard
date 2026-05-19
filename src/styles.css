@@ -1144,9 +1144,17 @@ button {
   position: sticky;
   top: 0;
   z-index: 2;
+  flex-wrap: wrap;
   margin: 0 0 22px;
   padding: 8px 0;
+  overflow-x: visible;
   background: #ffffff;
+}
+
+.mianotes-rich-editor [class*="diffSourceToggleWrapper"] {
+  position: static;
+  right: auto;
+  margin-left: 0;
 }
 
 .source-mode-toolbar {
