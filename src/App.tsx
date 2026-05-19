@@ -1876,7 +1876,7 @@ function AddNoteDialog({
             <label className="field-label">
               <span>URL</span>
               <input required type="url" value={url} onChange={(event) => setUrl(event.target.value)} placeholder="https://example.com/article" />
-              <small className="field-help">Mia will save a draft immediately, then replace it with Markdown when indexing finishes.</small>
+              <small className="field-help">Mia will save a draft now, then replace it with the page contents once indexing is complete.</small>
             </label>
           )}
           {mode === "file" && (
