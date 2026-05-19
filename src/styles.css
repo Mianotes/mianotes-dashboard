@@ -1152,6 +1152,47 @@ button {
   background-color: transparent !important;
 }
 
+.mianotes-rich-content .mn-code-keyword,
+.mianotes-rich-editor .mn-code-keyword {
+  color: #0f74b8 !important;
+}
+
+.mianotes-rich-content .mn-code-string,
+.mianotes-rich-editor .mn-code-string {
+  color: #008f6b !important;
+}
+
+.mianotes-rich-content .mn-code-property,
+.mianotes-rich-editor .mn-code-property {
+  color: #e71d73 !important;
+}
+
+.mianotes-rich-content .mn-code-name,
+.mianotes-rich-editor .mn-code-name {
+  color: #30323a !important;
+}
+
+.mianotes-rich-content .mn-code-builtin,
+.mianotes-rich-editor .mn-code-builtin {
+  color: #b75e00 !important;
+}
+
+.mianotes-rich-content .mn-code-literal,
+.mianotes-rich-editor .mn-code-literal {
+  color: #8b5cf6 !important;
+}
+
+.mianotes-rich-content .mn-code-comment,
+.mianotes-rich-editor .mn-code-comment {
+  color: #8a8c95 !important;
+  font-style: italic;
+}
+
+.mianotes-rich-content .mn-code-punctuation,
+.mianotes-rich-editor .mn-code-punctuation {
+  color: #30323a !important;
+}
+
 .mianotes-rich-viewer [class*="codeMirrorToolbar"] {
   display: none;
 }

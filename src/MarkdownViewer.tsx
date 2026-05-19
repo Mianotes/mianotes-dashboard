@@ -71,39 +71,49 @@ const openAiCodeHighlight = HighlightStyle.define([
       highlightTags.operatorKeyword,
       highlightTags.controlKeyword
     ],
-    color: "#0f74b8"
+    class: "mn-code-keyword"
   },
   {
     tag: [highlightTags.string, highlightTags.special(highlightTags.string)],
-    color: "#008f6b"
+    class: "mn-code-string"
   },
   {
     tag: [highlightTags.propertyName, highlightTags.attributeName],
-    color: "#e71d73"
+    class: "mn-code-property"
   },
   {
     tag: [
+      highlightTags.name,
+      highlightTags.variableName,
+      highlightTags.definition(highlightTags.name),
+      highlightTags.definition(highlightTags.variableName),
       highlightTags.function(highlightTags.variableName),
       highlightTags.function(highlightTags.propertyName)
     ],
-    color: "#b75e00"
+    class: "mn-code-name"
+  },
+  {
+    tag: [
+      highlightTags.standard(highlightTags.name),
+      highlightTags.standard(highlightTags.variableName)
+    ],
+    class: "mn-code-builtin"
   },
   {
     tag: [highlightTags.number, highlightTags.bool, highlightTags.null, highlightTags.atom],
-    color: "#8b5cf6"
+    class: "mn-code-literal"
   },
   {
     tag: [highlightTags.className, highlightTags.typeName, highlightTags.namespace],
-    color: "#6d4fc2"
+    class: "mn-code-name"
   },
   {
     tag: highlightTags.comment,
-    color: "#8a8c95",
-    fontStyle: "italic"
+    class: "mn-code-comment"
   },
   {
     tag: [highlightTags.operator, highlightTags.punctuation, highlightTags.bracket],
-    color: "#30323a"
+    class: "mn-code-punctuation"
   }
 ]);
 
