@@ -629,8 +629,9 @@ export function App() {
           {!openedNote && (
             <header className="toolbar">
               <div className="breadcrumb">
-                <img className="breadcrumb-mark" src={logoMarkUrl} alt="" />
-                <span className="breadcrumb-root">
+                <span>Project</span>
+                <span className={breadcrumbItems.length === 0 && !selectedTagRecord ? "current" : undefined}>
+                  <ChevronRight size={14} />
                   {selectedProject?.name ?? "All projects"}
                 </span>
                 {breadcrumbItems.map((item, index) => (
