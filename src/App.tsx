@@ -1302,8 +1302,15 @@ function NotePanel({
           <ChevronLeft size={16} />
         </button>
         <div className="note-document-breadcrumb">
-          <img className="breadcrumb-mark" src={logoMarkUrl} alt="" />
-          <span className="breadcrumb-root">{projectLabel}</span>
+          <span>Project</span>
+          <span>
+            <ChevronRight size={14} />
+            {projectLabel}
+          </span>
+          <strong>
+            <ChevronRight size={14} />
+            {note.title}
+          </strong>
         </div>
         <div className="panel-actions">
           {isEditing ? (

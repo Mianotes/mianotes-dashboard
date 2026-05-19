@@ -844,6 +844,7 @@ button {
   color: #1f2026;
   font-weight: 700;
   text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .note-document-title {
