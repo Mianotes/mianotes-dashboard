@@ -322,6 +322,7 @@ export function App() {
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [openProjectMenuId, setOpenProjectMenuId] = useState<string | null>(null);
   const [renamingProject, setRenamingProject] = useState<ProjectRecord | null>(null);
+  const [noteIdToEditOnOpen, setNoteIdToEditOnOpen] = useState<string | null>(null);
   const accountMenuRef = useRef<HTMLDivElement | null>(null);
   const projectActionsMenuRef = useRef<HTMLDivElement | null>(null);
 
@@ -489,7 +490,12 @@ export function App() {
   async function refreshNotes() {
     const nextNotes = await apiFetch<NoteRecord[]>("/api/notes");
     const hydrated = hydrateNotes(nextNotes, users, projects);
-    setNotes(hydrated);
+    setNotes((items) => (
+      hydrated.map((note) => {
+        const current = items.find((item) => item.id === note.id);
+        return current ? mergeNoteRecord(current, note) : note;
+      })
+    ));
     setOpenedNoteId((current) => current && hydrated.some((note) => note.id === current) ? current : null);
   }
 
@@ -868,6 +874,8 @@ export function App() {
                 note={openedNote}
                 projectLabel={openedNote.project?.name ?? selectedProject?.name ?? "All projects"}
                 currentUser={currentUser}
+                startInEdit={noteIdToEditOnOpen === openedNote.id}
+                onStartInEditConsumed={() => setNoteIdToEditOnOpen(null)}
                 onClose={() => setOpenedNoteId(null)}
                 onRefresh={async () => {
                   const fullNote = await apiFetch<NoteRecord>(`/api/notes/${openedNote.id}`);
@@ -944,7 +952,15 @@ export function App() {
           projects={projects}
           selectedProjectId={selectedProjectId}
           onClose={() => setIsAddOpen(false)}
-          onCreated={async () => {
+          onCreated={async (note, shouldEdit) => {
+            setNotes((items) => {
+              const hydratedNote = hydrateNotes([note], users, projects)[0] ?? note;
+              return items.some((item) => item.id === note.id)
+                ? items.map((item) => item.id === note.id ? mergeNoteRecord(item, hydratedNote) : item)
+                : [hydratedNote, ...items];
+            });
+            setOpenedNoteId(note.id);
+            setNoteIdToEditOnOpen(shouldEdit ? note.id : null);
             setIsAddOpen(false);
             await refreshNotes();
           }}
@@ -1153,6 +1169,8 @@ function NotePanel({
   note,
   projectLabel,
   currentUser,
+  startInEdit = false,
+  onStartInEditConsumed,
   onClose,
   onRefresh,
   onDeleted
@@ -1160,6 +1178,8 @@ function NotePanel({
   note: NoteRecord;
   projectLabel: string;
   currentUser: UserRecord;
+  startInEdit?: boolean;
+  onStartInEditConsumed?: () => void;
   onClose: () => void;
   onRefresh: () => Promise<void>;
   onDeleted: () => Promise<void>;
@@ -1187,13 +1207,16 @@ function NotePanel({
     setMiaError(null);
     setTagError(null);
     setCommentBody("");
-    setIsEditing(false);
+    setIsEditing(startInEdit);
     setDraftText(noteBodyMarkdown(note.text ?? ""));
     setIsActionsOpen(false);
     setIsApplyingMia(false);
     setIsEditingTitle(false);
     setIsTagDialogOpen(false);
     setTitleDraft(note.title);
+    if (startInEdit) {
+      onStartInEditConsumed?.();
+    }
   }, [note?.id]);
 
   useEffect(() => {
@@ -1747,7 +1770,7 @@ function AddNoteDialog({
   projects: ProjectRecord[];
   selectedProjectId: string | "all";
   onClose: () => void;
-  onCreated: () => Promise<void>;
+  onCreated: (note: NoteRecord, shouldEdit: boolean) => Promise<void>;
   onError: (message: string | null) => void;
 }) {
   const [mode, setMode] = useState<"text" | "link" | "file">("text");
@@ -1758,30 +1781,45 @@ function AddNoteDialog({
   const [url, setUrl] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const cleanTitle = title.trim();
+  const cleanUrl = url.trim();
+  const canCreate =
+    Boolean(projectId)
+    && (
+      (mode === "text" && cleanTitle.length > 0)
+      || (mode === "link" && cleanTitle.length > 0 && cleanUrl.length > 0)
+      || (mode === "file" && Boolean(file))
+    );
 
   async function submit(event: FormEvent) {
     event.preventDefault();
+    if (!canCreate) return;
     setIsSaving(true);
     onError(null);
     try {
+      let createdNote: NoteRecord;
+      let shouldEdit = false;
       if (mode === "text") {
-        await apiFetch("/api/notes/from-text", {
+        createdNote = await apiFetch<NoteRecord>("/api/notes/from-text", {
           method: "POST",
-          body: JSON.stringify({ project_id: projectId, title: title || undefined, text })
+          body: JSON.stringify({ project_id: projectId, title: cleanTitle, text: text.trim() || " " })
         });
+        shouldEdit = true;
       } else if (mode === "link") {
-        await apiFetch("/api/notes/from-url", {
+        createdNote = await apiFetch<NoteRecord>("/api/notes/from-url", {
           method: "POST",
-          body: JSON.stringify({ project_id: projectId, title: title || undefined, url })
+          body: JSON.stringify({ project_id: projectId, title: cleanTitle, url: cleanUrl })
         });
       } else if (file) {
         const formData = new FormData();
         formData.set("project_id", projectId);
         if (title) formData.set("title", title);
         formData.set("file", file);
-        await apiFetch("/api/notes/from-file", { method: "POST", body: formData });
+        createdNote = await apiFetch<NoteRecord>("/api/notes/from-file", { method: "POST", body: formData });
+      } else {
+        return;
       }
-      await onCreated();
+      await onCreated(createdNote, shouldEdit);
     } catch (err) {
       onError(err instanceof Error ? err.message : "Could not add note");
     } finally {
@@ -1791,33 +1829,66 @@ function AddNoteDialog({
 
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true">
-      <form className="modal" onSubmit={submit}>
-        <div className="modal-header">
-          <h2>Add note</h2>
+      <form className="modal project-modal add-note-modal" onSubmit={submit}>
+        <div className="project-modal-header">
+          <div>
+            <h2>Add note</h2>
+            <p>Create a note, index a link, or upload a file into your knowledge base.</p>
+          </div>
           <button className="icon-button" type="button" onClick={onClose} aria-label="Close"><X size={20} /></button>
         </div>
-        <div className="segmented">
-          <button type="button" className={mode === "text" ? "selected" : ""} onClick={() => setMode("text")}><FileText size={17} />Text</button>
-          <button type="button" className={mode === "link" ? "selected" : ""} onClick={() => setMode("link")}><Link size={17} />Link</button>
-          <button type="button" className={mode === "file" ? "selected" : ""} onClick={() => setMode("file")}><Upload size={17} />File</button>
-        </div>
-        {shouldChooseProject && (
+        <div className="project-modal-body">
+          <div className="segmented" aria-label="Note source type">
+            <button type="button" className={mode === "text" ? "selected" : ""} onClick={() => setMode("text")}><FileText size={17} />Text</button>
+            <button type="button" className={mode === "link" ? "selected" : ""} onClick={() => setMode("link")}><Link size={17} />Link</button>
+            <button type="button" className={mode === "file" ? "selected" : ""} onClick={() => setMode("file")}><Upload size={17} />File</button>
+          </div>
+          {shouldChooseProject && (
+            <label className="field-label">
+              <span>Project</span>
+              <select value={projectId} onChange={(event) => setProjectId(event.target.value)} required>
+                <option value="">Choose a project</option>
+                {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+              </select>
+            </label>
+          )}
           <label className="field-label">
-            <span>Project</span>
-            <select value={projectId} onChange={(event) => setProjectId(event.target.value)} required>
-              <option value="">Choose a project</option>
-              {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
-            </select>
+            <span>Title{mode === "file" ? " (optional)" : ""}</span>
+            <input
+              autoFocus
+              required={mode !== "file"}
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+              placeholder={mode === "file" ? "Use the file name" : undefined}
+            />
           </label>
-        )}
-        <input value={title} onChange={(event) => setTitle(event.target.value)} placeholder="Title, optional" />
-        {mode === "text" && <textarea required value={text} onChange={(event) => setText(event.target.value)} placeholder="Paste notes, agent output, or rough thoughts" />}
-        {mode === "link" && <input required type="url" value={url} onChange={(event) => setUrl(event.target.value)} placeholder="https://example.com/article" />}
-        {mode === "file" && <input required type="file" onChange={(event) => setFile(event.target.files?.[0] ?? null)} />}
-        <button className="primary-button" disabled={isSaving || !projectId}>
-          {isSaving ? <Loader2 className="spin" size={17} /> : <Plus size={17} />}
-          Create note
-        </button>
+          {mode === "text" && (
+            <label className="field-label">
+              <span>Text (optional)</span>
+              <textarea value={text} onChange={(event) => setText(event.target.value)} placeholder="Paste notes, agent output, or rough thoughts" />
+            </label>
+          )}
+          {mode === "link" && (
+            <label className="field-label">
+              <span>URL</span>
+              <input required type="url" value={url} onChange={(event) => setUrl(event.target.value)} placeholder="https://example.com/article" />
+              <small className="field-help">Mia will save a draft immediately, then replace it with Markdown when indexing finishes.</small>
+            </label>
+          )}
+          {mode === "file" && (
+            <label className="field-label">
+              <span>File</span>
+              <input required type="file" onChange={(event) => setFile(event.target.files?.[0] ?? null)} />
+            </label>
+          )}
+        </div>
+        <div className="project-modal-actions">
+          <button className="primary-button create-note-button" disabled={isSaving || !canCreate}>
+            {isSaving ? <Loader2 className="spin" size={17} /> : <Plus size={17} />}
+            Create note
+          </button>
+          <button className="text-button" type="button" onClick={onClose}>Cancel</button>
+        </div>
       </form>
     </div>
   );

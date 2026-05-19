@@ -1829,6 +1829,16 @@ textarea:focus {
   min-width: 154px;
 }
 
+.create-note-button {
+  min-width: 142px;
+}
+
+.field-help {
+  color: #72747e;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
 .modal-notice {
   padding: 10px 12px;
   border-radius: 8px;
