@@ -1248,6 +1248,7 @@ function NotePanel({
   const [miaError, setMiaError] = useState<string | null>(null);
   const [tagError, setTagError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [miaLoadingMessage, setMiaLoadingMessage] = useState("Sending your request to Mia...");
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isApplyingMia, setIsApplyingMia] = useState(false);
@@ -1256,12 +1257,33 @@ function NotePanel({
   const [titleDraft, setTitleDraft] = useState(note.title);
   const noteActionsMenuRef = useRef<HTMLDivElement | null>(null);
   const markdownEditorRef = useRef<MDXEditorMethods | null>(null);
+  const miaLoadingTimersRef = useRef<number[]>([]);
+
+  function clearMiaLoadingTimers() {
+    miaLoadingTimersRef.current.forEach((timerId) => window.clearTimeout(timerId));
+    miaLoadingTimersRef.current = [];
+  }
+
+  function startMiaLoadingMessages() {
+    clearMiaLoadingTimers();
+    setMiaLoadingMessage("Sending your request to Mia...");
+    miaLoadingTimersRef.current = [
+      window.setTimeout(() => {
+        setMiaLoadingMessage("This might take a few seconds.");
+      }, 3000),
+      window.setTimeout(() => {
+        setMiaLoadingMessage("Processing the response, hold on.");
+      }, 6000)
+    ];
+  }
 
   useEffect(() => {
+    clearMiaLoadingTimers();
     setMiaResponse(null);
     setNoteError(null);
     setMiaError(null);
     setTagError(null);
+    setMiaLoadingMessage("Sending your request to Mia...");
     setCommentBody("");
     setIsEditing(startInEdit);
     setDraftText(noteBodyMarkdown(note.text ?? ""));
@@ -1274,6 +1296,10 @@ function NotePanel({
       onStartInEditConsumed?.();
     }
   }, [note?.id]);
+
+  useEffect(() => () => {
+    clearMiaLoadingTimers();
+  }, []);
 
   useEffect(() => {
     if (!isEditingTitle) {
@@ -1393,6 +1419,7 @@ function NotePanel({
       ? trimmedInstructions
       : `@mia ${trimmedInstructions}`;
     setIsLoading(true);
+    startMiaLoadingMessages();
     setMiaResponse(null);
     setMiaError(null);
     const markdown = isEditing ? currentEditorMarkdown() : undefined;
@@ -1407,6 +1434,7 @@ function NotePanel({
     } catch (err) {
       setMiaError(err instanceof Error ? err.message : "Could not send comment");
     } finally {
+      clearMiaLoadingTimers();
       setIsLoading(false);
     }
   }
@@ -1708,6 +1736,7 @@ function NotePanel({
             {isLoading ? (
               <div className="mia-loader">
                 <img src={logoMarkUrl} alt="" />
+                <p>{miaLoadingMessage}</p>
               </div>
             ) : (
               <>

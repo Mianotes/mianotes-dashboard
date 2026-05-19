@@ -1507,6 +1507,8 @@ button {
   display: grid;
   place-items: center;
   align-items: center;
+  gap: 14px;
+  text-align: center;
   color: #6d6f79;
 }
 
@@ -1514,6 +1516,13 @@ button {
   width: 46px;
   height: 46px;
   animation: mia-logo-pulse 1.2s ease-in-out infinite;
+}
+
+.mia-loader p {
+  margin: 0;
+  color: #4e505a;
+  font-size: 14px;
+  font-weight: 500;
 }
 
 .mia-action-row {
