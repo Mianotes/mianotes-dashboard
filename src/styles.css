@@ -146,6 +146,7 @@ button {
 }
 
 .nav-item.active-soft {
+  border-left-color: #15161a;
   color: #1f2026;
   background: #f1f1f3;
 }
