@@ -146,7 +146,7 @@ button {
   text-align: left;
 }
 
-.project-nav-item {
+.folder-nav-item {
   cursor: pointer;
 }
 
@@ -171,13 +171,13 @@ button {
   text-align: center;
 }
 
-.project-actions-menu {
+.folder-actions-menu {
   position: relative;
   display: inline-grid;
   place-items: center;
 }
 
-.project-more-button {
+.folder-more-button {
   display: none;
   place-items: center;
   width: 28px;
@@ -188,30 +188,30 @@ button {
   background: transparent;
 }
 
-.project-more-button:hover {
+.folder-more-button:hover {
   color: #202128;
   background: #ffffff;
 }
 
-.project-actions-menu:has(.project-actions-popover) .project-note-count {
+.folder-actions-menu:has(.folder-actions-popover) .folder-note-count {
   display: none;
 }
 
-.project-actions-menu:has(.project-actions-popover) .project-more-button {
+.folder-actions-menu:has(.folder-actions-popover) .folder-more-button {
   display: inline-grid;
 }
 
 @media (hover: hover) and (pointer: fine) {
-  .project-nav-item:hover .project-note-count {
+  .folder-nav-item:hover .folder-note-count {
     display: none;
   }
 
-  .project-nav-item:hover .project-more-button {
+  .folder-nav-item:hover .folder-more-button {
     display: inline-grid;
   }
 }
 
-.project-actions-popover {
+.folder-actions-popover {
   position: absolute;
   top: calc(100% + 8px);
   right: 0;
@@ -225,7 +225,7 @@ button {
   box-shadow: 0 16px 32px rgba(20, 20, 24, 0.14);
 }
 
-.project-actions-popover button {
+.folder-actions-popover button {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -240,11 +240,11 @@ button {
   text-align: left;
 }
 
-.project-actions-popover button:hover {
+.folder-actions-popover button:hover {
   background: #f7f7f8;
 }
 
-.project-actions-popover .danger-action {
+.folder-actions-popover .danger-action {
   color: #e73535;
 }
 
@@ -778,7 +778,7 @@ button {
   font-weight: 400;
 }
 
-.project-name {
+.folder-name {
   color: #6f707b;
   font-family: "SFMono-Regular", Consolas, monospace;
   font-weight: 800;
@@ -1823,14 +1823,14 @@ textarea:focus {
   margin: 0;
 }
 
-.project-modal {
+.folder-modal {
   width: min(520px, calc(100vw - 32px));
   padding: 0;
   gap: 0;
   overflow: hidden;
 }
 
-.project-modal-header {
+.folder-modal-header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
@@ -1840,20 +1840,20 @@ textarea:focus {
   background: #f7f7f8;
 }
 
-.project-modal-header h2 {
+.folder-modal-header h2 {
   margin: 0;
   font-size: 20px;
   line-height: 1.2;
 }
 
-.project-modal-header p {
+.folder-modal-header p {
   margin: 7px 0 0;
   color: #686a75;
   font-size: 14px;
   line-height: 1.45;
 }
 
-.project-modal-body {
+.folder-modal-body {
   display: grid;
   gap: 16px;
   padding: 24px;
@@ -1908,7 +1908,7 @@ textarea:focus {
   line-height: 1.4;
 }
 
-.project-modal-actions {
+.folder-modal-actions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -1916,7 +1916,7 @@ textarea:focus {
   padding: 18px 24px 24px;
 }
 
-.create-project-button {
+.create-folder-button {
   min-width: 154px;
 }
 
@@ -2177,11 +2177,11 @@ textarea:focus {
     display: inline-flex;
   }
 
-  .sidebar .project-note-count {
+  .sidebar .folder-note-count {
     display: none;
   }
 
-  .sidebar .project-more-button {
+  .sidebar .folder-more-button {
     display: inline-grid;
   }
 

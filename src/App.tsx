@@ -48,7 +48,7 @@ type UserRecord = {
   photo_url?: string | null;
 };
 
-type ProjectRecord = {
+type FolderRecord = {
   id: string;
   user_id: string;
   name: string;
@@ -74,8 +74,8 @@ type NoteRecord = {
   id: string;
   user?: UserRecord;
   user_id?: string;
-  project?: ProjectRecord;
-  project_id?: string;
+  folder?: FolderRecord;
+  folder_id?: string;
   title: string;
   status: string;
   source_type: string;
@@ -120,7 +120,7 @@ type EmailCheckResponse = {
 type DashboardUiState = {
   selectedView: "recent" | "starred";
   selectedUserId: string | "all";
-  selectedProjectId: string | "all";
+  selectedFolderId: string | "all";
   selectedTag: string | "all";
   openedNoteId: string | null;
   searchQuery: string;
@@ -134,7 +134,7 @@ const notesPerPage = 10;
 const defaultDashboardUiState: DashboardUiState = {
   selectedView: "recent",
   selectedUserId: "all",
-  selectedProjectId: "all",
+  selectedFolderId: "all",
   selectedTag: "all",
   openedNoteId: null,
   searchQuery: "",
@@ -186,7 +186,7 @@ function readDashboardUiState(): DashboardUiState {
     return {
       selectedView: value.selectedView === "starred" ? "starred" : "recent",
       selectedUserId: typeof value.selectedUserId === "string" ? value.selectedUserId : "all",
-      selectedProjectId: typeof value.selectedProjectId === "string" ? value.selectedProjectId : "all",
+      selectedFolderId: typeof value.selectedFolderId === "string" ? value.selectedFolderId : "all",
       selectedTag: typeof value.selectedTag === "string" ? value.selectedTag : "all",
       openedNoteId: typeof value.openedNoteId === "string" ? value.openedNoteId : null,
       searchQuery: typeof value.searchQuery === "string" ? value.searchQuery : "",
@@ -305,13 +305,13 @@ export function App() {
   const initialUiState = useMemo(() => readDashboardUiState(), []);
   const [currentUser, setCurrentUser] = useState<UserRecord | null>(null);
   const [users, setUsers] = useState<UserRecord[]>([]);
-  const [projects, setProjects] = useState<ProjectRecord[]>([]);
+  const [folders, setFolders] = useState<FolderRecord[]>([]);
   const [tags, setTags] = useState<TagRecord[]>([]);
   const [notes, setNotes] = useState<NoteRecord[]>([]);
   const [storageCapacity, setStorageCapacity] = useState<StorageCapacityRecord | null>(null);
   const [selectedView, setSelectedView] = useState<"recent" | "starred">(initialUiState.selectedView);
   const [selectedUserId, setSelectedUserId] = useState<string | "all">(initialUiState.selectedUserId);
-  const [selectedProjectId, setSelectedProjectId] = useState<string | "all">(initialUiState.selectedProjectId);
+  const [selectedFolderId, setSelectedFolderId] = useState<string | "all">(initialUiState.selectedFolderId);
   const [selectedTag, setSelectedTag] = useState<string | "all">(initialUiState.selectedTag);
   const [openedNoteId, setOpenedNoteId] = useState<string | null>(initialUiState.openedNoteId);
   const [searchQuery, setSearchQuery] = useState(initialUiState.searchQuery);
@@ -320,14 +320,14 @@ export function App() {
   const [isWorkspaceLoaded, setIsWorkspaceLoaded] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isAddOpen, setIsAddOpen] = useState(false);
-  const [isProjectOpen, setIsProjectOpen] = useState(false);
+  const [isFolderOpen, setIsFolderOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [openProjectMenuId, setOpenProjectMenuId] = useState<string | null>(null);
-  const [renamingProject, setRenamingProject] = useState<ProjectRecord | null>(null);
+  const [openFolderMenuId, setOpenFolderMenuId] = useState<string | null>(null);
+  const [renamingFolder, setRenamingFolder] = useState<FolderRecord | null>(null);
   const [noteIdToEditOnOpen, setNoteIdToEditOnOpen] = useState<string | null>(null);
   const accountMenuRef = useRef<HTMLDivElement | null>(null);
-  const projectActionsMenuRef = useRef<HTMLDivElement | null>(null);
+  const folderActionsMenuRef = useRef<HTMLDivElement | null>(null);
 
   function clearSearch() {
     setSearchQuery("");
@@ -345,10 +345,10 @@ export function App() {
     setIsSidebarOpen(false);
   }
 
-  function selectProject(projectId: string) {
+  function selectFolder(folderId: string) {
     clearSearch();
     setCurrentPage(1);
-    setSelectedProjectId(projectId);
+    setSelectedFolderId(folderId);
     setIsSidebarOpen(false);
   }
 
@@ -370,10 +370,10 @@ export function App() {
     setIsAddOpen(true);
   }
 
-  function openAddProject() {
+  function openAddFolder() {
     clearSearch();
     setIsSidebarOpen(false);
-    setIsProjectOpen(true);
+    setIsFolderOpen(true);
   }
 
   useEffect(() => {
@@ -408,31 +408,31 @@ export function App() {
   }, [isAccountOpen]);
 
   useEffect(() => {
-    if (!openProjectMenuId) return;
+    if (!openFolderMenuId) return;
 
-    function closeProjectMenu(event: PointerEvent) {
+    function closeFolderMenu(event: PointerEvent) {
       if (
         event.target instanceof Node
-        && projectActionsMenuRef.current
-        && !projectActionsMenuRef.current.contains(event.target)
+        && folderActionsMenuRef.current
+        && !folderActionsMenuRef.current.contains(event.target)
       ) {
-        setOpenProjectMenuId(null);
+        setOpenFolderMenuId(null);
       }
     }
 
-    function closeProjectMenuOnEscape(event: KeyboardEvent) {
+    function closeFolderMenuOnEscape(event: KeyboardEvent) {
       if (event.key === "Escape") {
-        setOpenProjectMenuId(null);
+        setOpenFolderMenuId(null);
       }
     }
 
-    document.addEventListener("pointerdown", closeProjectMenu);
-    document.addEventListener("keydown", closeProjectMenuOnEscape);
+    document.addEventListener("pointerdown", closeFolderMenu);
+    document.addEventListener("keydown", closeFolderMenuOnEscape);
     return () => {
-      document.removeEventListener("pointerdown", closeProjectMenu);
-      document.removeEventListener("keydown", closeProjectMenuOnEscape);
+      document.removeEventListener("pointerdown", closeFolderMenu);
+      document.removeEventListener("keydown", closeFolderMenuOnEscape);
     };
-  }, [openProjectMenuId]);
+  }, [openFolderMenuId]);
 
   useEffect(() => {
     if (!isSidebarOpen) return;
@@ -453,35 +453,35 @@ export function App() {
     }
   }, [openedNoteId]);
 
-  async function updateProject(project: ProjectRecord, update: Partial<Pick<ProjectRecord, "name" | "is_pinned">>) {
+  async function updateFolder(folder: FolderRecord, update: Partial<Pick<FolderRecord, "name" | "is_pinned">>) {
     setError(null);
     try {
-      await apiFetch<ProjectRecord>(`/api/projects/${project.id}`, {
+      await apiFetch<FolderRecord>(`/api/folders/${folder.id}`, {
         method: "PATCH",
         body: JSON.stringify(update)
       });
-      setOpenProjectMenuId(null);
+      setOpenFolderMenuId(null);
       await loadWorkspace();
       return true;
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not update project");
+      setError(err instanceof Error ? err.message : "Could not update folder");
       return false;
     }
   }
 
-  async function deleteProject(project: ProjectRecord) {
-    const confirmed = window.confirm(`Delete "${project.name}"? Notes are kept, but the project is archived.`);
+  async function deleteFolder(folder: FolderRecord) {
+    const confirmed = window.confirm(`Delete "${folder.name}"? Notes are kept, but the folder is archived.`);
     if (!confirmed) return;
     setError(null);
     try {
-      await apiFetch(`/api/projects/${project.id}`, { method: "DELETE" });
-      setOpenProjectMenuId(null);
-      if (selectedProjectId === project.id) {
-        setSelectedProjectId("all");
+      await apiFetch(`/api/folders/${folder.id}`, { method: "DELETE" });
+      setOpenFolderMenuId(null);
+      if (selectedFolderId === folder.id) {
+        setSelectedFolderId("all");
       }
       await loadWorkspace();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not delete project");
+      setError(err instanceof Error ? err.message : "Could not delete folder");
     }
   }
 
@@ -501,17 +501,17 @@ export function App() {
   }
 
   async function loadWorkspace() {
-    const [nextUsers, nextProjects, nextTags, nextNotes, nextStorageCapacity] = await Promise.all([
+    const [nextUsers, nextFolders, nextTags, nextNotes, nextStorageCapacity] = await Promise.all([
       apiFetch<UserRecord[]>("/api/users"),
-      apiFetch<ProjectRecord[]>("/api/projects"),
+      apiFetch<FolderRecord[]>("/api/folders"),
       apiFetch<TagRecord[]>("/api/tags"),
       apiFetch<NoteRecord[]>("/api/notes"),
       apiFetch<StorageCapacityRecord>("/api/storage").catch(() => null)
     ]);
-    const activeProjects = nextProjects.filter((project) => !project.archived_at);
-    const hydrated = hydrateNotes(nextNotes, nextUsers, activeProjects);
+    const activeFolders = nextFolders.filter((folder) => !folder.archived_at);
+    const hydrated = hydrateNotes(nextNotes, nextUsers, activeFolders);
     setUsers(nextUsers);
-    setProjects(activeProjects);
+    setFolders(activeFolders);
     setTags(nextTags);
     setNotes(hydrated);
     setStorageCapacity(nextStorageCapacity);
@@ -520,7 +520,7 @@ export function App() {
 
   async function refreshNotes() {
     const nextNotes = await apiFetch<NoteRecord[]>("/api/notes");
-    const hydrated = hydrateNotes(nextNotes, users, projects);
+    const hydrated = hydrateNotes(nextNotes, users, folders);
     setNotes((items) => (
       hydrated.map((note) => {
         const current = items.find((item) => item.id === note.id);
@@ -549,8 +549,8 @@ export function App() {
     }
   }
 
-  const notesByProject = useMemo(() => countBy(notes, (note) => note.project?.id ?? note.project_id ?? ""), [notes]);
-  const selectedProject = selectedProjectId === "all" ? null : projects.find((project) => project.id === selectedProjectId) ?? null;
+  const notesByFolder = useMemo(() => countBy(notes, (note) => note.folder?.id ?? note.folder_id ?? ""), [notes]);
+  const selectedFolder = selectedFolderId === "all" ? null : folders.find((folder) => folder.id === selectedFolderId) ?? null;
   const selectedTagRecord = selectedTag === "all" ? null : tags.find((tag) => tag.slug === selectedTag) ?? null;
   const selectedUser = selectedUserId === "all" ? null : users.find((user) => user.id === selectedUserId) ?? null;
   const breadcrumbItems = [
@@ -565,8 +565,8 @@ export function App() {
       if (selectedView === "starred" && !note.is_starred) return;
       const userMatch = selectedUserId === "all" || note.user_id === selectedUserId;
       if (!userMatch) return;
-      const projectMatch = selectedProjectId === "all" || note.project_id === selectedProjectId;
-      if (!projectMatch) return;
+      const folderMatch = selectedFolderId === "all" || note.folder_id === selectedFolderId;
+      if (!folderMatch) return;
       const noteMatches = noteSearchText(note).includes(query);
       note.tags?.forEach((tag) => {
         const tagMatches = `${tag.name} ${tag.slug}`.toLowerCase().includes(query);
@@ -579,21 +579,21 @@ export function App() {
     return Array.from(tagMap.values())
       .sort((first, second) => first.name.localeCompare(second.name))
       .slice(0, 6);
-  }, [notes, searchQuery, selectedProjectId, selectedTag, selectedUserId, selectedView]);
+  }, [notes, searchQuery, selectedFolderId, selectedTag, selectedUserId, selectedView]);
   const filteredNotes = useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
     return notes.filter((note) => {
       if (selectedView === "starred" && !note.is_starred) return false;
       const userMatch = selectedUserId === "all" || note.user_id === selectedUserId;
       if (!userMatch) return false;
-      const projectMatch = selectedProjectId === "all" || note.project_id === selectedProjectId;
-      if (!projectMatch) return false;
+      const folderMatch = selectedFolderId === "all" || note.folder_id === selectedFolderId;
+      if (!folderMatch) return false;
       const tagMatch = selectedTag === "all" || note.tags?.some((tag) => tag.slug === selectedTag);
       if (!tagMatch) return false;
       if (!query) return true;
       return noteSearchText(note).includes(query);
     });
-  }, [notes, searchQuery, selectedProjectId, selectedTag, selectedUserId, selectedView]);
+  }, [notes, searchQuery, selectedFolderId, selectedTag, selectedUserId, selectedView]);
   const totalPages = Math.max(1, Math.ceil(filteredNotes.length / notesPerPage));
   const clampedPage = Math.min(currentPage, totalPages);
   const pageStartIndex = (clampedPage - 1) * notesPerPage;
@@ -619,8 +619,8 @@ export function App() {
     setSelectedUserId((current) => (
       current === "all" || users.some((user) => user.id === current) ? current : "all"
     ));
-    setSelectedProjectId((current) => (
-      current === "all" || projects.some((project) => project.id === current) ? current : "all"
+    setSelectedFolderId((current) => (
+      current === "all" || folders.some((folder) => folder.id === current) ? current : "all"
     ));
     setSelectedTag((current) => (
       current === "all" || tags.some((tag) => tag.slug === current) ? current : "all"
@@ -628,7 +628,7 @@ export function App() {
     setOpenedNoteId((current) => (
       current === null || notes.some((note) => note.id === current) ? current : null
     ));
-  }, [currentUser, isWorkspaceLoaded, notes, projects, tags, users]);
+  }, [currentUser, isWorkspaceLoaded, notes, folders, tags, users]);
 
   useEffect(() => {
     if (!currentUser || !isWorkspaceLoaded || !hasPendingNotes) return;
@@ -640,7 +640,7 @@ export function App() {
         const nextNotes = await apiFetch<NoteRecord[]>("/api/notes");
         if (cancelled) return;
 
-        const hydrated = hydrateNotes(nextNotes, users, projects);
+        const hydrated = hydrateNotes(nextNotes, users, folders);
         setNotes((items) => (
           hydrated.map((note) => {
             const current = items.find((item) => item.id === note.id);
@@ -670,7 +670,7 @@ export function App() {
       cancelled = true;
       window.clearInterval(intervalId);
     };
-  }, [currentUser, hasPendingNotes, isWorkspaceLoaded, openedNoteId, projects, users]);
+  }, [currentUser, hasPendingNotes, isWorkspaceLoaded, openedNoteId, folders, users]);
 
   useEffect(() => {
     if (!currentUser || !isWorkspaceLoaded) return;
@@ -678,7 +678,7 @@ export function App() {
     writeDashboardUiState({
       selectedView,
       selectedUserId,
-      selectedProjectId,
+      selectedFolderId,
       selectedTag,
       openedNoteId,
       searchQuery,
@@ -690,7 +690,7 @@ export function App() {
     isWorkspaceLoaded,
     openedNoteId,
     searchQuery,
-    selectedProjectId,
+    selectedFolderId,
     selectedTag,
     selectedUserId,
     selectedView
@@ -750,59 +750,59 @@ export function App() {
           </nav>
 
           <SidebarSection
-            title="Projects"
-            action={<button className="icon-button" aria-label="Add project" onClick={openAddProject}><Plus size={15} /></button>}
+            title="Folders"
+            action={<button className="icon-button" aria-label="Add folder" onClick={openAddFolder}><Plus size={15} /></button>}
           >
-            {projects.map((project) => (
+            {folders.map((folder) => (
               <div
-                key={project.id}
-                className={`nav-item project-nav-item ${selectedProjectId === project.id ? "active-soft" : ""}`}
+                key={folder.id}
+                className={`nav-item folder-nav-item ${selectedFolderId === folder.id ? "active-soft" : ""}`}
                 role="button"
                 tabIndex={0}
-                onClick={() => selectProject(project.id)}
+                onClick={() => selectFolder(folder.id)}
                 onKeyDown={(event) => {
                   if (event.key !== "Enter" && event.key !== " ") return;
                   event.preventDefault();
-                  selectProject(project.id);
+                  selectFolder(folder.id);
                 }}
               >
-                {project.is_pinned ? <Pin size={18} /> : <Folder size={19} />}
-                <span>{project.name}</span>
+                {folder.is_pinned ? <Pin size={18} /> : <Folder size={19} />}
+                <span>{folder.name}</span>
                 <div
-                  className="project-actions-menu"
-                  ref={openProjectMenuId === project.id ? projectActionsMenuRef : null}
+                  className="folder-actions-menu"
+                  ref={openFolderMenuId === folder.id ? folderActionsMenuRef : null}
                   onClick={(event) => event.stopPropagation()}
                   onKeyDown={(event) => event.stopPropagation()}
                 >
-                  <small className="project-note-count">{notesByProject[project.id] ?? 0}</small>
+                  <small className="folder-note-count">{notesByFolder[folder.id] ?? 0}</small>
                   <button
-                    className="project-more-button"
+                    className="folder-more-button"
                     type="button"
-                    aria-label={`Project actions for ${project.name}`}
-                    aria-expanded={openProjectMenuId === project.id}
-                    onClick={() => setOpenProjectMenuId((current) => current === project.id ? null : project.id)}
+                    aria-label={`Folder actions for ${folder.name}`}
+                    aria-expanded={openFolderMenuId === folder.id}
+                    onClick={() => setOpenFolderMenuId((current) => current === folder.id ? null : folder.id)}
                   >
                     <MoreVertical size={17} />
                   </button>
-                  {openProjectMenuId === project.id && (
-                    <div className="project-actions-popover" role="menu">
-                      <button type="button" role="menuitem" onClick={() => void updateProject(project, { is_pinned: !project.is_pinned })}>
+                  {openFolderMenuId === folder.id && (
+                    <div className="folder-actions-popover" role="menu">
+                      <button type="button" role="menuitem" onClick={() => void updateFolder(folder, { is_pinned: !folder.is_pinned })}>
                         <Pin size={15} />
-                        {project.is_pinned ? "Unpin" : "Pin to top"}
+                        {folder.is_pinned ? "Unpin" : "Pin to top"}
                       </button>
                       <button
                         type="button"
                         role="menuitem"
                         onClick={() => {
-                          setOpenProjectMenuId(null);
-                          setRenamingProject(project);
+                          setOpenFolderMenuId(null);
+                          setRenamingFolder(folder);
                         }}
                       >
                         <Edit3 size={15} />
                         Rename
                       </button>
                       <div className="note-actions-divider" />
-                      <button className="danger-action" type="button" role="menuitem" onClick={() => void deleteProject(project)}>
+                      <button className="danger-action" type="button" role="menuitem" onClick={() => void deleteFolder(folder)}>
                         <Trash2 size={15} />
                         Delete
                       </button>
@@ -842,10 +842,10 @@ export function App() {
                 <Menu size={20} />
               </button>
               <div className="breadcrumb">
-                <span>Project</span>
+                <span>Folder</span>
                 <span className={breadcrumbItems.length === 0 && !selectedTagRecord ? "current" : undefined}>
                   <ChevronRight size={14} />
-                  {selectedProject?.name ?? "All projects"}
+                  {selectedFolder?.name ?? "All folders"}
                 </span>
                 {breadcrumbItems.map((item, index) => (
                   <span key={`${item}-${index}`} className={index === breadcrumbItems.length - 1 ? "current" : undefined}>
@@ -970,7 +970,7 @@ export function App() {
             {openedNote ? (
               <NotePanel
                 note={openedNote}
-                projectLabel={openedNote.project?.name ?? selectedProject?.name ?? "All projects"}
+                folderLabel={openedNote.folder?.name ?? selectedFolder?.name ?? "All folders"}
                 currentUser={currentUser}
                 startInEdit={noteIdToEditOnOpen === openedNote.id}
                 onStartInEditConsumed={() => setNoteIdToEditOnOpen(null)}
@@ -1047,8 +1047,8 @@ export function App() {
 
       {isAddOpen && (
         <AddNoteDialog
-          projects={projects}
-          selectedProjectId={selectedProjectId}
+          folders={folders}
+          selectedFolderId={selectedFolderId}
           onClose={() => setIsAddOpen(false)}
           onCreated={async (note, shouldEdit) => {
             setSelectedView("recent");
@@ -1056,7 +1056,7 @@ export function App() {
             setSelectedTag("all");
             setCurrentPage(1);
             setNotes((items) => {
-              const hydratedNote = hydrateNotes([note], users, projects)[0] ?? note;
+              const hydratedNote = hydrateNotes([note], users, folders)[0] ?? note;
               return items.some((item) => item.id === note.id)
                 ? items.map((item) => item.id === note.id ? mergeNoteRecord(item, hydratedNote) : item)
                 : [hydratedNote, ...items];
@@ -1069,24 +1069,24 @@ export function App() {
           onError={setError}
         />
       )}
-      {isProjectOpen && (
-        <AddProjectDialog
-          onClose={() => setIsProjectOpen(false)}
-          onCreated={async (project) => {
-            setIsProjectOpen(false);
+      {isFolderOpen && (
+        <AddFolderDialog
+          onClose={() => setIsFolderOpen(false)}
+          onCreated={async (folder) => {
+            setIsFolderOpen(false);
             await loadWorkspace();
-            setSelectedProjectId(project.id);
+            setSelectedFolderId(folder.id);
           }}
           onError={setError}
         />
       )}
-      {renamingProject && (
-        <RenameProjectDialog
-          project={renamingProject}
-          onClose={() => setRenamingProject(null)}
+      {renamingFolder && (
+        <RenameFolderDialog
+          folder={renamingFolder}
+          onClose={() => setRenamingFolder(null)}
           onRename={async (name) => {
-            const didRename = await updateProject(renamingProject, { name });
-            if (didRename) setRenamingProject(null);
+            const didRename = await updateFolder(renamingFolder, { name });
+            if (didRename) setRenamingFolder(null);
             return didRename;
           }}
         />
@@ -1218,7 +1218,7 @@ function NoteRow({
   onToggleStar: () => void;
 }) {
   const Icon = sourceIcon(note.source_type);
-  const projectName = note.project?.name ?? "Unassigned";
+  const folderName = note.folder?.name ?? "Unassigned";
   const owner = note.user?.name ?? "Unknown";
   const tags = note.tags ?? [];
   const isBusy = ["pending_parse", "parsing"].includes(note.status);
@@ -1246,7 +1246,7 @@ function NoteRow({
       </span>
       <div className="note-body">
         <div className="note-meta-top">
-          <span className="project-name">{projectName}</span>
+          <span className="folder-name">{folderName}</span>
           <span className={`badge ${badgeTone(note.source_type)}`}><Icon size={15} />{note.source_type}</span>
           {isBusy && <span className="badge warning"><Loader2 size={14} className="spin" />{note.status.replace("_", " ")}</span>}
         </div>
@@ -1268,7 +1268,7 @@ function NoteRow({
 
 function NotePanel({
   note,
-  projectLabel,
+  folderLabel,
   currentUser,
   startInEdit = false,
   onStartInEditConsumed,
@@ -1277,7 +1277,7 @@ function NotePanel({
   onDeleted
 }: {
   note: NoteRecord;
-  projectLabel: string;
+  folderLabel: string;
   currentUser: UserRecord;
   startInEdit?: boolean;
   onStartInEditConsumed?: () => void;
@@ -1610,10 +1610,10 @@ function NotePanel({
           <ChevronLeft size={16} />
         </button>
         <div className="note-document-breadcrumb">
-          <span>Project</span>
+          <span>Folder</span>
           <span>
             <ChevronRight size={14} />
-            {projectLabel}
+            {folderLabel}
           </span>
         </div>
         <div className="panel-actions">
@@ -1911,21 +1911,21 @@ function NotePanel({
 }
 
 function AddNoteDialog({
-  projects,
-  selectedProjectId,
+  folders,
+  selectedFolderId,
   onClose,
   onCreated,
   onError
 }: {
-  projects: ProjectRecord[];
-  selectedProjectId: string | "all";
+  folders: FolderRecord[];
+  selectedFolderId: string | "all";
   onClose: () => void;
   onCreated: (note: NoteRecord, shouldEdit: boolean) => Promise<void>;
   onError: (message: string | null) => void;
 }) {
   const [mode, setMode] = useState<"text" | "link" | "file">("text");
-  const shouldChooseProject = selectedProjectId === "all";
-  const [projectId, setProjectId] = useState(shouldChooseProject ? "" : selectedProjectId);
+  const shouldChooseFolder = selectedFolderId === "all";
+  const [folderId, setFolderId] = useState(shouldChooseFolder ? "" : selectedFolderId);
   const [title, setTitle] = useState("");
   const [text, setText] = useState("");
   const [url, setUrl] = useState("");
@@ -1934,7 +1934,7 @@ function AddNoteDialog({
   const cleanTitle = title.trim();
   const cleanUrl = url.trim();
   const canCreate =
-    Boolean(projectId)
+    Boolean(folderId)
     && (
       (mode === "text" && cleanTitle.length > 0)
       || (mode === "link" && cleanTitle.length > 0 && cleanUrl.length > 0)
@@ -1952,17 +1952,17 @@ function AddNoteDialog({
       if (mode === "text") {
         createdNote = await apiFetch<NoteRecord>("/api/notes/from-text", {
           method: "POST",
-          body: JSON.stringify({ project_id: projectId, title: cleanTitle, text: text.trim() || " " })
+          body: JSON.stringify({ folder_id: folderId, title: cleanTitle, text: text.trim() || " " })
         });
         shouldEdit = true;
       } else if (mode === "link") {
         createdNote = await apiFetch<NoteRecord>("/api/notes/from-url", {
           method: "POST",
-          body: JSON.stringify({ project_id: projectId, title: cleanTitle, url: cleanUrl })
+          body: JSON.stringify({ folder_id: folderId, title: cleanTitle, url: cleanUrl })
         });
       } else if (file) {
         const formData = new FormData();
-        formData.set("project_id", projectId);
+        formData.set("folder_id", folderId);
         formData.set("title", cleanTitle);
         formData.set("file", file);
         createdNote = await apiFetch<NoteRecord>("/api/notes/from-file", { method: "POST", body: formData });
@@ -1979,26 +1979,26 @@ function AddNoteDialog({
 
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true">
-      <form className="modal project-modal add-note-modal" onSubmit={submit}>
-        <div className="project-modal-header">
+      <form className="modal folder-modal add-note-modal" onSubmit={submit}>
+        <div className="folder-modal-header">
           <div>
             <h2>Add note</h2>
             <p>Create a note, index a link, or upload a .pdf, .docx, .xls, .csv, .png, .jpg, or .mp3 file.</p>
           </div>
           <button className="icon-button" type="button" onClick={onClose} aria-label="Close"><X size={20} /></button>
         </div>
-        <div className="project-modal-body">
+        <div className="folder-modal-body">
           <div className="segmented" aria-label="Note source type">
             <button type="button" className={mode === "text" ? "selected" : ""} onClick={() => setMode("text")}><FileText size={17} />Text</button>
             <button type="button" className={mode === "link" ? "selected" : ""} onClick={() => setMode("link")}><Link size={17} />Link</button>
             <button type="button" className={mode === "file" ? "selected" : ""} onClick={() => setMode("file")}><Upload size={17} />File</button>
           </div>
-          {shouldChooseProject && (
+          {shouldChooseFolder && (
             <label className="field-label">
-              <span>Project</span>
-              <select value={projectId} onChange={(event) => setProjectId(event.target.value)} required>
-                <option value="">Choose a project</option>
-                {projects.map((project) => <option key={project.id} value={project.id}>{project.name}</option>)}
+              <span>Folder</span>
+              <select value={folderId} onChange={(event) => setFolderId(event.target.value)} required>
+                <option value="">Choose a folder</option>
+                {folders.map((folder) => <option key={folder.id} value={folder.id}>{folder.name}</option>)}
               </select>
             </label>
           )}
@@ -2038,7 +2038,7 @@ function AddNoteDialog({
             </div>
           )}
         </div>
-        <div className="project-modal-actions">
+        <div className="folder-modal-actions">
           <button className="primary-button create-note-button" disabled={isSaving || !canCreate}>
             {isSaving ? <Loader2 className="spin" size={17} /> : <Plus size={17} />}
             Create note
@@ -2050,32 +2050,32 @@ function AddNoteDialog({
   );
 }
 
-function AddProjectDialog({
+function AddFolderDialog({
   onClose,
   onCreated,
   onError
 }: {
   onClose: () => void;
-  onCreated: (project: ProjectRecord) => Promise<void>;
+  onCreated: (folder: FolderRecord) => Promise<void>;
   onError: (message: string | null) => void;
 }) {
   const [name, setName] = useState("");
   const [isPinned, setIsPinned] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const canCreateProject = name.trim().length >= 3;
+  const canCreateFolder = name.trim().length >= 3;
 
   async function submit(event: FormEvent) {
     event.preventDefault();
     setIsSaving(true);
     onError(null);
     try {
-      const project = await apiFetch<ProjectRecord>("/api/projects", {
+      const folder = await apiFetch<FolderRecord>("/api/folders", {
         method: "POST",
         body: JSON.stringify({ name, is_pinned: isPinned })
       });
-      await onCreated(project);
+      await onCreated(folder);
     } catch (err) {
-      onError(err instanceof Error ? err.message : "Could not add project");
+      onError(err instanceof Error ? err.message : "Could not add folder");
     } finally {
       setIsSaving(false);
     }
@@ -2083,17 +2083,17 @@ function AddProjectDialog({
 
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true">
-      <form className="modal project-modal" onSubmit={submit}>
-        <div className="project-modal-header">
+      <form className="modal folder-modal" onSubmit={submit}>
+        <div className="folder-modal-header">
           <div>
-            <h2>Add project</h2>
-            <p>Anyone signed in can view this project and add notes to it.</p>
+            <h2>Add folder</h2>
+            <p>Anyone signed in can view this folder and add notes to it.</p>
           </div>
           <button className="icon-button" type="button" onClick={onClose} aria-label="Close"><X size={20} /></button>
         </div>
-        <div className="project-modal-body">
+        <div className="folder-modal-body">
           <label className="field-label">
-            <span>Project name</span>
+            <span>Folder name</span>
             <input
               autoFocus
               required
@@ -2109,14 +2109,14 @@ function AddProjectDialog({
             />
             <span>
               <strong>Pin to top</strong>
-              <small>Keep this project above the rest of the list.</small>
+              <small>Keep this folder above the rest of the list.</small>
             </span>
           </label>
         </div>
-        <div className="project-modal-actions">
-          <button className="primary-button create-project-button" disabled={isSaving || !canCreateProject}>
+        <div className="folder-modal-actions">
+          <button className="primary-button create-folder-button" disabled={isSaving || !canCreateFolder}>
             {isSaving ? <Loader2 className="spin" size={17} /> : <Plus size={17} />}
-            Create project
+            Create folder
           </button>
           <button className="text-button" type="button" onClick={onClose}>Cancel</button>
         </div>
@@ -2125,20 +2125,20 @@ function AddProjectDialog({
   );
 }
 
-function RenameProjectDialog({
-  project,
+function RenameFolderDialog({
+  folder,
   onClose,
   onRename
 }: {
-  project: ProjectRecord;
+  folder: FolderRecord;
   onClose: () => void;
   onRename: (name: string) => Promise<boolean>;
 }) {
-  const [name, setName] = useState(project.name);
+  const [name, setName] = useState(folder.name);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const cleanName = name.trim();
-  const canRename = cleanName.length >= 3 && cleanName !== project.name;
+  const canRename = cleanName.length >= 3 && cleanName !== folder.name;
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -2148,7 +2148,7 @@ function RenameProjectDialog({
     setIsSaving(true);
     try {
       const didRename = await onRename(cleanName);
-      if (!didRename) setError("Could not rename project.");
+      if (!didRename) setError("Could not rename folder.");
     } finally {
       setIsSaving(false);
     }
@@ -2156,17 +2156,17 @@ function RenameProjectDialog({
 
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true">
-      <form className="modal project-modal" onSubmit={submit}>
-        <div className="project-modal-header">
+      <form className="modal folder-modal" onSubmit={submit}>
+        <div className="folder-modal-header">
           <div>
-            <h2>Rename project</h2>
-            <p>Update the project name shown to everyone signed in.</p>
+            <h2>Rename folder</h2>
+            <p>Update the folder name shown to everyone signed in.</p>
           </div>
           <button className="icon-button" type="button" onClick={onClose} aria-label="Close"><X size={20} /></button>
         </div>
-        <div className="project-modal-body">
+        <div className="folder-modal-body">
           <label className="field-label">
-            <span>Project name</span>
+            <span>Folder name</span>
             <input
               autoFocus
               required
@@ -2180,8 +2180,8 @@ function RenameProjectDialog({
             </div>
           )}
         </div>
-        <div className="project-modal-actions">
-          <button className="primary-button create-project-button" disabled={isSaving || !canRename}>
+        <div className="folder-modal-actions">
+          <button className="primary-button create-folder-button" disabled={isSaving || !canRename}>
             {isSaving ? <Loader2 className="spin" size={17} /> : <Edit3 size={17} />}
             Save changes
           </button>
@@ -2231,15 +2231,15 @@ function AddTagDialog({
 
   return (
     <div className="modal-backdrop" role="dialog" aria-modal="true">
-      <form className="modal project-modal" onSubmit={submit}>
-        <div className="project-modal-header">
+      <form className="modal folder-modal" onSubmit={submit}>
+        <div className="folder-modal-header">
           <div>
             <h2>Add tag</h2>
             <p>Tags help people filter and find related notes.</p>
           </div>
           <button className="icon-button" type="button" onClick={onClose} aria-label="Close"><X size={20} /></button>
         </div>
-        <div className="project-modal-body">
+        <div className="folder-modal-body">
           <label className="field-label">
             <span>Tag name</span>
             <input
@@ -2255,8 +2255,8 @@ function AddTagDialog({
             </div>
           )}
         </div>
-        <div className="project-modal-actions">
-          <button className="primary-button create-project-button" disabled={isSaving || !canAddTag}>
+        <div className="folder-modal-actions">
+          <button className="primary-button create-folder-button" disabled={isSaving || !canAddTag}>
             {isSaving ? <Loader2 className="spin" size={17} /> : <Plus size={17} />}
             Add tag
           </button>
@@ -2286,11 +2286,11 @@ function countBy<T>(items: T[], getter: (item: T) => string) {
   }, {});
 }
 
-function hydrateNotes(notes: NoteRecord[], users: UserRecord[], projects: ProjectRecord[]) {
+function hydrateNotes(notes: NoteRecord[], users: UserRecord[], folders: FolderRecord[]) {
   return notes.map((note) => ({
     ...note,
     user: note.user ?? users.find((user) => user.id === note.user_id),
-    project: note.project ?? projects.find((project) => project.id === note.project_id)
+    folder: note.folder ?? folders.find((folder) => folder.id === note.folder_id)
   }));
 }
 
@@ -2299,9 +2299,9 @@ function mergeNoteRecord(current: NoteRecord, update: NoteRecord) {
     ...current,
     ...update,
     user_id: update.user_id ?? update.user?.id ?? current.user_id,
-    project_id: update.project_id ?? update.project?.id ?? current.project_id,
+    folder_id: update.folder_id ?? update.folder?.id ?? current.folder_id,
     user: update.user ?? current.user,
-    project: update.project ?? current.project,
+    folder: update.folder ?? current.folder,
     tags: update.tags ?? current.tags,
     source_files: update.source_files ?? current.source_files
   };
@@ -2313,7 +2313,7 @@ function noteSearchText(note: NoteRecord) {
     note.title,
     note.summary,
     note.text,
-    note.project?.name,
+    note.folder?.name,
     note.user?.name,
     tagsText
   ].filter(Boolean).join(" ").toLowerCase();

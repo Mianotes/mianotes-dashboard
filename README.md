@@ -25,7 +25,7 @@ During development, Vite proxies `/api` and `/data` requests to
 ## Current scope
 
 - Email/password instance login flow.
-- Recent notes, users, projects, search, and tag filtering.
+- Recent notes, users, folders, search, and tag filtering.
 - Note preview with Markdown and source files.
 - Private `@mia` prompts for synchronous note assistance.
 - Add note from text, link, or file.
