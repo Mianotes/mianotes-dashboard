@@ -321,6 +321,7 @@ export function App() {
   const [isProjectOpen, setIsProjectOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [openProjectMenuId, setOpenProjectMenuId] = useState<string | null>(null);
+  const [renamingProject, setRenamingProject] = useState<ProjectRecord | null>(null);
   const accountMenuRef = useRef<HTMLDivElement | null>(null);
   const projectActionsMenuRef = useRef<HTMLDivElement | null>(null);
 
@@ -429,15 +430,11 @@ export function App() {
       });
       setOpenProjectMenuId(null);
       await loadWorkspace();
+      return true;
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not update project");
+      return false;
     }
-  }
-
-  async function renameProject(project: ProjectRecord) {
-    const nextName = window.prompt("Rename project", project.name)?.trim();
-    if (!nextName || nextName === project.name) return;
-    await updateProject(project, { name: nextName });
   }
 
   async function deleteProject(project: ProjectRecord) {
@@ -698,7 +695,14 @@ export function App() {
                         <Pin size={15} />
                         {project.is_pinned ? "Unpin" : "Pin to top"}
                       </button>
-                      <button type="button" role="menuitem" onClick={() => void renameProject(project)}>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          setOpenProjectMenuId(null);
+                          setRenamingProject(project);
+                        }}
+                      >
                         <Edit3 size={15} />
                         Rename
                       </button>
@@ -958,6 +962,17 @@ export function App() {
           onError={setError}
         />
       )}
+      {renamingProject && (
+        <RenameProjectDialog
+          project={renamingProject}
+          onClose={() => setRenamingProject(null)}
+          onRename={async (name) => {
+            const didRename = await updateProject(renamingProject, { name });
+            if (didRename) setRenamingProject(null);
+            return didRename;
+          }}
+        />
+      )}
     </main>
   );
 }
@@ -1162,6 +1177,7 @@ function NotePanel({
   const [isDeleting, setIsDeleting] = useState(false);
   const [isApplyingMia, setIsApplyingMia] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
+  const [isTagDialogOpen, setIsTagDialogOpen] = useState(false);
   const [titleDraft, setTitleDraft] = useState(note.title);
   const noteActionsMenuRef = useRef<HTMLDivElement | null>(null);
 
@@ -1176,6 +1192,7 @@ function NotePanel({
     setIsActionsOpen(false);
     setIsApplyingMia(false);
     setIsEditingTitle(false);
+    setIsTagDialogOpen(false);
     setTitleDraft(note.title);
   }, [note?.id]);
 
@@ -1371,17 +1388,16 @@ function NotePanel({
     }
   }
 
-  async function addTag() {
+  async function addTag(tagName: string) {
     if (!canChangeNote) {
       setTagError(cannotChangeNoteMessage);
-      return;
+      return false;
     }
     const existingTags = note.tags ?? [];
-    if (existingTags.length >= 5) return;
+    if (existingTags.length >= 5) return false;
 
-    const tagName = window.prompt("Add tag");
-    const normalizedTagName = tagName?.trim();
-    if (!normalizedTagName) return;
+    const normalizedTagName = tagName.trim();
+    if (!normalizedTagName) return false;
 
     const nextTags = Array.from(new Set([...existingTags.map((tag) => tag.name), normalizedTagName])).slice(0, 5);
     setTagError(null);
@@ -1391,8 +1407,10 @@ function NotePanel({
         body: JSON.stringify({ tags: nextTags })
       });
       await onRefresh();
+      return true;
     } catch (err) {
       setTagError(err instanceof Error ? err.message : "Could not add tag");
+      return false;
     }
   }
 
@@ -1658,7 +1676,10 @@ function NotePanel({
               aria-label="Add tag"
               disabled={!canChangeNote}
               title={!canChangeNote ? cannotChangeNoteMessage : undefined}
-              onClick={() => void addTag()}
+              onClick={() => {
+                setTagError(null);
+                setIsTagDialogOpen(true);
+              }}
             >
               <Plus size={14} />
             </button>
@@ -1670,6 +1691,17 @@ function NotePanel({
           </div>
         )}
       </section>
+      {isTagDialogOpen && (
+        <AddTagDialog
+          existingTags={noteTags.map((tag) => tag.name)}
+          onClose={() => setIsTagDialogOpen(false)}
+          onAdd={async (tagName) => {
+            const didAddTag = await addTag(tagName);
+            if (didAddTag) setIsTagDialogOpen(false);
+            return didAddTag;
+          }}
+        />
+      )}
     </section>
   );
 }
@@ -1827,6 +1859,148 @@ function AddProjectDialog({
           <button className="primary-button create-project-button" disabled={isSaving || !canCreateProject}>
             {isSaving ? <Loader2 className="spin" size={17} /> : <Plus size={17} />}
             Create project
+          </button>
+          <button className="text-button" type="button" onClick={onClose}>Cancel</button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function RenameProjectDialog({
+  project,
+  onClose,
+  onRename
+}: {
+  project: ProjectRecord;
+  onClose: () => void;
+  onRename: (name: string) => Promise<boolean>;
+}) {
+  const [name, setName] = useState(project.name);
+  const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const cleanName = name.trim();
+  const canRename = cleanName.length >= 3 && cleanName !== project.name;
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (!canRename) return;
+
+    setError(null);
+    setIsSaving(true);
+    try {
+      const didRename = await onRename(cleanName);
+      if (!didRename) setError("Could not rename project.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  return (
+    <div className="modal-backdrop" role="dialog" aria-modal="true">
+      <form className="modal project-modal" onSubmit={submit}>
+        <div className="project-modal-header">
+          <div>
+            <h2>Rename project</h2>
+            <p>Update the project name shown to everyone signed in.</p>
+          </div>
+          <button className="icon-button" type="button" onClick={onClose} aria-label="Close"><X size={20} /></button>
+        </div>
+        <div className="project-modal-body">
+          <label className="field-label">
+            <span>Project name</span>
+            <input
+              autoFocus
+              required
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+            />
+          </label>
+          {error && (
+            <div className="notice danger modal-notice" role="alert">
+              {error}
+            </div>
+          )}
+        </div>
+        <div className="project-modal-actions">
+          <button className="primary-button create-project-button" disabled={isSaving || !canRename}>
+            {isSaving ? <Loader2 className="spin" size={17} /> : <Edit3 size={17} />}
+            Save changes
+          </button>
+          <button className="text-button" type="button" onClick={onClose}>Cancel</button>
+        </div>
+      </form>
+    </div>
+  );
+}
+
+function AddTagDialog({
+  existingTags,
+  onClose,
+  onAdd
+}: {
+  existingTags: string[];
+  onClose: () => void;
+  onAdd: (name: string) => Promise<boolean>;
+}) {
+  const [name, setName] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const cleanName = name.trim();
+  const tagExists = existingTags.some((tag) => tag.toLowerCase() === cleanName.toLowerCase());
+  const canAddTag = cleanName.length >= 2 && !tagExists;
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (cleanName.length < 2) {
+      setError("Tags need at least 2 characters.");
+      return;
+    }
+    if (tagExists) {
+      setError("This note already has that tag.");
+      return;
+    }
+
+    setError(null);
+    setIsSaving(true);
+    try {
+      const didAddTag = await onAdd(cleanName);
+      if (!didAddTag) setError("Could not add tag.");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  return (
+    <div className="modal-backdrop" role="dialog" aria-modal="true">
+      <form className="modal project-modal" onSubmit={submit}>
+        <div className="project-modal-header">
+          <div>
+            <h2>Add tag</h2>
+            <p>Tags help people filter and find related notes.</p>
+          </div>
+          <button className="icon-button" type="button" onClick={onClose} aria-label="Close"><X size={20} /></button>
+        </div>
+        <div className="project-modal-body">
+          <label className="field-label">
+            <span>Tag name</span>
+            <input
+              autoFocus
+              required
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+            />
+          </label>
+          {error && (
+            <div className="notice danger modal-notice" role="alert">
+              {error}
+            </div>
+          )}
+        </div>
+        <div className="project-modal-actions">
+          <button className="primary-button create-project-button" disabled={isSaving || !canAddTag}>
+            {isSaving ? <Loader2 className="spin" size={17} /> : <Plus size={17} />}
+            Add tag
           </button>
           <button className="text-button" type="button" onClick={onClose}>Cancel</button>
         </div>
