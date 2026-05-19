@@ -1105,8 +1105,14 @@ button {
   align-items: center;
   justify-content: flex-start;
   flex-wrap: wrap;
-  gap: 8px;
+  gap: 10px 8px;
   min-width: 0;
+}
+
+.tag-chip {
+  position: relative;
+  display: inline-flex;
+  padding-top: 7px;
 }
 
 .tag-pill {
@@ -1123,6 +1129,36 @@ button {
   font-size: 12px;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.tag-remove-button {
+  position: absolute;
+  top: 0;
+  right: -4px;
+  display: inline-grid;
+  place-items: center;
+  width: 16px;
+  height: 16px;
+  padding: 0;
+  border: 1px solid #e0e1e7;
+  border-radius: 999px;
+  color: #686a75;
+  background: #ffffff;
+  opacity: 0;
+  transform: translateY(2px);
+  transition: opacity 0.12s ease, transform 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+}
+
+.tag-chip:hover .tag-remove-button,
+.tag-remove-button:focus-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.tag-remove-button:hover {
+  border-color: #f1b8c0;
+  color: #8a1f2a;
+  background: #ffe3e8;
 }
 
 .tag-add-button {

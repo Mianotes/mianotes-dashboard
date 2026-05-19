@@ -1414,6 +1414,25 @@ function NotePanel({
     }
   }
 
+  async function removeTag(tagName: string) {
+    if (!canChangeNote) {
+      setTagError(cannotChangeNoteMessage);
+      return;
+    }
+
+    const nextTags = noteTags.map((tag) => tag.name).filter((name) => name !== tagName);
+    setTagError(null);
+    try {
+      await apiFetch<NoteRecord>(`/api/notes/${note.id}/tags`, {
+        method: "PUT",
+        body: JSON.stringify({ tags: nextTags })
+      });
+      await onRefresh();
+    } catch (err) {
+      setTagError(err instanceof Error ? err.message : "Could not remove tag");
+    }
+  }
+
   const noteDate = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(new Date(note.created_at));
   const hasLoadedNoteText = typeof note.text === "string";
   const noteMarkdownBody = noteBodyMarkdown(note.text ?? "");
@@ -1667,7 +1686,19 @@ function NotePanel({
         <h3>Tags</h3>
         <div className="note-document-tags">
           {noteTags.map((tag) => (
-            <span className="tag-pill" key={tag.id}>{tag.name}</span>
+            <span className="tag-chip" key={tag.id}>
+              <span className="tag-pill">{tag.name}</span>
+              {canChangeNote && (
+                <button
+                  className="tag-remove-button"
+                  type="button"
+                  aria-label={`Remove ${tag.name} tag`}
+                  onClick={() => void removeTag(tag.name)}
+                >
+                  <X size={11} />
+                </button>
+              )}
+            </span>
           ))}
           {noteTags.length < 5 && (
             <button
