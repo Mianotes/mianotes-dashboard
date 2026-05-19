@@ -2177,6 +2177,14 @@ textarea:focus {
     display: inline-flex;
   }
 
+  .sidebar .project-note-count {
+    display: none;
+  }
+
+  .sidebar .project-more-button {
+    display: inline-grid;
+  }
+
   .workspace {
     width: 100%;
     max-width: 100%;
