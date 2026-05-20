@@ -260,10 +260,29 @@ function badgeTone(type: string) {
   return "neutral";
 }
 
+function isIndexingPlaceholder(text: string) {
+  const normalised = text.toLowerCase();
+  return normalised.includes("mia is indexing your link")
+    || normalised.includes("status: pending parsing");
+}
+
+function hasUsableNoteContent(note: NoteRecord) {
+  const summary = note.summary?.trim() ?? "";
+  const body = noteBodyMarkdown(note.text ?? "").trim();
+
+  return Boolean(summary && !isIndexingPlaceholder(summary))
+    || Boolean(body && !isIndexingPlaceholder(body));
+}
+
 function isNoteIndexing(note: NoteRecord) {
+  const finalStatuses = ["ready", "published", "failed", "completed", "succeeded"];
   const indexingStatuses = ["pending_parse", "parsing"];
   const indexingJobStatuses = ["queued", "running"];
   const isTextNote = ["text", "markdown"].includes(note.source_type);
+
+  if (hasUsableNoteContent(note) || finalStatuses.includes(note.status)) {
+    return false;
+  }
 
   return indexingStatuses.includes(note.status)
     || (note.job_status ? indexingJobStatuses.includes(note.job_status) : false)
