@@ -1430,15 +1430,15 @@ function ProfileSummaryCard({
       <span>{user.email}</span>
       <div className="profile-stats" aria-label={`${user.name} stats`}>
         <div>
-          <strong>{stats.notes}</strong>
+          <span className="number">{stats.notes}</span>
           <span>Notes</span>
         </div>
         <div>
-          <strong>{stats.tags}</strong>
+          <span className="number">{stats.tags}</span>
           <span>Tags</span>
         </div>
         <div>
-          <strong>{stats.folders}</strong>
+          <span className="number">{stats.folders}</span>
           <span>Folders</span>
         </div>
       </div>

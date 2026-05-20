@@ -1807,16 +1807,17 @@ button {
   justify-items: center;
 }
 
-.profile-stats strong {
-  color: #191a20;
-  font-size: 22px;
-  line-height: 1;
-}
-
 .profile-stats span {
   color: #70727c;
-  font-size: 12px;
+  font-size: 11px;
   text-transform: uppercase;
+}
+
+.profile-stats span.number {
+  color: #000;
+  font-size: 20px;
+  font-weight: 600;
+  line-height: 1;
 }
 
 .profile-detail-column {
