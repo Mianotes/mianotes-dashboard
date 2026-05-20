@@ -998,7 +998,7 @@ export function App() {
                     <div className="account-popover" role="menu">
                       <div className="account-popover-header">
                         <UserAvatar user={currentUser} className="account-popover-avatar" />
-                        <span>{currentUser.name}</span>
+                        <TypewriterText text={currentUser.name} />
                       </div>
                       <div className="account-popover-group">
                         <button type="button" role="menuitem" onClick={() => openProfile(currentUser.id)}>
@@ -1193,6 +1193,49 @@ export function App() {
         />
       )}
     </main>
+  );
+}
+
+function TypewriterText({ text }: { text: string }) {
+  const [visibleText, setVisibleText] = useState("");
+  const [isFinished, setIsFinished] = useState(false);
+
+  useEffect(() => {
+    setVisibleText("");
+    setIsFinished(false);
+
+    if (!text) {
+      setIsFinished(true);
+      return;
+    }
+
+    let index = 0;
+    let timeoutId: number | undefined;
+
+    function typeNextCharacter() {
+      index += 1;
+      setVisibleText(text.slice(0, index));
+      if (index < text.length) {
+        timeoutId = window.setTimeout(typeNextCharacter, 30);
+      } else {
+        setIsFinished(true);
+      }
+    }
+
+    timeoutId = window.setTimeout(typeNextCharacter, 30);
+
+    return () => {
+      if (timeoutId) {
+        window.clearTimeout(timeoutId);
+      }
+    };
+  }, [text]);
+
+  return (
+    <span className="typewriter-name" aria-label={text}>
+      {visibleText}
+      <span className={`typewriter-cursor${isFinished ? " hidden" : ""}`} aria-hidden="true">█</span>
+    </span>
   );
 }
 
