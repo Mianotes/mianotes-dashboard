@@ -607,11 +607,11 @@ button {
 .typewriter-cursor {
   display: inline-block;
   width: 0.5em;
-  height: 1.1em;
-  margin-top: -4px;
+  height: 1em;
+  margin-top: -2px;
   margin-left: 3px;
   vertical-align: middle;
-  animation: typewriter-blink 1s step-end infinite;
+  animation: typewriter-blink 1.5s step-end 2;
 }
 
 .typewriter-cursor.hidden {
@@ -619,12 +619,16 @@ button {
 }
 
 @keyframes typewriter-blink {
-  from,
+  from {
+    background: #17181f;
+  }
   to {
     background: transparent;
   }
-
   50% {
+    background: transparent;
+  }
+  99% {
     background: #17181f;
   }
 }
