@@ -1031,6 +1031,7 @@ export function App() {
             <ProfileScreen
               users={users}
               notes={notes}
+              folders={folders}
               currentUser={currentUser}
               selectedUserId={profileUserId}
               onSelectUser={setProfileUserId}
@@ -1189,8 +1190,19 @@ function userDisplayRole(user: UserRecord) {
   return user.role?.trim() || (user.is_admin ? "Admin" : "User");
 }
 
-function profileStats(user: UserRecord, notes: NoteRecord[]) {
-  const userNotes = notes.filter((note) => note.user_id === user.id || note.user?.id === user.id);
+function profileScopedNotes(user: UserRecord, notes: NoteRecord[], folders: FolderRecord[]) {
+  const activeFolderIds = new Set(folders.map((folder) => folder.id));
+  return notes.filter((note) => {
+    const isOwner = note.user_id === user.id || note.user?.id === user.id;
+    if (!isOwner) return false;
+
+    const folderId = note.folder_id ?? note.folder?.id;
+    return Boolean(folderId && activeFolderIds.has(folderId));
+  });
+}
+
+function profileStats(user: UserRecord, notes: NoteRecord[], folders: FolderRecord[]) {
+  const userNotes = profileScopedNotes(user, notes, folders);
   const tagIds = new Set<string>();
   const folderIds = new Set<string>();
 
@@ -1208,10 +1220,9 @@ function profileStats(user: UserRecord, notes: NoteRecord[]) {
   };
 }
 
-function profileTags(user: UserRecord, notes: NoteRecord[]) {
+function profileTags(user: UserRecord, notes: NoteRecord[], folders: FolderRecord[]) {
   const tagMap = new Map<string, TagRecord>();
-  notes.forEach((note) => {
-    if (note.user_id !== user.id && note.user?.id !== user.id) return;
+  profileScopedNotes(user, notes, folders).forEach((note) => {
     note.tags?.forEach((tag) => tagMap.set(tag.id, tag));
   });
   return Array.from(tagMap.values()).sort((first, second) => first.name.localeCompare(second.name));
@@ -1220,6 +1231,7 @@ function profileTags(user: UserRecord, notes: NoteRecord[]) {
 function ProfileScreen({
   users,
   notes,
+  folders,
   currentUser,
   selectedUserId,
   onSelectUser,
@@ -1228,6 +1240,7 @@ function ProfileScreen({
 }: {
   users: UserRecord[];
   notes: NoteRecord[];
+  folders: FolderRecord[];
   currentUser: UserRecord;
   selectedUserId: string | "all";
   onSelectUser: (userId: string | "all") => void;
@@ -1372,6 +1385,7 @@ function ProfileScreen({
           <SingleProfileView
             user={selectedUser}
             notes={notes}
+            folders={folders}
             isEditing={isEditing}
             draft={draft}
             onDraftChange={setDraft}
@@ -1380,6 +1394,7 @@ function ProfileScreen({
           <AllProfilesView
             users={users}
             notes={notes}
+            folders={folders}
             onSelectUser={(userId) => onSelectUser(userId)}
           />
         )}
@@ -1391,13 +1406,15 @@ function ProfileScreen({
 function ProfileSummaryCard({
   user,
   notes,
+  folders,
   compact = false
 }: {
   user: UserRecord;
   notes: NoteRecord[];
+  folders: FolderRecord[];
   compact?: boolean;
 }) {
-  const stats = profileStats(user, notes);
+  const stats = profileStats(user, notes, folders);
 
   return (
     <article className={`profile-card${compact ? " compact" : ""}`}>
@@ -1428,17 +1445,19 @@ function ProfileSummaryCard({
 function SingleProfileView({
   user,
   notes,
+  folders,
   isEditing,
   draft,
   onDraftChange
 }: {
   user: UserRecord;
   notes: NoteRecord[];
+  folders: FolderRecord[];
   isEditing: boolean;
   draft: { name: string; email: string; phone: string; role: string };
   onDraftChange: (draft: { name: string; email: string; phone: string; role: string }) => void;
 }) {
-  const tags = profileTags(user, notes);
+  const tags = profileTags(user, notes, folders);
 
   function setDraftField(field: keyof typeof draft, value: string) {
     onDraftChange({ ...draft, [field]: value });
@@ -1446,7 +1465,7 @@ function SingleProfileView({
 
   return (
     <div className="profile-layout">
-      <ProfileSummaryCard user={user} notes={notes} />
+      <ProfileSummaryCard user={user} notes={notes} folders={folders} />
       <div className="profile-detail-column">
         <section className="profile-info-card">
           <header>
@@ -1512,17 +1531,19 @@ function SingleProfileView({
 function AllProfilesView({
   users,
   notes,
+  folders,
   onSelectUser
 }: {
   users: UserRecord[];
   notes: NoteRecord[];
+  folders: FolderRecord[];
   onSelectUser: (userId: string) => void;
 }) {
   return (
     <section className="profiles-grid" aria-label="All user profiles">
       {users.map((user) => (
         <button className="profile-card-button" key={user.id} type="button" onClick={() => onSelectUser(user.id)}>
-          <ProfileSummaryCard user={user} notes={notes} compact />
+          <ProfileSummaryCard user={user} notes={notes} folders={folders} compact />
         </button>
       ))}
     </section>
