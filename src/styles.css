@@ -684,11 +684,11 @@ button {
 }
 
 .dashboard-notice {
-  display: inline-flex;
+  display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 10px;
-  align-self: flex-start;
-  max-width: calc(100% - 52px);
+  width: calc(100% - 52px);
   margin: 14px 26px 0;
   padding: 9px 10px 9px 12px;
   border: 1px solid #f1c6cc;
