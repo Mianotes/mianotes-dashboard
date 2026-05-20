@@ -1,5 +1,4 @@
 import {
-  Activity,
   Bot,
   Camera,
   ChevronDown,
@@ -29,6 +28,7 @@ import {
   Trash2,
   Upload,
   User,
+  Users,
   X
 } from "lucide-react";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
@@ -1010,8 +1010,8 @@ export function App() {
                           <span>Settings</span>
                         </button>
                         <button type="button" role="menuitem" onClick={() => openProfile("all")}>
-                          <Activity size={16} />
-                          <span>Activity</span>
+                          <Users size={16} />
+                          <span>Users</span>
                         </button>
                       </div>
                       <div className="account-popover-group">
@@ -1274,9 +1274,12 @@ function ProfileScreen({
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
+  const editSelectedProfileRef = useRef<string | null>(null);
 
   useEffect(() => {
-    setIsEditing(false);
+    const shouldEditSelectedProfile = Boolean(selectedUser?.id && editSelectedProfileRef.current === selectedUser.id);
+    editSelectedProfileRef.current = null;
+    setIsEditing(shouldEditSelectedProfile);
     setProfileError(null);
     setDraft({
       name: selectedUser?.name ?? "",
@@ -1285,6 +1288,11 @@ function ProfileScreen({
       role: selectedUser?.role ?? ""
     });
   }, [selectedUser?.id]);
+
+  function selectUserForEditing(userId: string) {
+    editSelectedProfileRef.current = userId;
+    onSelectUser(userId);
+  }
 
   async function saveProfile() {
     if (!selectedUser || !canEditSelectedUser) return;
@@ -1435,7 +1443,9 @@ function ProfileScreen({
             users={users}
             notes={notes}
             folders={folders}
+            currentUser={currentUser}
             onSelectUser={(userId) => onSelectUser(userId)}
+            onEditUser={selectUserForEditing}
           />
         )}
       </div>
@@ -1607,20 +1617,42 @@ function AllProfilesView({
   users,
   notes,
   folders,
+  currentUser,
+  onEditUser,
   onSelectUser
 }: {
   users: UserRecord[];
   notes: NoteRecord[];
   folders: FolderRecord[];
+  currentUser: UserRecord;
+  onEditUser: (userId: string) => void;
   onSelectUser: (userId: string) => void;
 }) {
   return (
     <section className="profiles-grid" aria-label="All user profiles">
-      {users.map((user) => (
-        <button className="profile-card-button" key={user.id} type="button" onClick={() => onSelectUser(user.id)}>
-          <ProfileSummaryCard user={user} notes={notes} folders={folders} compact />
-        </button>
-      ))}
+      {users.map((user) => {
+        const canEditUser = currentUser.is_admin || currentUser.id === user.id;
+        return (
+          <article className="profile-card-shell" key={user.id}>
+            {canEditUser && (
+              <button
+                className="profile-card-edit-button"
+                type="button"
+                aria-label={`Edit ${user.name}`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  onEditUser(user.id);
+                }}
+              >
+                <Edit3 size={15} />
+              </button>
+            )}
+            <button className="profile-card-button" type="button" onClick={() => onSelectUser(user.id)}>
+              <ProfileSummaryCard user={user} notes={notes} folders={folders} compact />
+            </button>
+          </article>
+        );
+      })}
     </section>
   );
 }

@@ -1935,11 +1935,47 @@ button {
   margin: 0 auto;
 }
 
+.profile-card-shell {
+  position: relative;
+  min-width: 0;
+}
+
 .profile-card-button {
+  width: 100%;
   padding: 0;
   border: 0;
   background: transparent;
   text-align: inherit;
+}
+
+.profile-card-edit-button {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  border: 1px solid #d7d8df;
+  border-radius: 999px;
+  color: #62646f;
+  background: #ffffff;
+  cursor: pointer;
+  transition: border-color 0.12s ease, color 0.12s ease, background-color 0.12s ease;
+}
+
+.profile-card-edit-button:hover {
+  border-color: #aeb0ba;
+  color: #202128;
+}
+
+.profile-card-edit-button:active {
+  border-color: #17181f;
+  color: #ffffff;
+  background: #17181f;
 }
 
 .profile-card-button .profile-card {
