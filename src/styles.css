@@ -594,15 +594,13 @@ button {
   border-bottom: 1px solid #e7e8ec;
 }
 
-.account-popover-header strong {
+.account-popover-header span {
   min-width: 0;
   overflow: hidden;
   color: #4a4c55;
   font-size: 12px;
-  font-weight: 800;
-  letter-spacing: 0.06em;
+  font-weight: 600;
   text-overflow: ellipsis;
-  text-transform: uppercase;
   white-space: nowrap;
 }
 
@@ -627,13 +625,13 @@ button {
   display: flex;
   align-items: center;
   gap: 13px;
-  min-height: 38px;
+  min-height: 34px;
   padding: 0 8px;
   border: 0;
   border-radius: 6px;
   color: #565863;
   background: transparent;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 400;
   text-align: left;
 }

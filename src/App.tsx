@@ -998,7 +998,7 @@ export function App() {
                     <div className="account-popover" role="menu">
                       <div className="account-popover-header">
                         <UserAvatar user={currentUser} className="account-popover-avatar" />
-                        <strong>{currentUser.name}</strong>
+                        <span>{currentUser.name}</span>
                       </div>
                       <div className="account-popover-group">
                         <button type="button" role="menuitem" onClick={() => openProfile(currentUser.id)}>
