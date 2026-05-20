@@ -31,7 +31,7 @@ import {
   X
 } from "lucide-react";
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
-import type { FormEvent, ReactNode } from "react";
+import type { FormEvent, KeyboardEvent as ReactKeyboardEvent, ReactNode, SyntheticEvent } from "react";
 import type { MDXEditorMethods } from "@mdxeditor/editor";
 import logoUrl from "./assets/logo_small.png";
 import logoMarkUrl from "./assets/mianotes_mark.svg";
@@ -393,7 +393,7 @@ export function App() {
       }
     }
 
-    function closeAccountMenuOnEscape(event: KeyboardEvent) {
+    function closeAccountMenuOnEscape(event: globalThis.KeyboardEvent) {
       if (event.key === "Escape") {
         setIsAccountOpen(false);
       }
@@ -420,7 +420,7 @@ export function App() {
       }
     }
 
-    function closeFolderMenuOnEscape(event: KeyboardEvent) {
+    function closeFolderMenuOnEscape(event: globalThis.KeyboardEvent) {
       if (event.key === "Escape") {
         setOpenFolderMenuId(null);
       }
@@ -437,7 +437,7 @@ export function App() {
   useEffect(() => {
     if (!isSidebarOpen) return;
 
-    function closeSidebarOnEscape(event: KeyboardEvent) {
+    function closeSidebarOnEscape(event: globalThis.KeyboardEvent) {
       if (event.key === "Escape") {
         setIsSidebarOpen(false);
       }
@@ -546,6 +546,21 @@ export function App() {
         items.map((item) => item.id === note.id ? { ...item, is_starred: note.is_starred } : item)
       ));
       setError("Could not update the star. Please refresh the Mianotes service and try again.");
+    }
+  }
+
+  async function openNote(note: NoteRecord, startInEdit = false) {
+    try {
+      const fullNote = note.text ? note : await apiFetch<NoteRecord>(`/api/notes/${note.id}`);
+      setNotes((items) => (
+        items.map((item) => item.id === note.id ? mergeNoteRecord(item, fullNote) : item)
+      ));
+      if (startInEdit) {
+        setNoteIdToEditOnOpen(note.id);
+      }
+      setOpenedNoteId(note.id);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not open note");
     }
   }
 
@@ -996,18 +1011,12 @@ export function App() {
                       <NoteRow
                         key={note.id}
                         note={note}
+                        currentUser={currentUser}
                         onToggleStar={() => void toggleNoteStar(note)}
-                        onClick={async () => {
-                          try {
-                            const fullNote = note.text ? note : await apiFetch<NoteRecord>(`/api/notes/${note.id}`);
-                            setNotes((items) => (
-                              items.map((item) => item.id === note.id ? mergeNoteRecord(item, fullNote) : item)
-                            ));
-                            setOpenedNoteId(note.id);
-                          } catch (err) {
-                            setError(err instanceof Error ? err.message : "Could not open note");
-                          }
-                        }}
+                        onClick={() => void openNote(note)}
+                        onEdit={() => void openNote(note, true)}
+                        onDeleted={refreshNotes}
+                        onError={setError}
                       />
                     ))
                   )}
@@ -1210,21 +1219,64 @@ function SidebarSection({ title, action, children }: { title: string; action?: R
 
 function NoteRow({
   note,
+  currentUser,
   onClick,
-  onToggleStar
+  onToggleStar,
+  onEdit,
+  onDeleted,
+  onError
 }: {
   note: NoteRecord;
+  currentUser: UserRecord;
   onClick: () => void;
   onToggleStar: () => void;
+  onEdit: () => void;
+  onDeleted: () => Promise<void>;
+  onError: (message: string | null) => void;
 }) {
   const Icon = sourceIcon(note.source_type);
   const folderName = note.folder?.name ?? "Unassigned";
   const owner = note.user?.name ?? "Unknown";
   const tags = note.tags ?? [];
   const isBusy = ["pending_parse", "parsing"].includes(note.status);
+  const canChangeNote = currentUser.is_admin || note.user_id === currentUser.id || note.user?.id === currentUser.id;
+  const cannotChangeNoteMessage = `Only ${owner} or an admin can change this note.`;
+
+  function openRowFromKeyboard(event: ReactKeyboardEvent<HTMLElement>) {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    onClick();
+  }
+
+  async function copyShareLink() {
+    const shareUrl = note.note_url ? new URL(note.note_url, window.location.origin).toString() : window.location.href;
+    await navigator.clipboard?.writeText(shareUrl);
+  }
+
+  async function deleteNote() {
+    if (!canChangeNote) {
+      onError(cannotChangeNoteMessage);
+      return;
+    }
+    const confirmed = window.confirm(`Delete "${note.title}"? This cannot be undone.`);
+    if (!confirmed) return;
+    onError(null);
+    try {
+      await apiFetch(`/api/notes/${note.id}`, { method: "DELETE" });
+      await onDeleted();
+    } catch (err) {
+      onError(err instanceof Error ? err.message : "Could not delete note");
+    }
+  }
 
   return (
-    <button className="note-row" onClick={onClick}>
+    <article
+      className="note-row"
+      role="button"
+      tabIndex={0}
+      onClick={onClick}
+      onKeyDown={openRowFromKeyboard}
+    >
       <span
         className={`star ${note.is_starred ? "on" : ""}`}
         role="button"
@@ -1262,7 +1314,135 @@ function NoteRow({
           <span className="inline-meta"><Clock3 size={16} />{relativeTime(note.updated_at ?? note.created_at)}</span>
         </div>
       </div>
-    </button>
+      <div className="note-row-actions">
+        <NoteActionsMenu
+          note={note}
+          canChangeNote={canChangeNote}
+          cannotChangeNoteMessage={cannotChangeNoteMessage}
+          onEdit={onEdit}
+          onShare={copyShareLink}
+          onDelete={deleteNote}
+        />
+      </div>
+    </article>
+  );
+}
+
+function NoteActionsMenu({
+  note,
+  canChangeNote,
+  cannotChangeNoteMessage,
+  isDeleting = false,
+  onEdit,
+  onShare,
+  onDelete
+}: {
+  note: NoteRecord;
+  canChangeNote: boolean;
+  cannotChangeNoteMessage: string;
+  isDeleting?: boolean;
+  onEdit: () => void;
+  onShare: () => void | Promise<void>;
+  onDelete: () => void | Promise<void>;
+}) {
+  const [isOpen, setIsOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    function closeMenu(event: PointerEvent) {
+      if (
+        event.target instanceof Node
+        && menuRef.current
+        && !menuRef.current.contains(event.target)
+      ) {
+        setIsOpen(false);
+      }
+    }
+
+    function closeMenuOnEscape(event: globalThis.KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", closeMenu);
+    document.addEventListener("keydown", closeMenuOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeMenu);
+      document.removeEventListener("keydown", closeMenuOnEscape);
+    };
+  }, [isOpen]);
+
+  function stopRowAction(event: SyntheticEvent) {
+    event.stopPropagation();
+  }
+
+  async function runAndClose(action: () => void | Promise<void>) {
+    await action();
+    setIsOpen(false);
+  }
+
+  return (
+    <div className="note-actions-menu" ref={menuRef} onClick={stopRowAction} onKeyDown={stopRowAction}>
+      <button
+        className="icon-button"
+        aria-label="More note actions"
+        aria-expanded={isOpen}
+        aria-haspopup="menu"
+        onClick={() => setIsOpen((current) => !current)}
+      >
+        <MoreVertical size={19} />
+      </button>
+      {isOpen && (
+        <div className="note-actions-popover" role="menu">
+          <button
+            type="button"
+            role="menuitem"
+            disabled={!canChangeNote}
+            title={!canChangeNote ? cannotChangeNoteMessage : undefined}
+            onClick={() => void runAndClose(onEdit)}
+          >
+            <Edit3 size={15} />
+            Edit
+          </button>
+          <button type="button" role="menuitem" onClick={() => void runAndClose(onShare)}>
+            <Share2 size={15} />
+            Share
+          </button>
+          {note.source_files?.[0]?.url ? (
+            <a
+              href={note.source_files[0].url}
+              target="_blank"
+              rel="noreferrer"
+              role="menuitem"
+              onClick={() => setIsOpen(false)}
+            >
+              <Eye size={15} />
+              View Source
+            </a>
+          ) : (
+            <span role="menuitem" aria-disabled="true">
+              <Eye size={15} />
+              View Source
+            </span>
+          )}
+          <div className="note-actions-divider" />
+          <button
+            className="danger-action"
+            type="button"
+            role="menuitem"
+            disabled={isDeleting || !canChangeNote}
+            title={!canChangeNote ? cannotChangeNoteMessage : undefined}
+            onClick={() => void runAndClose(onDelete)}
+          >
+            {isDeleting ? <Loader2 size={15} className="spin" /> : <Trash2 size={15} />}
+            Delete
+          </button>
+        </div>
+      )}
+    </div>
   );
 }
 
@@ -1289,7 +1469,6 @@ function NotePanel({
   const [miaResponse, setMiaResponse] = useState<string | null>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [draftText, setDraftText] = useState(noteBodyMarkdown(note.text ?? ""));
-  const [isActionsOpen, setIsActionsOpen] = useState(false);
   const [noteError, setNoteError] = useState<string | null>(null);
   const [miaError, setMiaError] = useState<string | null>(null);
   const [tagError, setTagError] = useState<string | null>(null);
@@ -1301,7 +1480,6 @@ function NotePanel({
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [isTagDialogOpen, setIsTagDialogOpen] = useState(false);
   const [titleDraft, setTitleDraft] = useState(note.title);
-  const noteActionsMenuRef = useRef<HTMLDivElement | null>(null);
   const markdownEditorRef = useRef<MDXEditorMethods | null>(null);
   const miaLoadingTimersRef = useRef<number[]>([]);
 
@@ -1333,7 +1511,6 @@ function NotePanel({
     setCommentBody("");
     setIsEditing(startInEdit);
     setDraftText(noteBodyMarkdown(note.text ?? ""));
-    setIsActionsOpen(false);
     setIsApplyingMia(false);
     setIsEditingTitle(false);
     setIsTagDialogOpen(false);
@@ -1358,33 +1535,6 @@ function NotePanel({
       setDraftText(noteBodyMarkdown(note.text ?? ""));
     }
   }, [isEditing, note.text]);
-
-  useEffect(() => {
-    if (!isActionsOpen) return;
-
-    function closeNoteActionsMenu(event: PointerEvent) {
-      if (
-        event.target instanceof Node
-        && noteActionsMenuRef.current
-        && !noteActionsMenuRef.current.contains(event.target)
-      ) {
-        setIsActionsOpen(false);
-      }
-    }
-
-    function closeNoteActionsMenuOnEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") {
-        setIsActionsOpen(false);
-      }
-    }
-
-    document.addEventListener("pointerdown", closeNoteActionsMenu);
-    document.addEventListener("keydown", closeNoteActionsMenuOnEscape);
-    return () => {
-      document.removeEventListener("pointerdown", closeNoteActionsMenu);
-      document.removeEventListener("keydown", closeNoteActionsMenuOnEscape);
-    };
-  }, [isActionsOpen]);
 
   const authorName = note.user?.name ?? "Unknown";
   const canChangeNote = currentUser.is_admin || note.user_id === currentUser.id || note.user?.id === currentUser.id;
@@ -1531,7 +1681,6 @@ function NotePanel({
   async function copyShareLink() {
     const shareUrl = note.note_url ? new URL(note.note_url, window.location.origin).toString() : window.location.href;
     await navigator.clipboard?.writeText(shareUrl);
-    setIsActionsOpen(false);
   }
 
   async function deleteNote() {
@@ -1646,60 +1795,15 @@ function NotePanel({
                 <Edit3 size={16} />
                 Edit
               </button>
-              <div className="note-actions-menu" ref={noteActionsMenuRef}>
-                <button
-                  className="icon-button"
-                  aria-label="More note actions"
-                  aria-expanded={isActionsOpen}
-                  onClick={() => setIsActionsOpen((current) => !current)}
-                >
-                  <MoreVertical size={19} />
-                </button>
-                {isActionsOpen && (
-                  <div className="note-actions-popover" role="menu">
-                    <button
-                      type="button"
-                      role="menuitem"
-                      disabled={!canChangeNote}
-                      title={!canChangeNote ? cannotChangeNoteMessage : undefined}
-                      onClick={() => {
-                        setIsEditing(true);
-                        setIsActionsOpen(false);
-                      }}
-                    >
-                      <Edit3 size={15} />
-                      Edit
-                    </button>
-                    <button type="button" role="menuitem" onClick={() => void copyShareLink()}>
-                      <Share2 size={15} />
-                      Share
-                    </button>
-                    {note.source_files?.[0]?.url ? (
-                      <a href={note.source_files[0].url} target="_blank" rel="noreferrer" role="menuitem" onClick={() => setIsActionsOpen(false)}>
-                        <Eye size={15} />
-                        View Source
-                      </a>
-                    ) : (
-                      <span role="menuitem" aria-disabled="true">
-                        <Eye size={15} />
-                        View Source
-                      </span>
-                    )}
-                    <div className="note-actions-divider" />
-                    <button
-                      className="danger-action"
-                      type="button"
-                      role="menuitem"
-                      disabled={isDeleting || !canChangeNote}
-                      title={!canChangeNote ? cannotChangeNoteMessage : undefined}
-                      onClick={() => void deleteNote()}
-                    >
-                      {isDeleting ? <Loader2 size={15} className="spin" /> : <Trash2 size={15} />}
-                      Delete
-                    </button>
-                  </div>
-                )}
-              </div>
+              <NoteActionsMenu
+                note={note}
+                canChangeNote={canChangeNote}
+                cannotChangeNoteMessage={cannotChangeNoteMessage}
+                isDeleting={isDeleting}
+                onEdit={() => setIsEditing(true)}
+                onShare={copyShareLink}
+                onDelete={deleteNote}
+              />
             </>
           )}
         </div>
