@@ -1009,7 +1009,7 @@ export function App() {
                           <Settings size={16} />
                           <span>Settings</span>
                         </button>
-                        <button type="button" role="menuitem">
+                        <button type="button" role="menuitem" onClick={() => openProfile("all")}>
                           <Activity size={16} />
                           <span>Activity</span>
                         </button>
