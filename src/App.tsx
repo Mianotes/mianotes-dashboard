@@ -260,6 +260,16 @@ function badgeTone(type: string) {
   return "neutral";
 }
 
+function isNoteIndexing(note: NoteRecord) {
+  const indexingStatuses = ["pending_parse", "parsing"];
+  const indexingJobStatuses = ["queued", "running"];
+  const isTextNote = ["text", "markdown"].includes(note.source_type);
+
+  return indexingStatuses.includes(note.status)
+    || (note.job_status ? indexingJobStatuses.includes(note.job_status) : false)
+    || (!note.is_published && !isTextNote);
+}
+
 function formatGigabytes(bytes: number) {
   return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
 }
@@ -1238,7 +1248,7 @@ function NoteRow({
   const folderName = note.folder?.name ?? "Unassigned";
   const owner = note.user?.name ?? "Unknown";
   const tags = note.tags ?? [];
-  const isBusy = ["pending_parse", "parsing"].includes(note.status);
+  const isBusy = isNoteIndexing(note);
   const canChangeNote = currentUser.is_admin || note.user_id === currentUser.id || note.user?.id === currentUser.id;
   const cannotChangeNoteMessage = `Only ${owner} or an admin can change this note.`;
 
@@ -1606,6 +1616,10 @@ function NotePanel({
 
   async function submitMiaPrompt(instructions: string, clearInput = false) {
     if (!note) return;
+    if (isIndexingNote) {
+      setMiaError("Mia is still indexing this note. You can ask questions once the content is ready.");
+      return;
+    }
     const trimmedInstructions = instructions.trim();
     if (!trimmedInstructions) {
       setMiaError("Please provide instructions for Mia.");
@@ -1751,6 +1765,8 @@ function NotePanel({
   const hasLoadedNoteText = typeof note.text === "string";
   const noteMarkdownBody = noteBodyMarkdown(note.text ?? "");
   const noteTags = note.tags ?? [];
+  const isIndexingNote = isNoteIndexing(note);
+  const isMiaDisabled = isLoading || isIndexingNote;
 
   return (
     <section className={`note-panel ${isEditing ? "editing" : ""}`}>
@@ -1884,6 +1900,11 @@ function NotePanel({
       <div className="note-section-divider" />
       <section className="comments-box">
         <h3>Ask Mia</h3>
+        {isIndexingNote && (
+          <p className="mia-disabled-note">
+            Mia is still indexing this note. You can ask questions once the content is ready.
+          </p>
+        )}
         {(isLoading || miaResponse) && (
           <div className={`mia-output ${isLoading ? "loading" : "result"}`} aria-live="polite">
             {isLoading ? (
@@ -1928,6 +1949,7 @@ function NotePanel({
         <form onSubmit={addComment} className="comment-form">
           <textarea
             value={commentBody}
+            disabled={isMiaDisabled}
             onChange={(event) => {
               setCommentBody(event.target.value);
               if (miaError === "Please provide instructions for Mia.") {
@@ -1937,7 +1959,7 @@ function NotePanel({
             placeholder="Ask Mia anything about this note."
           />
           <div className="mia-action-row">
-            <button className="primary-button small ask-mia-button" disabled={isLoading}>
+            <button className="primary-button small ask-mia-button" disabled={isMiaDisabled}>
               <MessageCircle size={16} />
               Ask Mia
             </button>
@@ -1945,7 +1967,7 @@ function NotePanel({
               {miaQuickActions.map((action) => (
                 <button
                   className="mia-quick-action"
-                  disabled={isLoading}
+                  disabled={isMiaDisabled}
                   key={action.label}
                   type="button"
                   onClick={() => void submitMiaPrompt(action.prompt)}

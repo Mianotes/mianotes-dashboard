@@ -1596,6 +1596,13 @@ button {
   font-weight: 500;
 }
 
+.mia-disabled-note {
+  margin: -4px 0 14px;
+  color: #747680;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 .mia-action-row {
   display: flex;
   align-items: center;
@@ -1642,6 +1649,12 @@ button {
 .modal textarea {
   min-height: 86px;
   resize: vertical;
+}
+
+.comment-form textarea:disabled {
+  cursor: not-allowed;
+  color: #8c8e98;
+  background: #f7f7f9;
 }
 
 .comment,
