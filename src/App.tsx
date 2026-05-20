@@ -1005,14 +1005,16 @@ export function App() {
                           <User size={16} />
                           <span>Profile</span>
                         </button>
-                        <button type="button" role="menuitem">
-                          <Settings size={16} />
-                          <span>Settings</span>
-                        </button>
                         <button type="button" role="menuitem" onClick={() => openProfile("all")}>
                           <Users size={16} />
                           <span>Users</span>
                         </button>
+                        {currentUser.is_admin && (
+                          <button type="button" role="menuitem">
+                            <Settings size={16} />
+                            <span>Settings</span>
+                          </button>
+                        )}
                       </div>
                       <div className="account-popover-group">
                         <button
