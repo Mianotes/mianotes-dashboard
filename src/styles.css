@@ -1756,11 +1756,48 @@ button {
 .profile-avatar-wrap {
   display: grid;
   place-items: center;
+  position: relative;
   width: 116px;
   height: 116px;
   margin-bottom: 24px;
   border: 5px solid #ececf0;
   border-radius: 999px;
+}
+
+.profile-avatar-upload {
+  position: absolute;
+  right: -3px;
+  bottom: 5px;
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border: 1px solid #d7d8df;
+  border-radius: 999px;
+  color: #62646f;
+  background: #ffffff;
+  cursor: pointer;
+  transition: border-color 0.12s ease, color 0.12s ease, background-color 0.12s ease;
+}
+
+.profile-avatar-upload:hover {
+  border-color: #aeb0ba;
+  color: #202128;
+}
+
+.profile-avatar-upload:active {
+  border-color: #17181f;
+  color: #ffffff;
+  background: #17181f;
+}
+
+.profile-avatar-upload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .profile-avatar {
@@ -2565,6 +2602,13 @@ textarea:focus {
     width: 96px;
     height: 96px;
     margin-bottom: 18px;
+  }
+
+  .profile-avatar-upload {
+    right: -5px;
+    bottom: 0;
+    width: 32px;
+    height: 32px;
   }
 
   .profile-avatar {

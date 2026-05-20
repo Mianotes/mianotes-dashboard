@@ -1,6 +1,7 @@
 import {
   Activity,
   Bot,
+  Camera,
   ChevronDown,
   ChevronLeft,
   ChevronRight,
@@ -151,6 +152,13 @@ const miaQuickActions = [
 
 function apiPath(path: string) {
   return `${apiBase}${path}`;
+}
+
+function mediaPath(path: string) {
+  if (/^https?:\/\//.test(path)) {
+    return path;
+  }
+  return apiPath(path);
 }
 
 async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
@@ -327,7 +335,7 @@ function UserAvatar({
 }) {
   const displayName = user?.name ?? name ?? "User";
   if (user?.photo_url) {
-    return <img className={`avatar avatar-photo ${className}`} src={user.photo_url} alt={displayName} />;
+    return <img className={`avatar avatar-photo ${className}`} src={mediaPath(user.photo_url)} alt={displayName} />;
   }
   return <span className={`avatar avatar-${avatarTone(displayName)} ${className}`}>{userInitials(displayName)}</span>;
 }
@@ -1264,6 +1272,7 @@ function ProfileScreen({
     role: selectedUser?.role ?? ""
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -1316,6 +1325,30 @@ function ProfileScreen({
       phone: selectedUser?.phone ?? "",
       role: selectedUser?.role ?? ""
     });
+  }
+
+  async function uploadProfilePhoto(file: File) {
+    if (!selectedUser || !canEditSelectedUser) return;
+    if (!["image/jpeg", "image/png"].includes(file.type)) {
+      setProfileError("Profile photos must be JPG or PNG images.");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("photo", file);
+    setIsUploadingPhoto(true);
+    setProfileError(null);
+    try {
+      const updatedUser = await apiFetch<UserRecord>(`/api/users/${selectedUser.id}/photo`, {
+        method: "POST",
+        body: formData
+      });
+      onUserUpdated(updatedUser);
+    } catch (err) {
+      setProfileError(err instanceof Error ? err.message : "Could not upload profile photo");
+    } finally {
+      setIsUploadingPhoto(false);
+    }
   }
 
   return (
@@ -1393,6 +1426,9 @@ function ProfileScreen({
             isEditing={isEditing}
             draft={draft}
             onDraftChange={setDraft}
+            canUploadPhoto={canEditSelectedUser}
+            isUploadingPhoto={isUploadingPhoto}
+            onPhotoUpload={uploadProfilePhoto}
           />
         ) : (
           <AllProfilesView
@@ -1411,12 +1447,18 @@ function ProfileSummaryCard({
   user,
   notes,
   folders,
-  compact = false
+  compact = false,
+  canUploadPhoto = false,
+  isUploadingPhoto = false,
+  onPhotoUpload
 }: {
   user: UserRecord;
   notes: NoteRecord[];
   folders: FolderRecord[];
   compact?: boolean;
+  canUploadPhoto?: boolean;
+  isUploadingPhoto?: boolean;
+  onPhotoUpload?: (file: File) => void;
 }) {
   const stats = profileStats(user, notes, folders);
 
@@ -1424,6 +1466,22 @@ function ProfileSummaryCard({
     <article className={`profile-card${compact ? " compact" : ""}`}>
       <div className="profile-avatar-wrap">
         <UserAvatar user={user} className="profile-avatar" />
+        {canUploadPhoto && (
+          <label className="profile-avatar-upload" aria-label="Upload profile photo">
+            {isUploadingPhoto ? <Loader2 className="spin" size={15} /> : <Camera size={15} />}
+            <input
+              type="file"
+              accept="image/jpeg,image/png"
+              onChange={(event) => {
+                const file = event.currentTarget.files?.[0];
+                event.currentTarget.value = "";
+                if (file) {
+                  onPhotoUpload?.(file);
+                }
+              }}
+            />
+          </label>
+        )}
       </div>
       <h2>{user.name}</h2>
       <p>{userDisplayRole(user)}</p>
@@ -1452,7 +1510,10 @@ function SingleProfileView({
   folders,
   isEditing,
   draft,
-  onDraftChange
+  onDraftChange,
+  canUploadPhoto,
+  isUploadingPhoto,
+  onPhotoUpload
 }: {
   user: UserRecord;
   notes: NoteRecord[];
@@ -1460,6 +1521,9 @@ function SingleProfileView({
   isEditing: boolean;
   draft: { name: string; email: string; phone: string; role: string };
   onDraftChange: (draft: { name: string; email: string; phone: string; role: string }) => void;
+  canUploadPhoto: boolean;
+  isUploadingPhoto: boolean;
+  onPhotoUpload: (file: File) => void;
 }) {
   const tags = profileTags(user, notes, folders);
 
@@ -1469,7 +1533,14 @@ function SingleProfileView({
 
   return (
     <div className="profile-layout">
-      <ProfileSummaryCard user={user} notes={notes} folders={folders} />
+      <ProfileSummaryCard
+        user={user}
+        notes={notes}
+        folders={folders}
+        canUploadPhoto={canUploadPhoto}
+        isUploadingPhoto={isUploadingPhoto}
+        onPhotoUpload={onPhotoUpload}
+      />
       <div className="profile-detail-column">
         <section className="profile-info-card">
           <header>
