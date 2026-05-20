@@ -606,8 +606,12 @@ button {
 
 .typewriter-cursor {
   display: inline-block;
-  margin-left: 2px;
-  animation: typewriter-blink 1s infinite;
+  width: 0.5em;
+  height: 1.1em;
+  margin-top: -4px;
+  margin-left: 3px;
+  vertical-align: middle;
+  animation: typewriter-blink 1s step-end infinite;
 }
 
 .typewriter-cursor.hidden {
@@ -615,8 +619,13 @@ button {
 }
 
 @keyframes typewriter-blink {
+  from,
+  to {
+    background: transparent;
+  }
+
   50% {
-    opacity: 0;
+    background: #17181f;
   }
 }
 

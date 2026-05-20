@@ -1225,7 +1225,7 @@ function TypewriterText({ text }: { text: string }) {
       if (index < text.length) {
         timeoutId = window.setTimeout(typeNextCharacter, 30);
       } else {
-        finishTimeoutId = window.setTimeout(() => setIsFinished(true), 2000);
+        finishTimeoutId = window.setTimeout(() => setIsFinished(true), 1800);
       }
     }
 
@@ -1244,7 +1244,7 @@ function TypewriterText({ text }: { text: string }) {
   return (
     <span className="typewriter-name" aria-label={text}>
       {visibleText}
-      <span className={`typewriter-cursor${isFinished ? " hidden" : ""}`} aria-hidden="true">█</span>
+      <span className={`typewriter-cursor${isFinished ? " hidden" : ""}`} aria-hidden="true" />
     </span>
   );
 }
