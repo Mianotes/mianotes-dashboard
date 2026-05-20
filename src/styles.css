@@ -984,6 +984,10 @@ button {
   white-space: nowrap;
 }
 
+.note-document-breadcrumb .current {
+  font-weight: 700;
+}
+
 .note-document-title {
   padding: 30px 0 22px;
 }

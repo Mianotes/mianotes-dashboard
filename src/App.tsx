@@ -1187,7 +1187,11 @@ export function App() {
 }
 
 function userDisplayRole(user: UserRecord) {
-  return user.role?.trim() || (user.is_admin ? "Admin" : "User");
+  const jobTitle = user.role?.trim();
+  if (jobTitle) {
+    return user.is_admin ? `${jobTitle} (Admin)` : jobTitle;
+  }
+  return user.is_admin ? "Admin" : "Not set";
 }
 
 function profileScopedNotes(user: UserRecord, notes: NoteRecord[], folders: FolderRecord[]) {
@@ -1486,7 +1490,7 @@ function SingleProfileView({
                 <input value={draft.phone} onChange={(event) => setDraftField("phone", event.target.value)} />
               </label>
               <label>
-                <span>Role</span>
+                <span>Job title</span>
                 <input value={draft.role} onChange={(event) => setDraftField("role", event.target.value)} />
               </label>
             </div>
@@ -1505,7 +1509,7 @@ function SingleProfileView({
                 <strong>{user.phone?.trim() || "Not set"}</strong>
               </div>
               <div>
-                <span>Role</span>
+                <span>Job title</span>
                 <strong>{userDisplayRole(user)}</strong>
               </div>
             </div>
@@ -2212,7 +2216,7 @@ function NotePanel({
         </button>
         <div className="note-document-breadcrumb">
           <span>Folder</span>
-          <span>
+          <span className="current">
             <ChevronRight size={14} />
             {folderLabel}
           </span>
