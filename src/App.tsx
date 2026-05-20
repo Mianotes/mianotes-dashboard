@@ -1051,6 +1051,7 @@ export function App() {
               selectedUserId={profileUserId}
               onSelectUser={setProfileUserId}
               onBack={() => setWorkspaceView("notes")}
+              onSignOut={() => void logout(setCurrentUser)}
               onUserUpdated={(updatedUser) => {
                 setUsers((items) => items.map((user) => user.id === updatedUser.id ? updatedUser : user));
                 setNotes((items) => (
@@ -1298,6 +1299,7 @@ function ProfileScreen({
   selectedUserId,
   onSelectUser,
   onBack,
+  onSignOut,
   onUserUpdated
 }: {
   users: UserRecord[];
@@ -1307,6 +1309,7 @@ function ProfileScreen({
   selectedUserId: string | "all";
   onSelectUser: (userId: string | "all") => void;
   onBack: () => void;
+  onSignOut: () => void;
   onUserUpdated: (user: UserRecord) => void;
 }) {
   const selectedUser = selectedUserId === "all"
@@ -1323,8 +1326,10 @@ function ProfileScreen({
   });
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const editSelectedProfileRef = useRef<string | null>(null);
+  const accountMenuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     const shouldEditSelectedProfile = Boolean(selectedUser?.id && editSelectedProfileRef.current === selectedUser.id);
@@ -1338,6 +1343,34 @@ function ProfileScreen({
       role: selectedUser?.role ?? ""
     });
   }, [selectedUser?.id]);
+
+  useEffect(() => {
+    if (!isAccountOpen) return;
+
+    function closeAccountMenu(event: PointerEvent) {
+      if (
+        event.target instanceof Node
+        && accountMenuRef.current
+        && !accountMenuRef.current.contains(event.target)
+      ) {
+        setIsAccountOpen(false);
+      }
+    }
+
+    function closeAccountMenuOnEscape(event: globalThis.KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsAccountOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", closeAccountMenu);
+    document.addEventListener("keydown", closeAccountMenuOnEscape);
+
+    return () => {
+      document.removeEventListener("pointerdown", closeAccountMenu);
+      document.removeEventListener("keydown", closeAccountMenuOnEscape);
+    };
+  }, [isAccountOpen]);
 
   function selectUserForEditing(userId: string) {
     editSelectedProfileRef.current = userId;
@@ -1465,7 +1498,69 @@ function ProfileScreen({
             </select>
             <ChevronDown className="select-button-chevron" size={12} />
           </label>
-          <UserAvatar user={currentUser} className="profile-toolbar-avatar" />
+          <div className="account-menu profile-account-menu" ref={accountMenuRef}>
+            <button
+              className="account-avatar-button"
+              type="button"
+              aria-expanded={isAccountOpen}
+              aria-haspopup="menu"
+              onClick={() => setIsAccountOpen((value) => !value)}
+            >
+              <UserAvatar user={currentUser} className="profile-toolbar-avatar" />
+            </button>
+            {isAccountOpen && (
+              <div className="account-popover" role="menu">
+                <div className="account-popover-header">
+                  <UserAvatar user={currentUser} className="account-popover-avatar" />
+                  <TypewriterText text={currentUser.name} />
+                </div>
+                <div className="account-popover-group">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setIsAccountOpen(false);
+                      onSelectUser(currentUser.id);
+                    }}
+                  >
+                    <User size={16} />
+                    <span>Profile</span>
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setIsAccountOpen(false);
+                      onSelectUser("all");
+                    }}
+                  >
+                    <Users size={16} />
+                    <span>Users</span>
+                  </button>
+                  {currentUser.is_admin && (
+                    <button type="button" role="menuitem">
+                      <Settings size={16} />
+                      <span>Settings</span>
+                    </button>
+                  )}
+                </div>
+                <div className="account-popover-group">
+                  <button
+                    className="danger"
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setIsAccountOpen(false);
+                      onSignOut();
+                    }}
+                  >
+                    <LogOut size={16} />
+                    <span>Sign out</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
