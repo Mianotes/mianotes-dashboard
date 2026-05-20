@@ -161,6 +161,11 @@ function mediaPath(path: string) {
   return apiPath(path);
 }
 
+function versionedMediaPath(path: string, version = Date.now()) {
+  const separator = path.includes("?") ? "&" : "?";
+  return `${path}${separator}v=${version}`;
+}
+
 async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers = new Headers(options.headers);
   if (!(options.body instanceof FormData) && !headers.has("Content-Type")) {
@@ -1396,7 +1401,10 @@ function ProfileScreen({
         method: "POST",
         body: formData
       });
-      onUserUpdated(updatedUser);
+      onUserUpdated({
+        ...updatedUser,
+        photo_url: updatedUser.photo_url ? versionedMediaPath(updatedUser.photo_url) : updatedUser.photo_url
+      });
     } catch (err) {
       setProfileError(err instanceof Error ? err.message : "Could not upload profile photo");
     } finally {
