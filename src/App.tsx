@@ -374,9 +374,17 @@ export function App() {
   const [noteIdToEditOnOpen, setNoteIdToEditOnOpen] = useState<string | null>(null);
   const accountMenuRef = useRef<HTMLDivElement | null>(null);
   const folderActionsMenuRef = useRef<HTMLDivElement | null>(null);
+  const openedNoteIdRef = useRef<string | null>(initialUiState.openedNoteId);
 
   function clearSearch() {
     setSearchQuery("");
+  }
+
+  function pushNoteHistory(noteId: string) {
+    const state = window.history.state as { mianotesView?: string; noteId?: string } | null;
+    if (state?.mianotesView === "note" && state.noteId === noteId) return;
+
+    window.history.pushState({ mianotesView: "note", noteId }, "", window.location.href);
   }
 
   function changePage(nextPage: number) {
@@ -442,6 +450,31 @@ export function App() {
 
   useEffect(() => {
     void bootstrap();
+  }, []);
+
+  useEffect(() => {
+    const initialNoteId = openedNoteIdRef.current;
+    window.history.replaceState({ mianotesView: "list" }, "", window.location.href);
+    if (initialNoteId) {
+      window.history.pushState({ mianotesView: "note", noteId: initialNoteId }, "", window.location.href);
+    }
+
+    function handleBrowserBack(event: PopStateEvent) {
+      const state = event.state as { mianotesView?: string; noteId?: string } | null;
+      if (state?.mianotesView === "note" && state.noteId) {
+        setWorkspaceView("notes");
+        setOpenedNoteId(state.noteId);
+        return;
+      }
+
+      if (openedNoteIdRef.current) {
+        setOpenedNoteId(null);
+        setNoteIdToEditOnOpen(null);
+      }
+    }
+
+    window.addEventListener("popstate", handleBrowserBack);
+    return () => window.removeEventListener("popstate", handleBrowserBack);
   }, []);
 
   useEffect(() => {
@@ -515,6 +548,7 @@ export function App() {
     if (openedNoteId) {
       setIsSidebarOpen(false);
     }
+    openedNoteIdRef.current = openedNoteId;
   }, [openedNoteId]);
 
   async function updateFolder(folder: FolderRecord, update: Partial<Pick<FolderRecord, "name" | "is_pinned">>) {
@@ -615,7 +649,7 @@ export function App() {
 
   async function openNote(note: NoteRecord, startInEdit = false) {
     try {
-      const fullNote = note.text ? note : await apiFetch<NoteRecord>(`/api/notes/${note.id}`);
+      const fullNote = await apiFetch<NoteRecord>(`/api/notes/${note.id}`);
       setNotes((items) => (
         items.map((item) => item.id === note.id ? mergeNoteRecord(item, fullNote) : item)
       ));
@@ -623,6 +657,7 @@ export function App() {
         setNoteIdToEditOnOpen(note.id);
       }
       setOpenedNoteId(note.id);
+      pushNoteHistory(note.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not open note");
     }
@@ -787,6 +822,44 @@ export function App() {
       )))
       .catch(() => undefined);
   }, [openedNote?.id]);
+
+  useEffect(() => {
+    if (!openedNote || hasUsableNoteContent(openedNote) || openedNote.status === "failed") return;
+    if (["text", "markdown"].includes(openedNote.source_type) && openedNote.is_published) return;
+
+    let cancelled = false;
+    const noteId = openedNote.id;
+
+    async function refreshOpenedNote() {
+      try {
+        const fullNote = await apiFetch<NoteRecord>(`/api/notes/${noteId}`);
+        if (cancelled || !fullNote) return;
+
+        setNotes((items) => (
+          items.map((item) => item.id === fullNote.id ? mergeNoteRecord(item, fullNote) : item)
+        ));
+      } catch {
+        // Keep the current draft visible; opening or saving the note will surface errors.
+      }
+    }
+
+    const intervalId = window.setInterval(() => {
+      void refreshOpenedNote();
+    }, 2500);
+    void refreshOpenedNote();
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(intervalId);
+    };
+  }, [
+    openedNote?.id,
+    openedNote?.is_published,
+    openedNote?.source_type,
+    openedNote?.status,
+    openedNote?.summary,
+    openedNote?.text
+  ]);
 
   useEffect(() => {
     if (!openedNoteId) return;
@@ -1169,6 +1242,7 @@ export function App() {
                 : [hydratedNote, ...items];
             });
             setOpenedNoteId(note.id);
+            pushNoteHistory(note.id);
             setNoteIdToEditOnOpen(shouldEdit ? note.id : null);
             setIsAddOpen(false);
             await refreshNotes();
