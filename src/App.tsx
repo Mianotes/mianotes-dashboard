@@ -44,6 +44,8 @@ type UserRecord = {
   email: string;
   name: string;
   username: string;
+  phone?: string | null;
+  role?: string | null;
   is_admin: boolean;
   photo_url?: string | null;
 };
@@ -352,6 +354,8 @@ export function App() {
   const [isFolderOpen, setIsFolderOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [workspaceView, setWorkspaceView] = useState<"notes" | "profile">("notes");
+  const [profileUserId, setProfileUserId] = useState<string | "all">("all");
   const [openFolderMenuId, setOpenFolderMenuId] = useState<string | null>(null);
   const [renamingFolder, setRenamingFolder] = useState<FolderRecord | null>(null);
   const [noteIdToEditOnOpen, setNoteIdToEditOnOpen] = useState<string | null>(null);
@@ -371,6 +375,8 @@ export function App() {
     clearSearch();
     setCurrentPage(1);
     setSelectedView(view);
+    setWorkspaceView("notes");
+    setOpenedNoteId(null);
     setIsSidebarOpen(false);
   }
 
@@ -378,6 +384,8 @@ export function App() {
     clearSearch();
     setCurrentPage(1);
     setSelectedFolderId(folderId);
+    setWorkspaceView("notes");
+    setOpenedNoteId(null);
     setIsSidebarOpen(false);
   }
 
@@ -395,14 +403,28 @@ export function App() {
 
   function openAddNote() {
     clearSearch();
+    setWorkspaceView("notes");
+    setOpenedNoteId(null);
     setIsSidebarOpen(false);
     setIsAddOpen(true);
   }
 
   function openAddFolder() {
     clearSearch();
+    setWorkspaceView("notes");
+    setOpenedNoteId(null);
     setIsSidebarOpen(false);
     setIsFolderOpen(true);
+  }
+
+  function openProfile(profileId: string | "all" = currentUser?.id ?? "all") {
+    clearSearch();
+    setWorkspaceView("profile");
+    setProfileUserId(profileId);
+    setOpenedNoteId(null);
+    setIsAccountOpen(false);
+    setIsSidebarOpen(false);
+    window.scrollTo(0, 0);
   }
 
   useEffect(() => {
@@ -660,6 +682,10 @@ export function App() {
   useEffect(() => {
     if (!currentUser || !isWorkspaceLoaded) return;
 
+    setProfileUserId((current) => (
+      current === "all" || users.some((user) => user.id === current) ? current : currentUser.id
+    ));
+
     setSelectedUserId((current) => (
       current === "all" || users.some((user) => user.id === current) ? current : "all"
     ));
@@ -874,7 +900,7 @@ export function App() {
         </aside>
 
         <section className="workspace">
-          {!openedNote && (
+          {workspaceView === "notes" && !openedNote && (
             <header className="toolbar">
               <button
                 className="mobile-sidebar-toggle"
@@ -967,7 +993,7 @@ export function App() {
                         <strong>{currentUser.name}</strong>
                       </div>
                       <div className="account-popover-group">
-                        <button type="button" role="menuitem">
+                        <button type="button" role="menuitem" onClick={() => openProfile(currentUser.id)}>
                           <User size={16} />
                           <span>Profile</span>
                         </button>
@@ -1001,81 +1027,107 @@ export function App() {
             </header>
           )}
 
-          {error && (
-            <div className="dashboard-notice" role="status">
-              <span>{error}</span>
-              <button type="button" aria-label="Dismiss message" onClick={() => setError(null)}>
-                <X size={14} />
-              </button>
-            </div>
-          )}
+          {workspaceView === "profile" ? (
+            <ProfileScreen
+              users={users}
+              notes={notes}
+              currentUser={currentUser}
+              selectedUserId={profileUserId}
+              onSelectUser={setProfileUserId}
+              onBack={() => setWorkspaceView("notes")}
+              onUserUpdated={(updatedUser) => {
+                setUsers((items) => items.map((user) => user.id === updatedUser.id ? updatedUser : user));
+                setNotes((items) => (
+                  items.map((note) => (
+                    note.user?.id === updatedUser.id || note.user_id === updatedUser.id
+                      ? { ...note, user: updatedUser }
+                      : note
+                  ))
+                ));
+                if (currentUser.id === updatedUser.id) {
+                  setCurrentUser(updatedUser);
+                }
+              }}
+            />
+          ) : (
+            <>
+              {error && (
+                <div className="dashboard-notice" role="status">
+                  <span>{error}</span>
+                  <button type="button" aria-label="Dismiss message" onClick={() => setError(null)}>
+                    <X size={14} />
+                  </button>
+                </div>
+              )}
 
-          <div className="content-surface">
-            {openedNote ? (
-              <NotePanel
-                note={openedNote}
-                folderLabel={openedNote.folder?.name ?? selectedFolder?.name ?? "All folders"}
-                currentUser={currentUser}
-                startInEdit={noteIdToEditOnOpen === openedNote.id}
-                onStartInEditConsumed={() => setNoteIdToEditOnOpen(null)}
-                onClose={() => setOpenedNoteId(null)}
-                onRefresh={async () => {
-                  const fullNote = await apiFetch<NoteRecord>(`/api/notes/${openedNote.id}`);
-                  setNotes((items) => (
-                    items.map((item) => item.id === openedNote.id ? mergeNoteRecord(item, fullNote) : item)
-                  ));
-                }}
-                onDeleted={async () => {
-                  setOpenedNoteId(null);
-                  await refreshNotes();
-                }}
-              />
-            ) : (
-              <>
-                <section className="note-list" aria-label="Notes">
-                  {filteredNotes.length === 0 ? (
-                    <EmptyState onAdd={openAddNote} />
-                  ) : (
-                    paginatedNotes.map((note) => (
-                      <NoteRow
-                        key={note.id}
-                        note={note}
-                        currentUser={currentUser}
-                        onToggleStar={() => void toggleNoteStar(note)}
-                        onClick={() => void openNote(note)}
-                        onEdit={() => void openNote(note, true)}
-                        onDeleted={refreshNotes}
-                        onError={setError}
-                      />
-                    ))
-                  )}
-                </section>
-                {filteredNotes.length > 0 && (
-                  <footer className="list-pagination" aria-label="Note list pagination">
-                    <span className="result-count">
-                      {visibleStart}-{visibleEnd} notes of {filteredNotes.length}
-                    </span>
-                    <button
-                      className="icon-button"
-                      aria-label="Previous page"
-                      disabled={clampedPage <= 1}
-                      onClick={() => changePage(Math.max(1, clampedPage - 1))}
-                    >
-                      <ChevronLeft size={18} />
-                    </button>
-                    <button
-                      className="icon-button"
-                      aria-label="Next page"
-                      disabled={clampedPage >= totalPages}
-                      onClick={() => changePage(Math.min(totalPages, clampedPage + 1))}
-                    >
-                      <ChevronRight size={18} />
-                    </button>
-                  </footer>
+              <div className="content-surface">
+                {openedNote ? (
+                  <NotePanel
+                    note={openedNote}
+                    folderLabel={openedNote.folder?.name ?? selectedFolder?.name ?? "All folders"}
+                    currentUser={currentUser}
+                    startInEdit={noteIdToEditOnOpen === openedNote.id}
+                    onStartInEditConsumed={() => setNoteIdToEditOnOpen(null)}
+                    onClose={() => setOpenedNoteId(null)}
+                    onRefresh={async () => {
+                      const fullNote = await apiFetch<NoteRecord>(`/api/notes/${openedNote.id}`);
+                      setNotes((items) => (
+                        items.map((item) => item.id === openedNote.id ? mergeNoteRecord(item, fullNote) : item)
+                      ));
+                    }}
+                    onDeleted={async () => {
+                      setOpenedNoteId(null);
+                      await refreshNotes();
+                    }}
+                  />
+                ) : (
+                  <>
+                    <section className="note-list" aria-label="Notes">
+                      {filteredNotes.length === 0 ? (
+                        <EmptyState onAdd={openAddNote} />
+                      ) : (
+                        paginatedNotes.map((note) => (
+                          <NoteRow
+                            key={note.id}
+                            note={note}
+                            currentUser={currentUser}
+                            onToggleStar={() => void toggleNoteStar(note)}
+                            onClick={() => void openNote(note)}
+                            onEdit={() => void openNote(note, true)}
+                            onDeleted={refreshNotes}
+                            onError={setError}
+                          />
+                        ))
+                      )}
+                    </section>
+                    {filteredNotes.length > 0 && (
+                      <footer className="list-pagination" aria-label="Note list pagination">
+                        <span className="result-count">
+                          {visibleStart}-{visibleEnd} notes of {filteredNotes.length}
+                        </span>
+                        <button
+                          className="icon-button"
+                          aria-label="Previous page"
+                          disabled={clampedPage <= 1}
+                          onClick={() => changePage(Math.max(1, clampedPage - 1))}
+                        >
+                          <ChevronLeft size={18} />
+                        </button>
+                        <button
+                          className="icon-button"
+                          aria-label="Next page"
+                          disabled={clampedPage >= totalPages}
+                          onClick={() => changePage(Math.min(totalPages, clampedPage + 1))}
+                        >
+                          <ChevronRight size={18} />
+                        </button>
+                      </footer>
+                    )}
+                  </>
                 )}
-              </>
-            )}
-          </div>
+              </div>
+            </>
+          )}
         </section>
       </section>
 
@@ -1130,6 +1182,350 @@ export function App() {
         />
       )}
     </main>
+  );
+}
+
+function userDisplayRole(user: UserRecord) {
+  return user.role?.trim() || (user.is_admin ? "Admin" : "User");
+}
+
+function profileStats(user: UserRecord, notes: NoteRecord[]) {
+  const userNotes = notes.filter((note) => note.user_id === user.id || note.user?.id === user.id);
+  const tagIds = new Set<string>();
+  const folderIds = new Set<string>();
+
+  userNotes.forEach((note) => {
+    if (note.folder_id || note.folder?.id) {
+      folderIds.add(note.folder_id ?? note.folder?.id ?? "");
+    }
+    note.tags?.forEach((tag) => tagIds.add(tag.id));
+  });
+
+  return {
+    notes: userNotes.length,
+    tags: tagIds.size,
+    folders: folderIds.size
+  };
+}
+
+function profileTags(user: UserRecord, notes: NoteRecord[]) {
+  const tagMap = new Map<string, TagRecord>();
+  notes.forEach((note) => {
+    if (note.user_id !== user.id && note.user?.id !== user.id) return;
+    note.tags?.forEach((tag) => tagMap.set(tag.id, tag));
+  });
+  return Array.from(tagMap.values()).sort((first, second) => first.name.localeCompare(second.name));
+}
+
+function ProfileScreen({
+  users,
+  notes,
+  currentUser,
+  selectedUserId,
+  onSelectUser,
+  onBack,
+  onUserUpdated
+}: {
+  users: UserRecord[];
+  notes: NoteRecord[];
+  currentUser: UserRecord;
+  selectedUserId: string | "all";
+  onSelectUser: (userId: string | "all") => void;
+  onBack: () => void;
+  onUserUpdated: (user: UserRecord) => void;
+}) {
+  const selectedUser = selectedUserId === "all"
+    ? null
+    : users.find((user) => user.id === selectedUserId) ?? currentUser;
+  const toolbarName = selectedUser?.name ?? "All users";
+  const canEditSelectedUser = Boolean(selectedUser && (currentUser.is_admin || selectedUser.id === currentUser.id));
+  const [isEditing, setIsEditing] = useState(false);
+  const [draft, setDraft] = useState({
+    name: selectedUser?.name ?? "",
+    email: selectedUser?.email ?? "",
+    phone: selectedUser?.phone ?? "",
+    role: selectedUser?.role ?? ""
+  });
+  const [isSaving, setIsSaving] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setIsEditing(false);
+    setProfileError(null);
+    setDraft({
+      name: selectedUser?.name ?? "",
+      email: selectedUser?.email ?? "",
+      phone: selectedUser?.phone ?? "",
+      role: selectedUser?.role ?? ""
+    });
+  }, [selectedUser?.id]);
+
+  async function saveProfile() {
+    if (!selectedUser || !canEditSelectedUser) return;
+    const nextName = draft.name.trim();
+    const nextEmail = draft.email.trim();
+    if (!nextName || !nextEmail) {
+      setProfileError("Name and email are required.");
+      return;
+    }
+
+    setIsSaving(true);
+    setProfileError(null);
+    try {
+      const updatedUser = await apiFetch<UserRecord>(`/api/users/${selectedUser.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          name: nextName,
+          email: nextEmail,
+          phone: draft.phone.trim(),
+          role: draft.role.trim()
+        })
+      });
+      onUserUpdated(updatedUser);
+      setIsEditing(false);
+    } catch (err) {
+      setProfileError(err instanceof Error ? err.message : "Could not update profile");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  function cancelEditing() {
+    setIsEditing(false);
+    setProfileError(null);
+    setDraft({
+      name: selectedUser?.name ?? "",
+      email: selectedUser?.email ?? "",
+      phone: selectedUser?.phone ?? "",
+      role: selectedUser?.role ?? ""
+    });
+  }
+
+  return (
+    <>
+      <header className="toolbar profile-toolbar">
+        <div className="profile-toolbar-left">
+          <button className="back-square-button" onClick={onBack} aria-label="Back to notes">
+            <ChevronLeft size={16} />
+          </button>
+          <div className="breadcrumb">
+            <span>Users</span>
+            <span className="current">
+              <ChevronRight size={14} />
+              {toolbarName}
+            </span>
+          </div>
+        </div>
+        <div className="toolbar-actions">
+          {selectedUser && canEditSelectedUser && (
+            isEditing ? (
+              <>
+                <button
+                  className="primary-button compact save-profile-button"
+                  type="button"
+                  disabled={isSaving}
+                  onClick={() => void saveProfile()}
+                >
+                  {isSaving ? <Loader2 className="spin" size={15} /> : null}
+                  Save
+                </button>
+                <button className="text-button compact" type="button" onClick={cancelEditing}>
+                  Cancel
+                </button>
+              </>
+            ) : (
+              <button className="secondary-action-button" type="button" onClick={() => setIsEditing(true)}>
+                <Edit3 size={16} />
+                Edit
+              </button>
+            )
+          )}
+          <label className="select-button user-select-button profile-user-select">
+            <User className="select-button-icon" size={16} />
+            <span className="select-button-label">{toolbarName}</span>
+            <select
+              value={selectedUserId}
+              onChange={(event) => onSelectUser(event.target.value)}
+            >
+              <option value="all">All users</option>
+              {users.map((person) => (
+                <option value={person.id} key={person.id}>{person.name}</option>
+              ))}
+            </select>
+            <ChevronDown className="select-button-chevron" size={12} />
+          </label>
+          <UserAvatar user={currentUser} className="profile-toolbar-avatar" />
+        </div>
+      </header>
+
+      {profileError && (
+        <div className="dashboard-notice" role="alert">
+          <span>{profileError}</span>
+          <button type="button" aria-label="Dismiss message" onClick={() => setProfileError(null)}>
+            <X size={14} />
+          </button>
+        </div>
+      )}
+
+      <div className="profile-surface">
+        {selectedUser ? (
+          <SingleProfileView
+            user={selectedUser}
+            notes={notes}
+            isEditing={isEditing}
+            draft={draft}
+            onDraftChange={setDraft}
+          />
+        ) : (
+          <AllProfilesView
+            users={users}
+            notes={notes}
+            onSelectUser={(userId) => onSelectUser(userId)}
+          />
+        )}
+      </div>
+    </>
+  );
+}
+
+function ProfileSummaryCard({
+  user,
+  notes,
+  compact = false
+}: {
+  user: UserRecord;
+  notes: NoteRecord[];
+  compact?: boolean;
+}) {
+  const stats = profileStats(user, notes);
+
+  return (
+    <article className={`profile-card${compact ? " compact" : ""}`}>
+      <div className="profile-avatar-wrap">
+        <UserAvatar user={user} className="profile-avatar" />
+      </div>
+      <h2>{user.name}</h2>
+      <p>{userDisplayRole(user)}</p>
+      <span>{user.email}</span>
+      <div className="profile-stats" aria-label={`${user.name} stats`}>
+        <div>
+          <strong>{stats.notes}</strong>
+          <span>Notes</span>
+        </div>
+        <div>
+          <strong>{stats.tags}</strong>
+          <span>Tags</span>
+        </div>
+        <div>
+          <strong>{stats.folders}</strong>
+          <span>Folders</span>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function SingleProfileView({
+  user,
+  notes,
+  isEditing,
+  draft,
+  onDraftChange
+}: {
+  user: UserRecord;
+  notes: NoteRecord[];
+  isEditing: boolean;
+  draft: { name: string; email: string; phone: string; role: string };
+  onDraftChange: (draft: { name: string; email: string; phone: string; role: string }) => void;
+}) {
+  const tags = profileTags(user, notes);
+
+  function setDraftField(field: keyof typeof draft, value: string) {
+    onDraftChange({ ...draft, [field]: value });
+  }
+
+  return (
+    <div className="profile-layout">
+      <ProfileSummaryCard user={user} notes={notes} />
+      <div className="profile-detail-column">
+        <section className="profile-info-card">
+          <header>
+            <h2>Personal Information</h2>
+          </header>
+          {isEditing ? (
+            <div className="profile-info-grid editable">
+              <label>
+                <span>Full name</span>
+                <input value={draft.name} onChange={(event) => setDraftField("name", event.target.value)} />
+              </label>
+              <label>
+                <span>Email</span>
+                <input type="email" value={draft.email} onChange={(event) => setDraftField("email", event.target.value)} />
+              </label>
+              <label>
+                <span>Phone</span>
+                <input value={draft.phone} onChange={(event) => setDraftField("phone", event.target.value)} />
+              </label>
+              <label>
+                <span>Role</span>
+                <input value={draft.role} onChange={(event) => setDraftField("role", event.target.value)} />
+              </label>
+            </div>
+          ) : (
+            <div className="profile-info-grid">
+              <div>
+                <span>Full name</span>
+                <strong>{user.name}</strong>
+              </div>
+              <div>
+                <span>Email</span>
+                <strong>{user.email}</strong>
+              </div>
+              <div>
+                <span>Phone</span>
+                <strong>{user.phone?.trim() || "Not set"}</strong>
+              </div>
+              <div>
+                <span>Role</span>
+                <strong>{userDisplayRole(user)}</strong>
+              </div>
+            </div>
+          )}
+        </section>
+        <section className="profile-info-card">
+          <header>
+            <h2>Tags</h2>
+          </header>
+          <div className="profile-tags">
+            {tags.length > 0 ? (
+              tags.slice(0, 12).map((tag) => <span className="tag-pill" key={tag.id}>{tag.name}</span>)
+            ) : (
+              <p>No tags yet.</p>
+            )}
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+function AllProfilesView({
+  users,
+  notes,
+  onSelectUser
+}: {
+  users: UserRecord[];
+  notes: NoteRecord[];
+  onSelectUser: (userId: string) => void;
+}) {
+  return (
+    <section className="profiles-grid" aria-label="All user profiles">
+      {users.map((user) => (
+        <button className="profile-card-button" key={user.id} type="button" onClick={() => onSelectUser(user.id)}>
+          <ProfileSummaryCard user={user} notes={notes} compact />
+        </button>
+      ))}
+    </section>
   );
 }
 
