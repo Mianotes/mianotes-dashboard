@@ -1217,6 +1217,7 @@ function TypewriterText({ text }: { text: string }) {
 
     let index = 0;
     let timeoutId: number | undefined;
+    let finishTimeoutId: number | undefined;
 
     function typeNextCharacter() {
       index += 1;
@@ -1224,7 +1225,7 @@ function TypewriterText({ text }: { text: string }) {
       if (index < text.length) {
         timeoutId = window.setTimeout(typeNextCharacter, 30);
       } else {
-        setIsFinished(true);
+        finishTimeoutId = window.setTimeout(() => setIsFinished(true), 1200);
       }
     }
 
@@ -1234,13 +1235,16 @@ function TypewriterText({ text }: { text: string }) {
       if (timeoutId) {
         window.clearTimeout(timeoutId);
       }
+      if (finishTimeoutId) {
+        window.clearTimeout(finishTimeoutId);
+      }
     };
   }, [text]);
 
   return (
     <span className="typewriter-name" aria-label={text}>
       {visibleText}
-      <span className={`typewriter-cursor${isFinished ? " hidden" : ""}`} aria-hidden="true">█</span>
+      <span className={`typewriter-cursor${isFinished ? " hidden" : ""}`} aria-hidden="true">|</span>
     </span>
   );
 }

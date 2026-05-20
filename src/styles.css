@@ -607,7 +607,7 @@ button {
 .typewriter-cursor {
   display: inline-block;
   margin-left: 2px;
-  animation: typewriter-blink 0.7s infinite;
+  animation: typewriter-blink 1s infinite;
 }
 
 .typewriter-cursor.hidden {
