@@ -1089,6 +1089,11 @@ button {
   background: transparent;
 }
 
+.note-actions-popover [aria-disabled="true"] {
+  cursor: not-allowed;
+  color: #aaacb5;
+}
+
 .note-actions-popover .danger-action {
   color: #d42b32;
 }

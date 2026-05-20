@@ -1674,13 +1674,16 @@ function NotePanel({
                       <Share2 size={15} />
                       Share
                     </button>
-                    {(note.source_files ?? []).length > 0 ? (
-                      <a href={note.source_files?.[0]?.url} target="_blank" rel="noreferrer" role="menuitem" onClick={() => setIsActionsOpen(false)}>
+                    {note.source_files?.[0]?.url ? (
+                      <a href={note.source_files[0].url} target="_blank" rel="noreferrer" role="menuitem" onClick={() => setIsActionsOpen(false)}>
                         <Eye size={15} />
                         View Source
                       </a>
                     ) : (
-                      <span>No source file</span>
+                      <span role="menuitem" aria-disabled="true">
+                        <Eye size={15} />
+                        View Source
+                      </span>
                     )}
                     <div className="note-actions-divider" />
                     <button
