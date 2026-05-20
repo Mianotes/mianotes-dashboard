@@ -470,7 +470,7 @@ export function App() {
   }
 
   async function deleteFolder(folder: FolderRecord) {
-    const confirmed = window.confirm(`Delete "${folder.name}"? Notes are kept, but the folder is archived.`);
+    const confirmed = window.confirm(`Archive "${folder.name}"? Notes and sources will be moved out of the active folders list.`);
     if (!confirmed) return;
     setError(null);
     try {
