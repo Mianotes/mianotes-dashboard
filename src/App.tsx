@@ -2905,7 +2905,7 @@ function AddNoteDialog({
         <div className="folder-modal-header">
           <div>
             <h2>Add note</h2>
-            <p>Create a note, index a link, or upload a .pdf, .docx, .xls, .csv, .png, .jpg, or .mp3 file.</p>
+            <p>Create a note, index a link, or upload a .pdf, .docx, .xls, .csv, .png, .jpg, .mp3, or .m4a file.</p>
           </div>
           <button className="icon-button" type="button" onClick={onClose} aria-label="Close"><X size={20} /></button>
         </div>
