@@ -138,6 +138,13 @@ type NavigationSnapshot = DashboardUiState & {
   noteIdToEditOnOpen: string | null;
 };
 
+type ProfileDraft = {
+  name: string;
+  email: string;
+  phone: string;
+  role: string;
+};
+
 const apiBase = import.meta.env.VITE_API_BASE_URL ?? "";
 const dashboardUiStateKey = "mianotes.dashboard.uiState";
 const notesPerPage = 10;
@@ -157,6 +164,13 @@ const miaQuickActions = [
   { label: "Extract key points", prompt: "extract key points" },
   { label: "Humanize", prompt: "humanize text" }
 ] as const;
+
+const emptyProfileDraft: ProfileDraft = {
+  name: "",
+  email: "",
+  phone: "",
+  role: ""
+};
 
 function apiPath(path: string) {
   return `${apiBase}${path}`;
@@ -1343,6 +1357,10 @@ export function App() {
                   setCurrentUser(updatedUser);
                 }
               }}
+              onUserCreated={(createdUser) => {
+                setUsers((items) => [createdUser, ...items]);
+                setProfileUserId(createdUser.id);
+              }}
               onSelectTag={openProfileTag}
             />
           ) : (
@@ -1577,6 +1595,7 @@ function ProfileScreen({
   onBack,
   onSignOut,
   onUserUpdated,
+  onUserCreated,
   onSelectTag
 }: {
   users: UserRecord[];
@@ -1588,20 +1607,17 @@ function ProfileScreen({
   onBack: () => void;
   onSignOut: () => void;
   onUserUpdated: (user: UserRecord) => void;
+  onUserCreated: (user: UserRecord) => void;
   onSelectTag: (userId: string, tagSlug: string) => void;
 }) {
   const selectedUser = selectedUserId === "all"
     ? null
     : users.find((user) => user.id === selectedUserId) ?? currentUser;
-  const toolbarName = selectedUser?.name ?? "All users";
+  const [isAddingUser, setIsAddingUser] = useState(false);
+  const toolbarName = isAddingUser ? "New user" : selectedUser?.name ?? "All users";
   const canEditSelectedUser = Boolean(selectedUser && (currentUser.is_admin || selectedUser.id === currentUser.id));
   const [isEditing, setIsEditing] = useState(false);
-  const [draft, setDraft] = useState({
-    name: selectedUser?.name ?? "",
-    email: selectedUser?.email ?? "",
-    phone: selectedUser?.phone ?? "",
-    role: selectedUser?.role ?? ""
-  });
+  const [draft, setDraft] = useState<ProfileDraft>(emptyProfileDraft);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
@@ -1613,6 +1629,7 @@ function ProfileScreen({
     const shouldEditSelectedProfile = Boolean(selectedUser?.id && editSelectedProfileRef.current === selectedUser.id);
     editSelectedProfileRef.current = null;
     setIsEditing(shouldEditSelectedProfile);
+    setIsAddingUser(false);
     setProfileError(null);
     setDraft({
       name: selectedUser?.name ?? "",
@@ -1655,6 +1672,43 @@ function ProfileScreen({
     onSelectUser(userId);
   }
 
+  function startAddingUser() {
+    setIsAddingUser(true);
+    setIsEditing(false);
+    setProfileError(null);
+    setDraft(emptyProfileDraft);
+  }
+
+  async function saveNewUser() {
+    const nextName = draft.name.trim();
+    const nextEmail = draft.email.trim();
+    if (!nextName || !nextEmail) {
+      setProfileError("Name and email are required.");
+      return;
+    }
+
+    setIsSaving(true);
+    setProfileError(null);
+    try {
+      const createdUser = await apiFetch<UserRecord>("/api/users", {
+        method: "POST",
+        body: JSON.stringify({
+          name: nextName,
+          email: nextEmail,
+          phone: draft.phone.trim(),
+          role: draft.role.trim()
+        })
+      });
+      onUserCreated(createdUser);
+      setIsAddingUser(false);
+      setDraft(emptyProfileDraft);
+    } catch (err) {
+      setProfileError(err instanceof Error ? err.message : "Could not add user");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
   async function saveProfile() {
     if (!selectedUser || !canEditSelectedUser) return;
     const nextName = draft.name.trim();
@@ -1686,6 +1740,7 @@ function ProfileScreen({
   }
 
   function cancelEditing() {
+    setIsAddingUser(false);
     setIsEditing(false);
     setProfileError(null);
     setDraft({
@@ -1739,7 +1794,22 @@ function ProfileScreen({
           </div>
         </div>
         <div className="toolbar-actions">
-          {selectedUser && canEditSelectedUser && (
+          {isAddingUser ? (
+            <>
+              <button
+                className="primary-button compact save-profile-button"
+                type="button"
+                disabled={isSaving}
+                onClick={() => void saveNewUser()}
+              >
+                {isSaving ? <Loader2 className="spin" size={15} /> : null}
+                Save
+              </button>
+              <button className="text-button compact" type="button" onClick={cancelEditing}>
+                Cancel
+              </button>
+            </>
+          ) : selectedUser && canEditSelectedUser && (
             isEditing ? (
               <>
                 <button
@@ -1756,18 +1826,34 @@ function ProfileScreen({
                 </button>
               </>
             ) : (
-              <button className="secondary-action-button" type="button" onClick={() => setIsEditing(true)}>
-                <Edit3 size={16} />
-                Edit
-              </button>
+              <>
+                {currentUser.is_admin && (
+                  <button className="primary-button compact add-user-button" type="button" onClick={startAddingUser}>
+                    Add User
+                  </button>
+                )}
+                <button className="secondary-action-button" type="button" onClick={() => setIsEditing(true)}>
+                  <Edit3 size={16} />
+                  Edit
+                </button>
+              </>
             )
+          )}
+          {!isAddingUser && (!selectedUser || !canEditSelectedUser) && currentUser.is_admin && (
+            <button className="primary-button compact add-user-button" type="button" onClick={startAddingUser}>
+              Add User
+            </button>
           )}
           <label className="select-button user-select-button profile-user-select">
             <User className="select-button-icon" size={16} />
             <span className="select-button-label">{toolbarName}</span>
             <select
               value={selectedUserId}
-              onChange={(event) => onSelectUser(event.target.value)}
+              onChange={(event) => {
+                setIsAddingUser(false);
+                onSelectUser(event.target.value);
+              }}
+              disabled={isAddingUser}
             >
               <option value="all">All users</option>
               {users.map((person) => (
@@ -1852,7 +1938,12 @@ function ProfileScreen({
       )}
 
       <div className="profile-surface">
-        {selectedUser ? (
+        {isAddingUser ? (
+          <NewUserProfileView
+            draft={draft}
+            onDraftChange={setDraft}
+          />
+        ) : selectedUser ? (
           <SingleProfileView
             user={selectedUser}
             notes={notes}
@@ -2044,6 +2135,94 @@ function SingleProfileView({
             ) : (
               <p>No tags yet.</p>
             )}
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
+
+function NewUserProfileView({
+  draft,
+  onDraftChange
+}: {
+  draft: ProfileDraft;
+  onDraftChange: (draft: ProfileDraft) => void;
+}) {
+  function setDraftField(field: keyof ProfileDraft, value: string) {
+    onDraftChange({ ...draft, [field]: value });
+  }
+
+  const previewName = draft.name.trim() || "Full Name";
+  const previewRole = draft.role.trim() || "Job Title";
+  const previewEmail = draft.email.trim() || "Email";
+
+  return (
+    <div className="profile-layout">
+      <article className="profile-card">
+        <div className="profile-avatar-wrap">
+          <span className={`avatar avatar-${avatarTone(previewName)} profile-avatar`}>
+            {userInitials(previewName)}
+          </span>
+        </div>
+        <h2>{previewName}</h2>
+        <p>{previewRole}</p>
+        <span>{previewEmail}</span>
+        <div className="profile-stats" aria-label="New user stats">
+          <div>
+            <span className="number">0</span>
+            <span>Notes</span>
+          </div>
+          <div>
+            <span className="number">0</span>
+            <span>Tags</span>
+          </div>
+          <div>
+            <span className="number">0</span>
+            <span>Folders</span>
+          </div>
+        </div>
+      </article>
+
+      <div className="profile-detail-column">
+        <section className="profile-info-card">
+          <header>
+            <h2>Personal Information</h2>
+          </header>
+          <div className="profile-info-grid editable">
+            <label>
+              <span>Full name</span>
+              <input
+                value={draft.name}
+                onChange={(event) => setDraftField("name", event.target.value)}
+                autoFocus
+              />
+            </label>
+            <label>
+              <span>Email</span>
+              <input
+                type="email"
+                value={draft.email}
+                onChange={(event) => setDraftField("email", event.target.value)}
+              />
+            </label>
+            <label>
+              <span>Phone</span>
+              <input value={draft.phone} onChange={(event) => setDraftField("phone", event.target.value)} />
+            </label>
+            <label>
+              <span>Job title</span>
+              <input value={draft.role} onChange={(event) => setDraftField("role", event.target.value)} />
+            </label>
+          </div>
+        </section>
+
+        <section className="profile-info-card">
+          <header>
+            <h2>Tags</h2>
+          </header>
+          <div className="profile-tags">
+            <p>No tags yet.</p>
           </div>
         </section>
       </div>
@@ -2574,7 +2753,7 @@ function NotePanel({
       setMiaError(null);
       setIsFinishingEdit(true);
       await new Promise<void>((resolve) => {
-        editExitTimerRef.current = window.setTimeout(resolve, 180);
+        editExitTimerRef.current = window.setTimeout(resolve, 240);
       });
       editExitTimerRef.current = undefined;
       setIsEditing(false);

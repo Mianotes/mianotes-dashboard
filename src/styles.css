@@ -1574,19 +1574,23 @@ button {
   display: flex;
   align-items: center;
   gap: 18px;
+  max-height: 54px;
   margin: 48px 0 0;
+  overflow: hidden;
   color: #3f414b;
   font-size: 13px;
   opacity: 1;
-  transform: translateY(0);
   transition:
-    opacity 0.18s ease,
-    transform 0.18s ease;
+    max-height 0.24s ease,
+    margin 0.24s ease,
+    opacity 0.16s ease;
 }
 
 .note-bottom-save.is-exiting {
+  max-height: 0;
+  margin-top: 0;
   opacity: 0;
-  transform: translateY(-4px);
+  pointer-events: none;
 }
 
 .bottom-save-button {
@@ -1876,6 +1880,10 @@ button {
 
 .save-profile-button {
   min-width: 86px;
+}
+
+.add-user-button {
+  min-width: 116px;
 }
 
 .profile-surface {
@@ -2951,9 +2959,15 @@ textarea:focus {
     align-items: flex-start;
     flex-direction: column;
     gap: 10px;
+    max-height: 104px;
     margin-top: 32px;
     font-size: 12px;
     line-height: 1.45;
+  }
+
+  .note-bottom-save.is-exiting {
+    max-height: 0;
+    margin-top: 0;
   }
 
   .bottom-save-button {
