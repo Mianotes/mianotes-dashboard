@@ -1587,10 +1587,9 @@ button {
 }
 
 .note-bottom-save.is-hidden {
-  max-height: 0;
-  margin-top: 0;
   opacity: 0;
   pointer-events: none;
+  visibility: hidden;
 }
 
 .bottom-save-button {
@@ -2966,8 +2965,9 @@ textarea:focus {
   }
 
   .note-bottom-save.is-hidden {
-    max-height: 0;
-    margin-top: 0;
+    opacity: 0;
+    pointer-events: none;
+    visibility: hidden;
   }
 
   .bottom-save-button {
