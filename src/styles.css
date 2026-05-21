@@ -1493,6 +1493,142 @@ button {
   background: #ffffff;
 }
 
+.mianotes-rich-editor [class*="dialogContent"] {
+  width: min(520px, calc(100vw - 32px));
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #dedfe6;
+  border-radius: 14px;
+  background: #ffffff;
+  box-shadow: 0 22px 48px rgba(20, 20, 24, 0.16);
+}
+
+.mianotes-rich-editor [class*="dialogContent"] > h2,
+.mianotes-rich-editor [class*="dialogContent"] > [class*="dialogTitle"] {
+  display: none;
+}
+
+.mianotes-rich-editor form[class*="multiFieldForm"] {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 24px;
+}
+
+.mianotes-rich-editor form[class*="multiFieldForm"] [class*="formField"] {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mianotes-rich-editor form[class*="multiFieldForm"] [class*="formField"] label {
+  color: #5f6270;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.mianotes-rich-editor form[class*="multiFieldForm"] input[type="file"] {
+  width: 100%;
+  min-height: 48px;
+  padding: 7px;
+  border: 1px solid #d8dae2;
+  border-radius: 10px;
+  color: #5f6270;
+  background: #ffffff;
+  font: inherit;
+  font-size: 13px;
+}
+
+.mianotes-rich-editor form[class*="multiFieldForm"] input[type="file"]:hover {
+  border-color: #b9bcc7;
+}
+
+.mianotes-rich-editor form[class*="multiFieldForm"] input[type="file"]::file-selector-button {
+  min-height: 32px;
+  margin-right: 12px;
+  padding: 0 14px;
+  border: 1px solid #d8dae2;
+  border-radius: 8px;
+  color: #25262d;
+  background: #f7f7f9;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mianotes-rich-editor form[class*="multiFieldForm"] input[type="file"]:hover::file-selector-button {
+  border-color: #b9bcc7;
+  color: #111217;
+  background: #ffffff;
+}
+
+.mianotes-rich-editor form[class*="multiFieldForm"] input:not([type="file"]):not([type="hidden"]):not([type="checkbox"]):not([type="radio"]) {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 12px;
+  border: 1px solid #d8dae2;
+  border-radius: 10px;
+  color: #202127;
+  background: #ffffff;
+  font: inherit;
+  font-size: 13px;
+  outline: none;
+}
+
+.mianotes-rich-editor form[class*="multiFieldForm"] input:not([type="file"]):not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):hover {
+  border-color: #b9bcc7;
+}
+
+.mianotes-rich-editor form[class*="multiFieldForm"] input:not([type="file"]):not([type="hidden"]):not([type="checkbox"]):not([type="radio"]):focus {
+  border-color: #8f929d;
+  box-shadow: 0 0 0 4px rgba(143, 146, 157, 0.12);
+}
+
+.mianotes-rich-editor form[class*="multiFieldForm"] > div:last-child {
+  margin-top: 8px;
+}
+
+.mianotes-rich-editor form[class*="multiFieldForm"] button[class*="primaryButton"],
+.mianotes-rich-editor form[class*="multiFieldForm"] button[class*="secondaryButton"] {
+  min-height: 40px;
+  padding: 0 18px;
+  border-radius: 8px;
+  box-shadow: none;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.mianotes-rich-editor form[class*="multiFieldForm"] button[class*="primaryButton"] {
+  border: 1px solid #17181d;
+  color: #ffffff;
+  background: #17181d;
+}
+
+.mianotes-rich-editor form[class*="multiFieldForm"] button[class*="primaryButton"]:hover {
+  border-color: #000000;
+  background: #000000;
+}
+
+.mianotes-rich-editor form[class*="multiFieldForm"] button[class*="secondaryButton"] {
+  border: 1px solid #d8dae2;
+  color: #4b4d57;
+  background: #ffffff;
+}
+
+.mianotes-rich-editor form[class*="multiFieldForm"] button[class*="secondaryButton"]:hover {
+  border-color: #b9bcc7;
+  color: #17181d;
+}
+
+.mianotes-rich-editor form[class*="multiFieldForm"] button[class*="secondaryButton"]:active {
+  border-color: #17181d;
+  color: #ffffff;
+  background: #17181d;
+}
+
 .mianotes-rich-editor [class*="diffSourceToggleWrapper"] {
   position: static;
   right: auto;
