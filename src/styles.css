@@ -534,6 +534,7 @@ button {
 
 .view-select-button {
   grid-template-columns: 16px 12px;
+  gap: 4px;
   width: 44px;
   padding: 0 8px;
 }
@@ -1576,6 +1577,16 @@ button {
   margin: 48px 0 0;
   color: #3f414b;
   font-size: 13px;
+  opacity: 1;
+  transform: translateY(0);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+.note-bottom-save.is-exiting {
+  opacity: 0;
+  transform: translateY(-4px);
 }
 
 .bottom-save-button {
