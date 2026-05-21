@@ -148,6 +148,7 @@ type ProfileDraft = {
 const apiBase = import.meta.env.VITE_API_BASE_URL ?? "";
 const dashboardUiStateKey = "mianotes.dashboard.uiState";
 const notesPerPage = 10;
+const avatarTones = ["magenta", "violet", "blue", "sky", "cyan"] as const;
 
 const defaultDashboardUiState: DashboardUiState = {
   selectedView: "recent",
@@ -365,12 +366,15 @@ function userInitials(name: string) {
   return (parts[0] ?? "?").slice(0, 2).toUpperCase();
 }
 
-function avatarTone(name: string) {
-  const tones = ["magenta", "violet", "blue", "sky", "cyan"];
-  const hash = [...name.trim().toLowerCase()].reduce((total, character) => (
+function avatarTone(seed: string) {
+  const hash = [...seed.trim().toLowerCase()].reduce((total, character) => (
     total + character.charCodeAt(0)
   ), 0);
-  return tones[hash % tones.length];
+  return avatarTones[hash % avatarTones.length];
+}
+
+function randomAvatarTone() {
+  return avatarTones[Math.floor(Math.random() * avatarTones.length)];
 }
 
 function UserAvatar({
@@ -378,7 +382,7 @@ function UserAvatar({
   name,
   className = ""
 }: {
-  user?: Pick<UserRecord, "name" | "photo_url"> | null;
+  user?: Pick<UserRecord, "id" | "name" | "photo_url"> | null;
   name?: string;
   className?: string;
 }) {
@@ -386,7 +390,7 @@ function UserAvatar({
   if (user?.photo_url) {
     return <img className={`avatar avatar-photo ${className}`} src={mediaPath(user.photo_url)} alt={displayName} />;
   }
-  return <span className={`avatar avatar-${avatarTone(displayName)} ${className}`}>{userInitials(displayName)}</span>;
+  return <span className={`avatar avatar-${avatarTone(user?.id ?? displayName)} ${className}`}>{userInitials(displayName)}</span>;
 }
 
 export function App() {
@@ -1622,6 +1626,7 @@ function ProfileScreen({
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
+  const [newUserAvatarTone, setNewUserAvatarTone] = useState(() => randomAvatarTone());
   const editSelectedProfileRef = useRef<string | null>(null);
   const accountMenuRef = useRef<HTMLDivElement | null>(null);
 
@@ -1676,6 +1681,7 @@ function ProfileScreen({
     setIsAddingUser(true);
     setIsEditing(false);
     setProfileError(null);
+    setNewUserAvatarTone(randomAvatarTone());
     setDraft(emptyProfileDraft);
   }
 
@@ -1942,6 +1948,7 @@ function ProfileScreen({
           <NewUserProfileView
             draft={draft}
             onDraftChange={setDraft}
+            avatarToneName={newUserAvatarTone}
           />
         ) : selectedUser ? (
           <SingleProfileView
@@ -2144,10 +2151,12 @@ function SingleProfileView({
 
 function NewUserProfileView({
   draft,
-  onDraftChange
+  onDraftChange,
+  avatarToneName
 }: {
   draft: ProfileDraft;
   onDraftChange: (draft: ProfileDraft) => void;
+  avatarToneName: (typeof avatarTones)[number];
 }) {
   function setDraftField(field: keyof ProfileDraft, value: string) {
     onDraftChange({ ...draft, [field]: value });
@@ -2161,7 +2170,7 @@ function NewUserProfileView({
     <div className="profile-layout">
       <article className="profile-card">
         <div className="profile-avatar-wrap">
-          <span className={`avatar avatar-${avatarTone(previewName)} profile-avatar`}>
+          <span className={`avatar avatar-${avatarToneName} profile-avatar`}>
             {userInitials(previewName)}
           </span>
         </div>
