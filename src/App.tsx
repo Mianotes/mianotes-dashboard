@@ -3108,22 +3108,24 @@ function NotePanel({
           </Suspense>
         </div>
       )}
-      <div
-        className={`note-bottom-save ${!isEditing || isFinishingEdit ? "is-hidden" : ""}`}
-        aria-hidden={!isEditing}
-      >
-        <button
-          className="bottom-save-button"
-          type="button"
-          disabled={!isEditing || isSaving || !canChangeNote}
-          tabIndex={isEditing ? 0 : -1}
-          title={!canChangeNote ? cannotChangeNoteMessage : undefined}
-          onClick={() => void saveMarkdown()}
+      <div className="note-bottom-save-slot">
+        <div
+          className={`note-bottom-save ${!isEditing || isFinishingEdit ? "is-hidden" : ""}`}
+          aria-hidden={!isEditing}
         >
-          {isSaving ? <Loader2 className="spin" size={15} /> : <Save size={15} />}
-          Save
-        </button>
-        <span>Press ⌘ + S on Mac or Ctrl + S on Windows and ChromeOS</span>
+          <button
+            className="bottom-save-button"
+            type="button"
+            disabled={!isEditing || isSaving || !canChangeNote}
+            tabIndex={isEditing ? 0 : -1}
+            title={!canChangeNote ? cannotChangeNoteMessage : undefined}
+            onClick={() => void saveMarkdown()}
+          >
+            {isSaving ? <Loader2 className="spin" size={15} /> : <Save size={15} />}
+            Save
+          </button>
+          <span>Press ⌘ + S on Mac or Ctrl + S on Windows and ChromeOS</span>
+        </div>
       </div>
       <div className="note-section-divider" />
       <section className="comments-box">
