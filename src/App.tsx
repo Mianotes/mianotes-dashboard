@@ -2654,7 +2654,6 @@ function NotePanel({
   const [isLoading, setIsLoading] = useState(false);
   const [miaLoadingMessage, setMiaLoadingMessage] = useState("Sending your request to Mia...");
   const [isSaving, setIsSaving] = useState(false);
-  const [isFinishingEdit, setIsFinishingEdit] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isApplyingMia, setIsApplyingMia] = useState(false);
   const [isEditingTitle, setIsEditingTitle] = useState(false);
@@ -2662,7 +2661,6 @@ function NotePanel({
   const [titleDraft, setTitleDraft] = useState(note.title);
   const markdownEditorRef = useRef<MDXEditorMethods | null>(null);
   const miaLoadingTimersRef = useRef<number[]>([]);
-  const editExitTimerRef = useRef<number | undefined>(undefined);
 
   function clearMiaLoadingTimers() {
     miaLoadingTimersRef.current.forEach((timerId) => window.clearTimeout(timerId));
@@ -2691,7 +2689,6 @@ function NotePanel({
     setMiaLoadingMessage("Sending your request to Mia...");
     setCommentBody("");
     setIsEditing(startInEdit);
-    setIsFinishingEdit(false);
     setDraftText(noteBodyMarkdown(note.text ?? ""));
     setIsApplyingMia(false);
     setIsEditingTitle(false);
@@ -2704,9 +2701,6 @@ function NotePanel({
 
   useEffect(() => () => {
     clearMiaLoadingTimers();
-    if (editExitTimerRef.current) {
-      window.clearTimeout(editExitTimerRef.current);
-    }
   }, []);
 
   useEffect(() => {
@@ -2760,16 +2754,9 @@ function NotePanel({
       setDraftText(nextText);
       setMiaResponse(null);
       setMiaError(null);
-      setIsFinishingEdit(true);
-      await new Promise<void>((resolve) => {
-        editExitTimerRef.current = window.setTimeout(resolve, 240);
-      });
-      editExitTimerRef.current = undefined;
       setIsEditing(false);
-      setIsFinishingEdit(false);
       await onRefresh();
     } catch (err) {
-      setIsFinishingEdit(false);
       setNoteError(err instanceof Error ? err.message : "Could not save note");
     } finally {
       setIsSaving(false);
@@ -3108,16 +3095,12 @@ function NotePanel({
           </Suspense>
         </div>
       )}
-      <div className="note-bottom-save-slot">
-        <div
-          className={`note-bottom-save ${!isEditing || isFinishingEdit ? "is-hidden" : ""}`}
-          aria-hidden={!isEditing}
-        >
+      {isEditing && (
+        <div className="note-bottom-save">
           <button
             className="bottom-save-button"
             type="button"
-            disabled={!isEditing || isSaving || !canChangeNote}
-            tabIndex={isEditing ? 0 : -1}
+            disabled={isSaving || !canChangeNote}
             title={!canChangeNote ? cannotChangeNoteMessage : undefined}
             onClick={() => void saveMarkdown()}
           >
@@ -3126,7 +3109,7 @@ function NotePanel({
           </button>
           <span>Press ⌘ + S on Mac or Ctrl + S on Windows and ChromeOS</span>
         </div>
-      </div>
+      )}
       <div className="note-section-divider" />
       <section className="comments-box">
         <h3>Ask Mia</h3>
