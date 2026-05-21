@@ -604,35 +604,6 @@ button {
   white-space: nowrap;
 }
 
-.typewriter-cursor {
-  display: inline-block;
-  width: 0.5em;
-  height: 1em;
-  margin-top: -2px;
-  margin-left: 3px;
-  vertical-align: middle;
-  animation: typewriter-blink 1.5s step-end 2;
-}
-
-.typewriter-cursor.hidden {
-  display: none;
-}
-
-@keyframes typewriter-blink {
-  from {
-    background: #17181f;
-  }
-  to {
-    background: transparent;
-  }
-  50% {
-    background: transparent;
-  }
-  99% {
-    background: #17181f;
-  }
-}
-
 .account-popover-avatar {
   width: 38px;
   height: 38px;
