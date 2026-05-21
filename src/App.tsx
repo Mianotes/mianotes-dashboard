@@ -108,6 +108,7 @@ type StorageCapacityRecord = {
   total_bytes: number;
   used_bytes: number;
   free_bytes: number;
+  data_size_bytes: number;
   used_percent: number;
   cache_seconds: number;
   refreshed_at: string;
@@ -326,9 +327,19 @@ function formatGigabytes(bytes: number) {
   return `${(bytes / 1024 ** 3).toFixed(1)} GB`;
 }
 
-function availableStoragePercent(storage: StorageCapacityRecord | null) {
+function formatStorageSize(bytes: number) {
+  if (bytes < 1024 ** 2) {
+    return `${Math.max(bytes / 1024, 0.1).toFixed(1)} KB`;
+  }
+  if (bytes < 1024 ** 3) {
+    return `${(bytes / 1024 ** 2).toFixed(1)} MB`;
+  }
+  return formatGigabytes(bytes);
+}
+
+function mianotesStoragePercent(storage: StorageCapacityRecord | null) {
   if (!storage || storage.total_bytes <= 0) return 0;
-  return (storage.free_bytes / storage.total_bytes) * 100;
+  return ((storage.data_size_bytes ?? 0) / storage.total_bytes) * 100;
 }
 
 function userInitials(name: string) {
@@ -1120,12 +1131,12 @@ export function App() {
           <div className="storage-meter">
             <div>
               <span>Storage</span>
-              <strong>{storageCapacity ? `${formatGigabytes(storageCapacity.free_bytes)} available` : "Checking..."}</strong>
+              <strong>{storageCapacity ? `${formatStorageSize(storageCapacity.data_size_bytes ?? 0)} used` : "Checking..."}</strong>
             </div>
             <div className="meter-track">
               <div
                 className="meter-fill"
-                style={{ width: `${Math.min(availableStoragePercent(storageCapacity), 100)}%` }}
+                style={{ width: `${Math.min(Math.max(mianotesStoragePercent(storageCapacity), 2), 100)}%` }}
               />
             </div>
           </div>
