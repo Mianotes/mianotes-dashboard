@@ -223,6 +223,18 @@ function writeDashboardUiState(state: DashboardUiState) {
   }
 }
 
+function folderPermissionMessage(action: "change" | "rename" | "delete") {
+  return `Only the folder owner or an admin can ${action} this folder.`;
+}
+
+function folderActionErrorMessage(err: unknown, action: "change" | "rename" | "delete") {
+  const message = err instanceof Error ? err.message : "";
+  if (message.toLowerCase().includes("owner") && message.toLowerCase().includes("admin")) {
+    return folderPermissionMessage(action);
+  }
+  return message || `Could not ${action} folder.`;
+}
+
 function relativeTime(value: string) {
   const then = new Date(value).getTime();
   const diff = Date.now() - then;
@@ -560,10 +572,11 @@ export function App() {
       });
       setOpenFolderMenuId(null);
       await loadWorkspace();
-      return true;
+      return { ok: true };
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not update folder");
-      return false;
+      const message = folderActionErrorMessage(err, update.name ? "rename" : "change");
+      setError(message);
+      return { ok: false, error: message };
     }
   }
 
@@ -579,7 +592,7 @@ export function App() {
       }
       await loadWorkspace();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Could not delete folder");
+      setError(folderActionErrorMessage(err, "delete"));
     }
   }
 
@@ -878,6 +891,8 @@ export function App() {
     return <AuthScreen onSignedIn={bootstrap} />;
   }
 
+  const canManageFolder = (folder: FolderRecord) => currentUser.is_admin || folder.user_id === currentUser.id;
+
   return (
     <main className="screen">
       <button
@@ -909,64 +924,86 @@ export function App() {
             title="Folders"
             action={<button className="icon-button" aria-label="Add folder" onClick={openAddFolder}><Plus size={15} /></button>}
           >
-            {folders.map((folder) => (
-              <div
-                key={folder.id}
-                className={`nav-item folder-nav-item ${selectedFolderId === folder.id ? "active-soft" : ""}`}
-                role="button"
-                tabIndex={0}
-                onClick={() => selectFolder(folder.id)}
-                onKeyDown={(event) => {
-                  if (event.key !== "Enter" && event.key !== " ") return;
-                  event.preventDefault();
-                  selectFolder(folder.id);
-                }}
-              >
-                {folder.is_pinned ? <Pin size={18} /> : <Folder size={19} />}
-                <span>{folder.name}</span>
+            {folders.map((folder) => {
+              const canManageThisFolder = canManageFolder(folder);
+              const folderDisabledTitle = canManageThisFolder
+                ? undefined
+                : folderPermissionMessage("change");
+
+              return (
                 <div
-                  className="folder-actions-menu"
-                  ref={openFolderMenuId === folder.id ? folderActionsMenuRef : null}
-                  onClick={(event) => event.stopPropagation()}
-                  onKeyDown={(event) => event.stopPropagation()}
+                  key={folder.id}
+                  className={`nav-item folder-nav-item ${selectedFolderId === folder.id ? "active-soft" : ""}`}
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => selectFolder(folder.id)}
+                  onKeyDown={(event) => {
+                    if (event.key !== "Enter" && event.key !== " ") return;
+                    event.preventDefault();
+                    selectFolder(folder.id);
+                  }}
                 >
-                  <small className="folder-note-count">{notesByFolder[folder.id] ?? 0}</small>
-                  <button
-                    className="folder-more-button"
-                    type="button"
-                    aria-label={`Folder actions for ${folder.name}`}
-                    aria-expanded={openFolderMenuId === folder.id}
-                    onClick={() => setOpenFolderMenuId((current) => current === folder.id ? null : folder.id)}
+                  {folder.is_pinned ? <Pin size={18} /> : <Folder size={19} />}
+                  <span>{folder.name}</span>
+                  <div
+                    className="folder-actions-menu"
+                    ref={openFolderMenuId === folder.id ? folderActionsMenuRef : null}
+                    onClick={(event) => event.stopPropagation()}
+                    onKeyDown={(event) => event.stopPropagation()}
                   >
-                    <MoreVertical size={17} />
-                  </button>
-                  {openFolderMenuId === folder.id && (
-                    <div className="folder-actions-popover" role="menu">
-                      <button type="button" role="menuitem" onClick={() => void updateFolder(folder, { is_pinned: !folder.is_pinned })}>
-                        <Pin size={15} />
-                        {folder.is_pinned ? "Unpin" : "Pin to top"}
-                      </button>
-                      <button
-                        type="button"
-                        role="menuitem"
-                        onClick={() => {
-                          setOpenFolderMenuId(null);
-                          setRenamingFolder(folder);
-                        }}
-                      >
-                        <Edit3 size={15} />
-                        Rename
-                      </button>
-                      <div className="note-actions-divider" />
-                      <button className="danger-action" type="button" role="menuitem" onClick={() => void deleteFolder(folder)}>
-                        <Trash2 size={15} />
-                        Delete
-                      </button>
-                    </div>
-                  )}
+                    <small className="folder-note-count">{notesByFolder[folder.id] ?? 0}</small>
+                    <button
+                      className="folder-more-button"
+                      type="button"
+                      aria-label={`Folder actions for ${folder.name}`}
+                      aria-expanded={openFolderMenuId === folder.id}
+                      onClick={() => setOpenFolderMenuId((current) => current === folder.id ? null : folder.id)}
+                    >
+                      <MoreVertical size={17} />
+                    </button>
+                    {openFolderMenuId === folder.id && (
+                      <div className="folder-actions-popover" role="menu">
+                        <button
+                          type="button"
+                          role="menuitem"
+                          disabled={!canManageThisFolder}
+                          title={folderDisabledTitle}
+                          onClick={() => void updateFolder(folder, { is_pinned: !folder.is_pinned })}
+                        >
+                          <Pin size={15} />
+                          {folder.is_pinned ? "Unpin" : "Pin to top"}
+                        </button>
+                        <button
+                          type="button"
+                          role="menuitem"
+                          disabled={!canManageThisFolder}
+                          title={canManageThisFolder ? undefined : folderPermissionMessage("rename")}
+                          onClick={() => {
+                            setOpenFolderMenuId(null);
+                            setRenamingFolder(folder);
+                          }}
+                        >
+                          <Edit3 size={15} />
+                          Rename
+                        </button>
+                        <div className="note-actions-divider" />
+                        <button
+                          className="danger-action"
+                          type="button"
+                          role="menuitem"
+                          disabled={!canManageThisFolder}
+                          title={canManageThisFolder ? undefined : folderPermissionMessage("delete")}
+                          onClick={() => void deleteFolder(folder)}
+                        >
+                          <Trash2 size={15} />
+                          Delete
+                        </button>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </SidebarSection>
 
           <div className="storage-meter">
@@ -1266,9 +1303,9 @@ export function App() {
           folder={renamingFolder}
           onClose={() => setRenamingFolder(null)}
           onRename={async (name) => {
-            const didRename = await updateFolder(renamingFolder, { name });
-            if (didRename) setRenamingFolder(null);
-            return didRename;
+            const result = await updateFolder(renamingFolder, { name });
+            if (result.ok) setRenamingFolder(null);
+            return result;
           }}
         />
       )}
@@ -3017,7 +3054,7 @@ function RenameFolderDialog({
 }: {
   folder: FolderRecord;
   onClose: () => void;
-  onRename: (name: string) => Promise<boolean>;
+  onRename: (name: string) => Promise<{ ok: boolean; error?: string }>;
 }) {
   const [name, setName] = useState(folder.name);
   const [error, setError] = useState<string | null>(null);
@@ -3032,8 +3069,8 @@ function RenameFolderDialog({
     setError(null);
     setIsSaving(true);
     try {
-      const didRename = await onRename(cleanName);
-      if (!didRename) setError("Could not rename folder.");
+      const result = await onRename(cleanName);
+      if (!result.ok) setError(result.error ?? "Could not rename folder.");
     } finally {
       setIsSaving(false);
     }

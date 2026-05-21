@@ -244,8 +244,18 @@ button {
   background: #f7f7f8;
 }
 
+.folder-actions-popover button:disabled {
+  cursor: not-allowed;
+  color: #aaacb5;
+  background: transparent;
+}
+
 .folder-actions-popover .danger-action {
   color: #e73535;
+}
+
+.folder-actions-popover .danger-action:disabled {
+  color: #d99ba0;
 }
 
 .nav-item.active,
