@@ -21,6 +21,7 @@ import {
   Pin,
   Plus,
   Search,
+  Save,
   Settings,
   Share2,
   Star,
@@ -2574,6 +2575,20 @@ function NotePanel({
     }
   }
 
+  useEffect(() => {
+    if (!isEditing) return;
+
+    function saveFromKeyboard(event: globalThis.KeyboardEvent) {
+      if (!(event.metaKey || event.ctrlKey) || event.key.toLowerCase() !== "s") return;
+      event.preventDefault();
+      if (isSaving) return;
+      void saveMarkdown();
+    }
+
+    window.addEventListener("keydown", saveFromKeyboard);
+    return () => window.removeEventListener("keydown", saveFromKeyboard);
+  }, [canChangeNote, draftText, isEditing, isSaving, note.id]);
+
   async function saveTitle() {
     if (!canChangeNote) {
       setNoteError(cannotChangeNoteMessage);
@@ -2890,6 +2905,21 @@ function NotePanel({
               <div className="editor-loading">Loading note...</div>
             )}
           </Suspense>
+        </div>
+      )}
+      {isEditing && (
+        <div className="note-bottom-save">
+          <button
+            className="bottom-save-button"
+            type="button"
+            disabled={isSaving || !canChangeNote}
+            title={!canChangeNote ? cannotChangeNoteMessage : undefined}
+            onClick={() => void saveMarkdown()}
+          >
+            {isSaving ? <Loader2 className="spin" size={15} /> : <Save size={15} />}
+            Save
+          </button>
+          <span>Press ⌘ + S on Mac or Ctrl + S on Windows and ChromeOS</span>
         </div>
       )}
       <div className="note-section-divider" />
