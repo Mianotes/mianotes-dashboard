@@ -672,7 +672,7 @@ button {
   margin-top: -2px;
   margin-left: 3px;
   vertical-align: middle;
-  animation: typewriter-blink 0s step-end 1;
+  animation: typewriter-blink 0.8s step-end 1;
 }
 
 .typewriter-cursor.hidden {
@@ -681,7 +681,7 @@ button {
 
 @keyframes typewriter-blink {
   from {
-    background: #17181f;
+    background: #4a4c55;
   }
   to {
     background: transparent;
