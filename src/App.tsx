@@ -130,6 +130,12 @@ type DashboardUiState = {
   currentPage: number;
 };
 
+type NavigationSnapshot = DashboardUiState & {
+  workspaceView: "notes" | "profile";
+  profileUserId: string | "all";
+  noteIdToEditOnOpen: string | null;
+};
+
 const apiBase = import.meta.env.VITE_API_BASE_URL ?? "";
 const dashboardUiStateKey = "mianotes.dashboard.uiState";
 const notesPerPage = 10;
@@ -387,16 +393,60 @@ export function App() {
   const accountMenuRef = useRef<HTMLDivElement | null>(null);
   const folderActionsMenuRef = useRef<HTMLDivElement | null>(null);
   const openedNoteIdRef = useRef<string | null>(initialUiState.openedNoteId);
+  const navigationStackRef = useRef<NavigationSnapshot[]>([]);
 
   function clearSearch() {
     setSearchQuery("");
   }
 
-  function pushNoteHistory(noteId: string) {
-    const state = window.history.state as { mianotesView?: string; noteId?: string } | null;
-    if (state?.mianotesView === "note" && state.noteId === noteId) return;
+  function navigationSnapshot(overrides: Partial<NavigationSnapshot> = {}): NavigationSnapshot {
+    return {
+      selectedView,
+      selectedUserId,
+      selectedFolderId,
+      selectedTag,
+      openedNoteId,
+      searchQuery,
+      currentPage,
+      workspaceView,
+      profileUserId,
+      noteIdToEditOnOpen,
+      ...overrides
+    };
+  }
 
-    window.history.pushState({ mianotesView: "note", noteId }, "", window.location.href);
+  function restoreNavigationSnapshot(snapshot: NavigationSnapshot) {
+    setSelectedView(snapshot.selectedView);
+    setSelectedUserId(snapshot.selectedUserId);
+    setSelectedFolderId(snapshot.selectedFolderId);
+    setSelectedTag(snapshot.selectedTag);
+    setOpenedNoteId(snapshot.openedNoteId);
+    setSearchQuery(snapshot.searchQuery);
+    setCurrentPage(snapshot.currentPage);
+    setWorkspaceView(snapshot.workspaceView);
+    setProfileUserId(snapshot.profileUserId);
+    setNoteIdToEditOnOpen(snapshot.noteIdToEditOnOpen);
+    setIsAccountOpen(false);
+    setIsSidebarOpen(false);
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }
+
+  function pushNavigationSnapshot(snapshot = navigationSnapshot()) {
+    navigationStackRef.current.push(snapshot);
+    window.history.pushState({ mianotesView: "dashboard" }, "", window.location.href);
+  }
+
+  function goBack() {
+    if (navigationStackRef.current.length > 0) {
+      window.history.back();
+      return;
+    }
+
+    restoreNavigationSnapshot(navigationSnapshot({
+      workspaceView: "notes",
+      openedNoteId: null,
+      noteIdToEditOnOpen: null
+    }));
   }
 
   function changePage(nextPage: number) {
@@ -452,6 +502,7 @@ export function App() {
 
   function openProfile(profileId: string | "all" = currentUser?.id ?? "all") {
     clearSearch();
+    pushNavigationSnapshot();
     setWorkspaceView("profile");
     setProfileUserId(profileId);
     setOpenedNoteId(null);
@@ -462,6 +513,7 @@ export function App() {
 
   function openProfileTag(userId: string, tagSlug: string) {
     clearSearch();
+    pushNavigationSnapshot();
     setSelectedView("recent");
     setSelectedFolderId("all");
     setSelectedUserId(userId);
@@ -479,16 +531,23 @@ export function App() {
 
   useEffect(() => {
     const initialNoteId = openedNoteIdRef.current;
-    window.history.replaceState({ mianotesView: "list" }, "", window.location.href);
+    window.history.replaceState({ mianotesView: "dashboard-root" }, "", window.location.href);
     if (initialNoteId) {
-      window.history.pushState({ mianotesView: "note", noteId: initialNoteId }, "", window.location.href);
+      navigationStackRef.current.push({
+        ...defaultDashboardUiState,
+        ...readDashboardUiState(),
+        openedNoteId: null,
+        workspaceView: "notes",
+        profileUserId: "all",
+        noteIdToEditOnOpen: null
+      });
+      window.history.pushState({ mianotesView: "dashboard" }, "", window.location.href);
     }
 
-    function handleBrowserBack(event: PopStateEvent) {
-      const state = event.state as { mianotesView?: string; noteId?: string } | null;
-      if (state?.mianotesView === "note" && state.noteId) {
-        setWorkspaceView("notes");
-        setOpenedNoteId(state.noteId);
+    function handleBrowserBack() {
+      const snapshot = navigationStackRef.current.pop();
+      if (snapshot) {
+        restoreNavigationSnapshot(snapshot);
         return;
       }
 
@@ -674,16 +733,17 @@ export function App() {
   }
 
   async function openNote(note: NoteRecord, startInEdit = false) {
+    const previousScreen = navigationSnapshot();
     try {
       const fullNote = await apiFetch<NoteRecord>(`/api/notes/${note.id}`);
       setNotes((items) => (
         items.map((item) => item.id === note.id ? mergeNoteRecord(item, fullNote) : item)
       ));
+      pushNavigationSnapshot(previousScreen);
       if (startInEdit) {
         setNoteIdToEditOnOpen(note.id);
       }
       setOpenedNoteId(note.id);
-      pushNoteHistory(note.id);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not open note");
     }
@@ -1173,7 +1233,7 @@ export function App() {
               currentUser={currentUser}
               selectedUserId={profileUserId}
               onSelectUser={setProfileUserId}
-              onBack={() => setWorkspaceView("notes")}
+              onBack={goBack}
               onSignOut={() => void logout(setCurrentUser)}
               onUserUpdated={(updatedUser) => {
                 setUsers((items) => items.map((user) => user.id === updatedUser.id ? updatedUser : user));
@@ -1209,7 +1269,7 @@ export function App() {
                     currentUser={currentUser}
                     startInEdit={noteIdToEditOnOpen === openedNote.id}
                     onStartInEditConsumed={() => setNoteIdToEditOnOpen(null)}
-                    onClose={() => setOpenedNoteId(null)}
+                    onClose={goBack}
                     onRefresh={async () => {
                       const fullNote = await apiFetch<NoteRecord>(`/api/notes/${openedNote.id}`);
                       setNotes((items) => (
@@ -1282,6 +1342,11 @@ export function App() {
           selectedFolderId={selectedFolderId}
           onClose={() => setIsAddOpen(false)}
           onCreated={async (note, shouldEdit) => {
+            const previousScreen = navigationSnapshot({
+              workspaceView: "notes",
+              openedNoteId: null,
+              noteIdToEditOnOpen: null
+            });
             setSelectedView("recent");
             setSearchQuery("");
             setSelectedTag("all");
@@ -1292,8 +1357,8 @@ export function App() {
                 ? items.map((item) => item.id === note.id ? mergeNoteRecord(item, hydratedNote) : item)
                 : [hydratedNote, ...items];
             });
+            pushNavigationSnapshot(previousScreen);
             setOpenedNoteId(note.id);
-            pushNoteHistory(note.id);
             setNoteIdToEditOnOpen(shouldEdit ? note.id : null);
             setIsAddOpen(false);
             await refreshNotes();
