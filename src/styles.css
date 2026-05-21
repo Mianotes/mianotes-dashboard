@@ -522,6 +522,10 @@ button {
   overflow: hidden;
 }
 
+.view-select-button {
+  width: 104px;
+}
+
 .select-button:hover {
   border-color: #c7c9d1;
 }
@@ -2604,7 +2608,7 @@ textarea:focus {
 
   .toolbar-actions {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) minmax(98px, 124px) 38px;
+    grid-template-columns: minmax(0, 1fr) 104px minmax(98px, 124px) 38px;
     flex: 1 1 100%;
     gap: 8px;
     justify-content: stretch;

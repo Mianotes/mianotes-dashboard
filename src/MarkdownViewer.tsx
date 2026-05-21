@@ -147,14 +147,16 @@ function SourceModeToolbar() {
   );
 }
 
-function richMarkdownPlugins() {
+type ImageUploadHandler = (image: File) => Promise<string>;
+
+function richMarkdownPlugins(imageUploadHandler?: ImageUploadHandler) {
   return [
     headingsPlugin(),
     listsPlugin(),
     quotePlugin(),
     linkPlugin(),
     linkDialogPlugin(),
-    imagePlugin({ disableImageResize: true }),
+    imagePlugin({ disableImageResize: true, imageUploadHandler }),
     tablePlugin(),
     thematicBreakPlugin(),
     directivesPlugin({ directiveDescriptors: [AdmonitionDirectiveDescriptor] }),
@@ -181,9 +183,9 @@ export default function MarkdownViewer({ id, updatedAt, markdown }: { id: string
   );
 }
 
-function richMarkdownEditorPlugins() {
+function richMarkdownEditorPlugins(imageUploadHandler?: ImageUploadHandler) {
   return [
-    ...richMarkdownPlugins(),
+    ...richMarkdownPlugins(imageUploadHandler),
     diffSourcePlugin({ viewMode: "rich-text", codeMirrorExtensions: codeMirrorThemeExtensions }),
     toolbarPlugin({
       toolbarContents: () => (
@@ -217,13 +219,15 @@ type MarkdownEditorProps = {
   id: string;
   markdown: string;
   onChange: (markdown: string) => void;
+  imageUploadHandler?: ImageUploadHandler;
 };
 
 export const MarkdownEditor = forwardRef<MDXEditorMethods, MarkdownEditorProps>(function MarkdownEditor(
   {
     id,
     markdown,
-    onChange
+    onChange,
+    imageUploadHandler
   },
   ref
 ) {
@@ -233,7 +237,7 @@ export const MarkdownEditor = forwardRef<MDXEditorMethods, MarkdownEditorProps>(
       key={`${id}-editing`}
       markdown={markdown}
       onChange={(nextMarkdown) => onChange(nextMarkdown)}
-      plugins={richMarkdownEditorPlugins()}
+      plugins={richMarkdownEditorPlugins(imageUploadHandler)}
       className="mianotes-rich-editor"
       contentEditableClassName="mianotes-rich-content"
     />

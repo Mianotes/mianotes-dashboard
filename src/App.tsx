@@ -12,6 +12,7 @@ import {
   Folder,
   History,
   Image,
+  LayoutDashboard,
   Link,
   LogOut,
   Loader2,
@@ -458,6 +459,16 @@ export function App() {
     clearSearch();
     setCurrentPage(1);
     setSelectedView(view);
+    setWorkspaceView("notes");
+    setOpenedNoteId(null);
+    setIsSidebarOpen(false);
+  }
+
+  function selectDashboard() {
+    clearSearch();
+    setCurrentPage(1);
+    setSelectedFolderId("all");
+    setSelectedTag("all");
     setWorkspaceView("notes");
     setOpenedNoteId(null);
     setIsSidebarOpen(false);
@@ -982,14 +993,13 @@ export function App() {
             <span>Add Note</span>
           </button>
 
-          <nav className="nav-group" aria-label="Note filters">
-            <button className={`nav-item ${selectedView === "recent" ? "active" : ""}`} onClick={() => selectView("recent")}>
-              <History size={20} />
-              <span>Recent</span>
-            </button>
-            <button className={`nav-item ${selectedView === "starred" ? "active" : ""}`} onClick={() => selectView("starred")}>
-              <Star size={20} />
-              <span>Starred</span>
+          <nav className="nav-group" aria-label="Dashboard navigation">
+            <button
+              className={`nav-item ${workspaceView === "notes" && selectedFolderId === "all" ? "active" : ""}`}
+              onClick={selectDashboard}
+            >
+              <LayoutDashboard size={20} />
+              <span>Dashboard</span>
             </button>
           </nav>
 
@@ -1161,6 +1171,22 @@ export function App() {
                     </div>
                   )}
                 </div>
+                <label className="select-button view-select-button">
+                  {selectedView === "starred" ? (
+                    <Star className="select-button-icon" size={16} />
+                  ) : (
+                    <History className="select-button-icon" size={16} />
+                  )}
+                  <span className="select-button-label">{selectedView === "starred" ? "Starred" : "Recent"}</span>
+                  <select
+                    value={selectedView}
+                    onChange={(event) => selectView(event.target.value === "starred" ? "starred" : "recent")}
+                  >
+                    <option value="recent">Recent</option>
+                    <option value="starred">Starred</option>
+                  </select>
+                  <ChevronDown className="select-button-chevron" size={12} />
+                </label>
                 <label className="select-button user-select-button">
                   <User className="select-button-icon" size={16} />
                   <span className="select-button-label">{selectedUser?.name ?? "All users"}</span>
@@ -2441,6 +2467,20 @@ function NotePanel({
     return markdownEditorRef.current?.getMarkdown() ?? draftText;
   }
 
+  async function uploadEditorImage(image: File) {
+    if (!canChangeNote) {
+      throw new Error(cannotChangeNoteMessage);
+    }
+
+    const formData = new FormData();
+    formData.set("image", image);
+    const response = await apiFetch<{ url: string }>(`/api/notes/${note.id}/images`, {
+      method: "POST",
+      body: formData
+    });
+    return response.url;
+  }
+
   async function saveMarkdown() {
     if (!canChangeNote) {
       setNoteError(cannotChangeNoteMessage);
@@ -2765,6 +2805,7 @@ function NotePanel({
               id={note.id}
               markdown={draftText}
               onChange={setDraftText}
+              imageUploadHandler={uploadEditorImage}
             />
           </Suspense>
         </div>
