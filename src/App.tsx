@@ -2743,9 +2743,14 @@ function NotePanel({
       setNoteError(cannotChangeNoteMessage);
       return;
     }
+    const nextText = currentEditorMarkdown();
+    if (!nextText.trim()) {
+      setNoteError("Please add some text before saving this note.");
+      return;
+    }
+
     setIsSaving(true);
     setNoteError(null);
-    const nextText = currentEditorMarkdown();
     try {
       await apiFetch<NoteRecord>(`/api/notes/${note.id}`, {
         method: "PATCH",
@@ -2757,7 +2762,12 @@ function NotePanel({
       setIsEditing(false);
       await onRefresh();
     } catch (err) {
-      setNoteError(err instanceof Error ? err.message : "Could not save note");
+      const message = err instanceof Error ? err.message : "Could not save note";
+      setNoteError(
+        message.includes("String should have at least 1 character")
+          ? "Please add some text before saving this note."
+          : message
+      );
     } finally {
       setIsSaving(false);
     }
