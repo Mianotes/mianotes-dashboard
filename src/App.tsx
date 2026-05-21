@@ -3099,21 +3099,23 @@ function NotePanel({
           </Suspense>
         </div>
       )}
-      {isEditing && (
-        <div className={`note-bottom-save ${isFinishingEdit ? "is-exiting" : ""}`}>
-          <button
-            className="bottom-save-button"
-            type="button"
-            disabled={isSaving || !canChangeNote}
-            title={!canChangeNote ? cannotChangeNoteMessage : undefined}
-            onClick={() => void saveMarkdown()}
-          >
-            {isSaving ? <Loader2 className="spin" size={15} /> : <Save size={15} />}
-            Save
-          </button>
-          <span>Press ⌘ + S on Mac or Ctrl + S on Windows and ChromeOS</span>
-        </div>
-      )}
+      <div
+        className={`note-bottom-save ${!isEditing || isFinishingEdit ? "is-hidden" : ""}`}
+        aria-hidden={!isEditing}
+      >
+        <button
+          className="bottom-save-button"
+          type="button"
+          disabled={!isEditing || isSaving || !canChangeNote}
+          tabIndex={isEditing ? 0 : -1}
+          title={!canChangeNote ? cannotChangeNoteMessage : undefined}
+          onClick={() => void saveMarkdown()}
+        >
+          {isSaving ? <Loader2 className="spin" size={15} /> : <Save size={15} />}
+          Save
+        </button>
+        <span>Press ⌘ + S on Mac or Ctrl + S on Windows and ChromeOS</span>
+      </div>
       <div className="note-section-divider" />
       <section className="comments-box">
         <h3>Ask Mia</h3>

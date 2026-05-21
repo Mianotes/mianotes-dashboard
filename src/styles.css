@@ -1586,7 +1586,7 @@ button {
     opacity 0.16s ease;
 }
 
-.note-bottom-save.is-exiting {
+.note-bottom-save.is-hidden {
   max-height: 0;
   margin-top: 0;
   opacity: 0;
@@ -2965,7 +2965,7 @@ textarea:focus {
     line-height: 1.45;
   }
 
-  .note-bottom-save.is-exiting {
+  .note-bottom-save.is-hidden {
     max-height: 0;
     margin-top: 0;
   }
