@@ -1935,6 +1935,23 @@ button {
   font-size: 13px;
 }
 
+.profile-tag-button {
+  appearance: none;
+  font-family: inherit;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.profile-tag-button:hover {
+  border-color: #b8bac4;
+  color: #202128;
+}
+
+.profile-tag-button:active {
+  border-color: #17181f;
+  color: #17181f;
+}
+
 .profiles-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));

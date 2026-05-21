@@ -460,6 +460,19 @@ export function App() {
     window.scrollTo(0, 0);
   }
 
+  function openProfileTag(userId: string, tagSlug: string) {
+    clearSearch();
+    setSelectedView("recent");
+    setSelectedFolderId("all");
+    setSelectedUserId(userId);
+    setSelectedTag(tagSlug);
+    setCurrentPage(1);
+    setWorkspaceView("notes");
+    setOpenedNoteId(null);
+    setIsSidebarOpen(false);
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }
+
   useEffect(() => {
     void bootstrap();
   }, []);
@@ -1175,6 +1188,7 @@ export function App() {
                   setCurrentUser(updatedUser);
                 }
               }}
+              onSelectTag={openProfileTag}
             />
           ) : (
             <>
@@ -1402,7 +1416,8 @@ function ProfileScreen({
   onSelectUser,
   onBack,
   onSignOut,
-  onUserUpdated
+  onUserUpdated,
+  onSelectTag
 }: {
   users: UserRecord[];
   notes: NoteRecord[];
@@ -1413,6 +1428,7 @@ function ProfileScreen({
   onBack: () => void;
   onSignOut: () => void;
   onUserUpdated: (user: UserRecord) => void;
+  onSelectTag: (userId: string, tagSlug: string) => void;
 }) {
   const selectedUser = selectedUserId === "all"
     ? null
@@ -1687,6 +1703,7 @@ function ProfileScreen({
             canUploadPhoto={canEditSelectedUser}
             isUploadingPhoto={isUploadingPhoto}
             onPhotoUpload={uploadProfilePhoto}
+            onSelectTag={onSelectTag}
           />
         ) : (
           <AllProfilesView
@@ -1773,7 +1790,8 @@ function SingleProfileView({
   onDraftChange,
   canUploadPhoto,
   isUploadingPhoto,
-  onPhotoUpload
+  onPhotoUpload,
+  onSelectTag
 }: {
   user: UserRecord;
   notes: NoteRecord[];
@@ -1784,6 +1802,7 @@ function SingleProfileView({
   canUploadPhoto: boolean;
   isUploadingPhoto: boolean;
   onPhotoUpload: (file: File) => void;
+  onSelectTag: (userId: string, tagSlug: string) => void;
 }) {
   const tags = profileTags(user, notes, folders);
 
@@ -1852,7 +1871,16 @@ function SingleProfileView({
           </header>
           <div className="profile-tags">
             {tags.length > 0 ? (
-              tags.slice(0, 12).map((tag) => <span className="tag-pill" key={tag.id}>{tag.name}</span>)
+              tags.slice(0, 12).map((tag) => (
+                <button
+                  className="tag-pill profile-tag-button"
+                  key={tag.id}
+                  type="button"
+                  onClick={() => onSelectTag(user.id, tag.slug)}
+                >
+                  {tag.name}
+                </button>
+              ))
             ) : (
               <p>No tags yet.</p>
             )}
