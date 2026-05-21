@@ -1487,20 +1487,27 @@ button {
 }
 
 .note-section-divider {
-  margin: 24px 0;
-  padding: 24px 0 0;
+  margin: 48px 0;
+  padding: 0;
   border-top: 1px solid #e4e5e9;
 }
 
+.comments-box {
+  padding: 24px 24px;
+  border: 1px solid #eee;
+  border-radius: 14px;
+  color: #000;
+  background: linear-gradient(180deg, #fafafa 0%, #f4f5f7 45%, #eceef2 100%);
+}
+
 .comments-box h3 {
-  margin: 20px 0 12px;
+  margin: 0 0 24px;
   font-size: 1.08rem;
 }
 
 .note-tags-section {
-  margin: 34px 0 0;
-  padding: 32px 0 0;
-  border-top: 1px solid #e4e5e9;
+  margin: 0;
+  padding: 0;
 }
 
 .note-tags-section h3 {
@@ -2834,11 +2841,6 @@ textarea:focus {
   .ask-mia-button,
   .mia-quick-action {
     width: 100%;
-  }
-
-  .note-tags-section {
-    margin-top: 38px;
-    padding-top: 34px;
   }
 
   .row-spacer {

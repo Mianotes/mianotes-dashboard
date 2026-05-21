@@ -2911,6 +2911,7 @@ function NotePanel({
           </div>
         )}
       </section>
+      <div className="note-section-divider" />
       <section className="note-tags-section">
         <h3>Tags</h3>
         <div className="note-document-tags">
