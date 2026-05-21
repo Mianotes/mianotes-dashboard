@@ -340,6 +340,12 @@ button {
   background: #17181d;
 }
 
+.nav-mark-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+}
+
 .workspace {
   min-width: 0;
   background: #ffffff;
@@ -522,8 +528,49 @@ button {
   overflow: hidden;
 }
 
+.view-filter {
+  position: relative;
+}
+
 .view-select-button {
-  width: 104px;
+  grid-template-columns: 16px 12px;
+  width: 44px;
+  padding: 0 8px;
+}
+
+.view-filter-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  z-index: 14;
+  display: grid;
+  min-width: 142px;
+  padding: 8px;
+  border: 1px solid #e1e2e7;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 14px 34px rgba(18, 18, 22, 0.12);
+}
+
+.view-filter-menu button {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 34px;
+  padding: 0 9px;
+  border: 0;
+  border-radius: 6px;
+  color: #565863;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 400;
+  text-align: left;
+}
+
+.view-filter-menu button:hover,
+.view-filter-menu button.active {
+  color: #202128;
+  background: #f7f7f8;
 }
 
 .select-button:hover {
@@ -2615,7 +2662,7 @@ textarea:focus {
 
   .toolbar-actions {
     display: grid;
-    grid-template-columns: minmax(0, 1fr) 104px minmax(98px, 124px) 38px;
+    grid-template-columns: minmax(0, 1fr) 44px minmax(98px, 124px) 38px;
     flex: 1 1 100%;
     gap: 8px;
     justify-content: stretch;

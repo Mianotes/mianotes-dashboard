@@ -12,7 +12,6 @@ import {
   Folder,
   History,
   Image,
-  LayoutDashboard,
   Link,
   LogOut,
   Loader2,
@@ -385,6 +384,7 @@ export function App() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isFolderOpen, setIsFolderOpen] = useState(false);
   const [isAccountOpen, setIsAccountOpen] = useState(false);
+  const [isViewFilterOpen, setIsViewFilterOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [workspaceView, setWorkspaceView] = useState<"notes" | "profile">("notes");
   const [profileUserId, setProfileUserId] = useState<string | "all">("all");
@@ -392,6 +392,7 @@ export function App() {
   const [renamingFolder, setRenamingFolder] = useState<FolderRecord | null>(null);
   const [noteIdToEditOnOpen, setNoteIdToEditOnOpen] = useState<string | null>(null);
   const accountMenuRef = useRef<HTMLDivElement | null>(null);
+  const viewFilterRef = useRef<HTMLDivElement | null>(null);
   const folderActionsMenuRef = useRef<HTMLDivElement | null>(null);
   const openedNoteIdRef = useRef<string | null>(initialUiState.openedNoteId);
   const navigationStackRef = useRef<NavigationSnapshot[]>([]);
@@ -598,6 +599,33 @@ export function App() {
       document.removeEventListener("keydown", closeAccountMenuOnEscape);
     };
   }, [isAccountOpen]);
+
+  useEffect(() => {
+    if (!isViewFilterOpen) return;
+
+    function closeViewFilter(event: PointerEvent) {
+      if (
+        event.target instanceof Node
+        && viewFilterRef.current
+        && !viewFilterRef.current.contains(event.target)
+      ) {
+        setIsViewFilterOpen(false);
+      }
+    }
+
+    function closeViewFilterOnEscape(event: globalThis.KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsViewFilterOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", closeViewFilter);
+    document.addEventListener("keydown", closeViewFilterOnEscape);
+    return () => {
+      document.removeEventListener("pointerdown", closeViewFilter);
+      document.removeEventListener("keydown", closeViewFilterOnEscape);
+    };
+  }, [isViewFilterOpen]);
 
   useEffect(() => {
     if (!openFolderMenuId) return;
@@ -998,7 +1026,7 @@ export function App() {
               className={`nav-item ${workspaceView === "notes" && selectedFolderId === "all" ? "active" : ""}`}
               onClick={selectDashboard}
             >
-              <LayoutDashboard size={20} />
+              <img className="nav-mark-icon" src={logoMarkUrl} alt="" />
               <span>Dashboard</span>
             </button>
           </nav>
@@ -1171,22 +1199,51 @@ export function App() {
                     </div>
                   )}
                 </div>
-                <label className="select-button view-select-button">
-                  {selectedView === "starred" ? (
-                    <Star className="select-button-icon" size={16} />
-                  ) : (
-                    <History className="select-button-icon" size={16} />
-                  )}
-                  <span className="select-button-label">{selectedView === "starred" ? "Starred" : "Recent"}</span>
-                  <select
-                    value={selectedView}
-                    onChange={(event) => selectView(event.target.value === "starred" ? "starred" : "recent")}
+                <div className="view-filter" ref={viewFilterRef}>
+                  <button
+                    className="select-button view-select-button"
+                    type="button"
+                    aria-label={`Filter notes by ${selectedView}`}
+                    aria-expanded={isViewFilterOpen}
+                    aria-haspopup="menu"
+                    onClick={() => setIsViewFilterOpen((value) => !value)}
                   >
-                    <option value="recent">Recent</option>
-                    <option value="starred">Starred</option>
-                  </select>
-                  <ChevronDown className="select-button-chevron" size={12} />
-                </label>
+                    {selectedView === "starred" ? (
+                      <Star className="select-button-icon" size={16} />
+                    ) : (
+                      <History className="select-button-icon" size={16} />
+                    )}
+                    <ChevronDown className="select-button-chevron" size={12} />
+                  </button>
+                  {isViewFilterOpen && (
+                    <div className="view-filter-menu" role="menu">
+                      <button
+                        className={selectedView === "recent" ? "active" : ""}
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          selectView("recent");
+                          setIsViewFilterOpen(false);
+                        }}
+                      >
+                        <History size={16} />
+                        <span>Recent</span>
+                      </button>
+                      <button
+                        className={selectedView === "starred" ? "active" : ""}
+                        type="button"
+                        role="menuitem"
+                        onClick={() => {
+                          selectView("starred");
+                          setIsViewFilterOpen(false);
+                        }}
+                      >
+                        <Star size={16} />
+                        <span>Starred</span>
+                      </button>
+                    </div>
+                  )}
+                </div>
                 <label className="select-button user-select-button">
                   <User className="select-button-icon" size={16} />
                   <span className="select-button-label">{selectedUser?.name ?? "All users"}</span>
