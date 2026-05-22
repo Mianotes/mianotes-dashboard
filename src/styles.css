@@ -1004,7 +1004,7 @@ button {
 }
 
 .shell.note-open .note-panel {
-  width: min(100%, 1520px);
+  width: min(90%, 1520px);
 }
 
 .note-panel.editing {
