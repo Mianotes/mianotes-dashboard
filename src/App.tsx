@@ -19,7 +19,6 @@ import {
   Menu,
   MessageCircle,
   MoreVertical,
-  Pin,
   Plus,
   Search,
   Save,
@@ -41,6 +40,24 @@ import logoMarkUrl from "./assets/mianotes_mark.svg";
 
 const MarkdownViewer = lazy(() => import("./MarkdownViewer"));
 const MarkdownEditor = lazy(() => import("./MarkdownViewer").then((module) => ({ default: module.MarkdownEditor })));
+
+function PinIcon({ size = 18 }: { size?: number }) {
+  return (
+    <svg
+      aria-hidden="true"
+      width={size}
+      height={size}
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        fill="currentColor"
+        d="M8.25 3a1 1 0 0 1 1-1h5.5a1 1 0 0 1 1 1v1.25h.75a1 1 0 1 1 0 2h-.75v3.08l2.7 2.7a1 1 0 0 1-.7 1.71H13v6.26a1 1 0 1 1-2 0v-6.26H6.26a1 1 0 0 1-.7-1.7l2.69-2.7V6.25H7.5a1 1 0 0 1 0-2h.75V3Zm2 3.25v3.5c0 .27-.11.52-.29.71l-1.28 1.28h6.64l-1.28-1.28a1 1 0 0 1-.29-.7V6.25h-3.5Z"
+      />
+    </svg>
+  );
+}
 
 type UserRecord = {
   id: string;
@@ -1160,7 +1177,7 @@ export function App() {
                     selectFolder(folder.id);
                   }}
                 >
-                  {folder.is_pinned ? <Pin size={18} /> : <Folder size={19} />}
+                  {folder.is_pinned ? <PinIcon size={18} /> : <Folder size={19} />}
                   <span>{folder.name}</span>
                   <div
                     className="folder-actions-menu"
@@ -1187,7 +1204,7 @@ export function App() {
                           title={folderDisabledTitle}
                           onClick={() => void updateFolder(folder, { is_pinned: !folder.is_pinned })}
                         >
-                          <Pin size={15} />
+                          <PinIcon size={15} />
                           {folder.is_pinned ? "Unpin" : "Pin to top"}
                         </button>
                         <button
