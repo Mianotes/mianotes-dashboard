@@ -1716,9 +1716,8 @@ function SettingsScreen({
     }
   }
 
-  const databasePath = storageCapacity?.data_dir
-    ? `${storageCapacity.data_dir.replace(/\/$/, "")}/mia.db`
-    : "./data/mia.db";
+  const dataDirName = storageCapacity?.data_dir?.replace(/\/$/, "").split("/").pop() || "data";
+  const databasePath = `${dataDirName}/mia.db`;
 
   return (
     <>
@@ -1727,12 +1726,8 @@ function SettingsScreen({
           <button className="back-square-button" onClick={onBack} aria-label="Back to notes">
             <ChevronLeft size={16} />
           </button>
-          <div className="breadcrumb">
+          <div className="breadcrumb settings-breadcrumb">
             <span>Settings</span>
-            <span className="current">
-              <ChevronRight size={14} />
-              Restore notes
-            </span>
           </div>
         </div>
         <div className="toolbar-actions">
@@ -1809,83 +1804,82 @@ function SettingsScreen({
         </div>
       </header>
       <section className="settings-surface">
-        {settingsError && (
-          <div className="dashboard-notice settings-notice" role="alert">
-            <span>{settingsError}</span>
-            <button type="button" aria-label="Dismiss" onClick={() => setSettingsError(null)}>
-              <X size={16} />
-            </button>
-          </div>
-        )}
-        {settingsMessage && (
-          <div className="dashboard-notice success settings-notice" role="status">
-            <span>{settingsMessage}</span>
-            <button type="button" aria-label="Dismiss" onClick={() => setSettingsMessage(null)}>
-              <X size={16} />
-            </button>
-          </div>
-        )}
-        <section className="settings-page-section">
-          <h1>Storage</h1>
-          <div className="settings-card">
-            <div className="settings-card-body">
-              <div className="settings-storage-row">
-                <Database size={28} />
-                <div>
-                  <strong>{databasePath}</strong>
-                  <span>If the database does not exist, it will be created.</span>
-                </div>
-                <span className="settings-muted-action">Edit</span>
+        <div className="settings-content">
+          <h1>Settings</h1>
+          {settingsError && (
+            <div className="dashboard-notice settings-notice" role="alert">
+              <span>{settingsError}</span>
+              <button type="button" aria-label="Dismiss" onClick={() => setSettingsError(null)}>
+                <X size={16} />
+              </button>
+            </div>
+          )}
+          {settingsMessage && (
+            <div className="dashboard-notice success settings-notice" role="status">
+              <span>{settingsMessage}</span>
+              <button type="button" aria-label="Dismiss" onClick={() => setSettingsMessage(null)}>
+                <X size={16} />
+              </button>
+            </div>
+          )}
+          <section className="settings-card settings-storage-card" aria-labelledby="settings-storage-title">
+            <div className="settings-card-intro">
+              <h2 id="settings-storage-title">Database</h2>
+              <p>
+                Choose the folder that contains the Mianotes database for this instance. If mia.db is missing, Mianotes
+                creates a new empty database and the dashboard starts with no notes.
+              </p>
+            </div>
+            <div className="settings-storage-panel">
+              <Database size={30} />
+              <strong>{databasePath}</strong>
+              <span className="settings-text-action disabled" aria-disabled="true">
+                Choose folder
+              </span>
+            </div>
+          </section>
+          <section className="settings-card settings-restore-card" aria-labelledby="settings-restore-title">
+            <div className="settings-card-intro">
+              <h2 id="settings-restore-title">Restore folders</h2>
+              <p>
+                Restore folders that were removed from the sidebar. Notes and source files are moved back from the
+                archive.
+              </p>
+            </div>
+            {isLoadingArchivedFolders ? (
+              <div className="settings-empty-state settings-restore-empty">
+                <Loader2 className="spin" size={18} />
+                Loading archived folders...
               </div>
-            </div>
-          </div>
-        </section>
-        <section className="settings-page-section">
-          <h1>Restore notes</h1>
-          <p className="settings-section-copy">
-            Restore folders that were removed from the sidebar. Notes and source files are moved back from the archive.
-          </p>
-          <div className="settings-card">
-            <div className="settings-card-header">
-              <h2>Archived folders</h2>
-              <p>Restored folders become visible in the sidebar again.</p>
-            </div>
-            <div className="settings-card-body">
-              {isLoadingArchivedFolders ? (
-                <div className="settings-empty-state">
-                  <Loader2 className="spin" size={18} />
-                  Loading archived folders...
-                </div>
-              ) : archivedFolders.length === 0 ? (
-                <div className="settings-empty-state">
-                  <History size={18} />
-                  No archived folders yet.
-                </div>
-              ) : (
-                <div className="restore-list">
-                  {archivedFolders.map((folder) => (
-                    <div className="restore-row" key={folder.id}>
-                      <Folder size={24} />
-                      <div className="restore-row-copy">
-                        <strong>{folder.name}</strong>
-                        <span>{folder.path ?? `Archived on ${formatSettingsDate(folder.archived_at)}`}</span>
-                      </div>
-                      <button
-                        className="secondary-action-button restore-action"
-                        type="button"
-                        disabled={restoringFolderId === folder.id}
-                        onClick={() => void restoreFolder(folder)}
-                      >
-                        {restoringFolderId === folder.id ? <Loader2 className="spin" size={15} /> : <History size={15} />}
-                        Restore
-                      </button>
+            ) : archivedFolders.length === 0 ? (
+              <div className="settings-empty-state settings-restore-empty">
+                <History size={18} />
+                No archived folders yet.
+              </div>
+            ) : (
+              <div className="restore-list">
+                {archivedFolders.map((folder) => (
+                  <div className="restore-row" key={folder.id}>
+                    <Folder size={27} />
+                    <div className="restore-row-copy">
+                      <strong>{folder.name}</strong>
+                      <span>{folder.path ?? `Archived on ${formatSettingsDate(folder.archived_at)}`}</span>
                     </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </section>
+                    <button
+                      className="secondary-action-button restore-action"
+                      type="button"
+                      disabled={restoringFolderId === folder.id}
+                      onClick={() => void restoreFolder(folder)}
+                    >
+                      {restoringFolderId === folder.id ? <Loader2 className="spin" size={15} /> : <History size={15} />}
+                      Restore
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
+        </div>
       </section>
     </>
   );
