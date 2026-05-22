@@ -2908,6 +2908,12 @@ textarea:focus {
   background: #edf4ff;
 }
 
+.database-create-fields {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+
 .database-path-field {
   display: grid;
   gap: 8px;
@@ -2920,11 +2926,7 @@ textarea:focus {
   font-weight: 700;
 }
 
-.database-path-row {
-  display: block;
-}
-
-.database-path-row input {
+.database-path-field input {
   width: 100%;
   min-width: 0;
 }
@@ -2936,7 +2938,6 @@ textarea:focus {
 }
 
 .database-create-button {
-  grid-column: 2;
   justify-self: end;
   min-width: 168px;
 }

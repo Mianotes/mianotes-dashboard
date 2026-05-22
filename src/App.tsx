@@ -2002,18 +2002,20 @@ function DatabaseSwitchModal({
   onDatabaseSwitched: () => void;
 }) {
   const [selectedLocationId, setSelectedLocationId] = useState("");
+  const [databaseName, setDatabaseName] = useState("");
   const [folderPath, setFolderPath] = useState("");
-  const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
+  const [isCreateFormOpen, setIsCreateFormOpen] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const activeLocation = storageSettings.locations.find((location) => location.is_active)
     ?? storageSettings.locations[0];
   const availableLocations = storageSettings.locations.filter((location) => !location.is_active);
   const selectedLocation = availableLocations.find((location) => location.id === selectedLocationId);
+  const trimmedDatabaseName = databaseName.trim();
   const trimmedFolderPath = folderPath.trim();
-  const shouldCreateDatabase = Boolean(trimmedFolderPath);
-  const canSubmit = shouldCreateDatabase || Boolean(selectedLocation && !selectedLocation.is_active);
-  const showSwitchAction = Boolean(selectedLocation && !shouldCreateDatabase);
+  const canCreateDatabase = Boolean(trimmedDatabaseName && trimmedFolderPath);
+  const canSwitchDatabase = Boolean(selectedLocation && !selectedLocation.is_active);
+  const showSwitchAction = Boolean(selectedLocation && !isCreateFormOpen);
 
   async function switchToLocation(locationId: string) {
     await apiFetch<StorageSwitchResponse>("/api/settings/storage/active", {
@@ -2023,27 +2025,36 @@ function DatabaseSwitchModal({
     onDatabaseSwitched();
   }
 
-  async function submit() {
-    if (!canSubmit || isSubmitting) return;
+  async function createDatabaseLocation() {
+    if (!canCreateDatabase || isSubmitting) return;
     setIsSubmitting(true);
     setError(null);
     try {
-      if (shouldCreateDatabase) {
-        const name = databaseNameFromPath(trimmedFolderPath);
-        const nextSettings = await apiFetch<StorageSettingsRecord>("/api/settings/storage/locations", {
-          method: "POST",
-          body: JSON.stringify({ name, folder_path: trimmedFolderPath })
-        });
-        onSettingsChanged(nextSettings);
-        const createdLocation = nextSettings.locations.find(
-          (location) => location.folder_path === trimmedFolderPath || location.name === name
-        ) ?? nextSettings.locations[nextSettings.locations.length - 1];
-        await switchToLocation(createdLocation.id);
-        return;
-      }
-      if (selectedLocation) {
-        await switchToLocation(selectedLocation.id);
-      }
+      const nextSettings = await apiFetch<StorageSettingsRecord>("/api/settings/storage/locations", {
+        method: "POST",
+        body: JSON.stringify({ name: trimmedDatabaseName, folder_path: trimmedFolderPath })
+      });
+      onSettingsChanged(nextSettings);
+      const createdLocation = [...nextSettings.locations].reverse().find(
+        (location) => location.folder_path === trimmedFolderPath || location.name === trimmedDatabaseName
+      ) ?? nextSettings.locations[nextSettings.locations.length - 1];
+      setSelectedLocationId(createdLocation?.id ?? "");
+      setDatabaseName("");
+      setFolderPath("");
+      setIsCreateFormOpen(false);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Could not create database.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function switchSelectedDatabase() {
+    if (!canSwitchDatabase || isSubmitting || !selectedLocation) return;
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      await switchToLocation(selectedLocation.id);
     } catch (error) {
       setError(error instanceof Error ? error.message : "Could not switch database.");
     } finally {
@@ -2083,48 +2094,25 @@ function DatabaseSwitchModal({
               />
             )}
           </DatabaseLocationGroup>
-          <DatabaseLocationGroup title="Available databases">
-            {availableLocations.length > 0 ? (
-              availableLocations.map((location) => (
-                <DatabaseLocationButton
-                  key={location.id}
-                  location={location}
-                  selected={selectedLocationId === location.id}
-                  onSelect={() => {
-                    setFolderPath("");
-                    setIsCreateFormOpen(false);
-                    setSelectedLocationId(location.id);
-                  }}
-                />
-              ))
-            ) : (
-              <div className="database-empty-state">
-                <Folder size={38} />
-                <strong>No other databases were found.</strong>
-                <span>Choose a folder where Mianotes can create a new database.</span>
-              </div>
-            )}
-            {!isCreateFormOpen ? (
-              <button
-                className="database-create-link"
-                type="button"
-                onClick={() => {
-                  setError(null);
-                  setSelectedLocationId("");
-                  setIsCreateFormOpen(true);
-                }}
-              >
-                <Plus size={14} />
-                Create a database
-              </button>
-            ) : (
-              <div className={`database-create-card ${shouldCreateDatabase ? "selected" : ""}`}>
+          {isCreateFormOpen ? (
+            <DatabaseLocationGroup title="Create Database">
+              <div className={`database-create-card ${canCreateDatabase ? "selected" : ""}`}>
                 <div className="database-create-icon">
                   <Folder size={22} />
                 </div>
-                <label className="database-path-field">
-                  <span>Folder path</span>
-                  <div className="database-path-row">
+                <div className="database-create-fields">
+                  <label className="database-path-field">
+                    <span>Name</span>
+                    <input
+                      value={databaseName}
+                      onChange={(event) => {
+                        setDatabaseName(event.target.value);
+                        setSelectedLocationId("");
+                      }}
+                    />
+                  </label>
+                  <label className="database-path-field">
+                    <span>Folder path</span>
                     <input
                       id="database-folder-path"
                       value={folderPath}
@@ -2134,21 +2122,58 @@ function DatabaseSwitchModal({
                         setSelectedLocationId("");
                       }}
                     />
-                  </div>
-                  <small>Mianotes will create mia.db in the selected folder.</small>
-                </label>
-                <button
-                  className="primary-button database-create-button"
-                  type="button"
-                  disabled={!shouldCreateDatabase || isSubmitting}
-                  onClick={() => void submit()}
-                >
-                  {isSubmitting && shouldCreateDatabase ? <Loader2 className="spin" size={16} /> : <Database size={16} />}
-                  Create database
-                </button>
+                    <small>Mianotes will create mia.db in the selected folder.</small>
+                  </label>
+                  <button
+                    className="primary-button database-create-button"
+                    type="button"
+                    disabled={!canCreateDatabase || isSubmitting}
+                    onClick={() => void createDatabaseLocation()}
+                  >
+                    {isSubmitting ? <Loader2 className="spin" size={16} /> : <Database size={16} />}
+                    Create database
+                  </button>
+                </div>
               </div>
-            )}
-          </DatabaseLocationGroup>
+            </DatabaseLocationGroup>
+          ) : (
+            <DatabaseLocationGroup title="Available databases">
+              {availableLocations.length > 0 ? (
+                availableLocations.map((location) => (
+                  <DatabaseLocationButton
+                    key={location.id}
+                    location={location}
+                    selected={selectedLocationId === location.id}
+                    onSelect={() => {
+                      setFolderPath("");
+                      setDatabaseName("");
+                      setSelectedLocationId(location.id);
+                    }}
+                  />
+                ))
+              ) : (
+                <div className="database-empty-state">
+                  <Folder size={38} />
+                  <strong>No other databases were found.</strong>
+                  <span>Create a database to add another workspace.</span>
+                </div>
+              )}
+              <button
+                className="database-create-link"
+                type="button"
+                onClick={() => {
+                  setError(null);
+                  setSelectedLocationId("");
+                  setDatabaseName("");
+                  setFolderPath("");
+                  setIsCreateFormOpen(true);
+                }}
+              >
+                <Plus size={14} />
+                Create a database
+              </button>
+            </DatabaseLocationGroup>
+          )}
         </div>
         <div className="folder-modal-actions database-modal-actions">
           <button className="secondary-action-button" type="button" onClick={onClose}>
@@ -2158,8 +2183,8 @@ function DatabaseSwitchModal({
             <button
               className="primary-button database-switch-button"
               type="button"
-              disabled={!canSubmit || isSubmitting}
-              onClick={() => void submit()}
+              disabled={!canSwitchDatabase || isSubmitting}
+              onClick={() => void switchSelectedDatabase()}
             >
               {isSubmitting ? <Loader2 className="spin" size={16} /> : <Database size={16} />}
               Switch database
@@ -2217,11 +2242,6 @@ function DatabaseLocationButton({
       {badge ? <span className="database-current-badge">{badge}</span> : null}
     </button>
   );
-}
-
-function databaseNameFromPath(path: string) {
-  const parts = path.replace(/\/$/, "").split("/");
-  return parts[parts.length - 1] || "New workspace";
 }
 
 function compactDatabasePath(path: string) {
