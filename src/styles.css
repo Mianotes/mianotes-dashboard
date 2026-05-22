@@ -3431,7 +3431,7 @@ textarea:focus {
   align-self: start;
   width: 24px;
   height: 24px;
-  margin-top: 2px;
+  margin-top: 4px;
   color: #a0a2aa;
 }
 
@@ -3495,7 +3495,7 @@ textarea:focus {
 
 .restore-row > svg {
   align-self: start;
-  margin-top: 2px;
+  margin-top: 4px;
   color: #9a9ba4;
 }
 
