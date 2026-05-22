@@ -3408,13 +3408,8 @@ textarea:focus {
   max-width: 960px;
   margin: 0;
   color: #9a9ba4;
-  font-size: 15px;
+  font-size: 14px;
   line-height: 1.5;
-}
-
-.settings-card-intro p strong {
-  color: #17181d;
-  font-weight: 700;
 }
 
 .settings-storage-card {
@@ -3425,14 +3420,18 @@ textarea:focus {
   display: grid;
   grid-template-columns: 44px 1fr auto;
   align-items: center;
-  gap: 12px;
+  gap: 0;
   min-height: 96px;
   margin: 0;
-  padding: 34px;
+  padding: 24px 34px;
   color: var(--slate-7);
 }
 
 .settings-storage-panel svg {
+  align-self: start;
+  width: 24px;
+  height: 24px;
+  margin-top: 2px;
   color: #a0a2aa;
 }
 
@@ -3475,13 +3474,13 @@ textarea:focus {
 }
 
 .settings-restore-card {
-  min-height: 368px;
+  min-height: 320px;
 }
 
 .restore-list {
   display: grid;
   gap: 28px;
-  padding: 34px;
+  padding: 24px 34px;
 }
 
 .restore-row {
@@ -3495,6 +3494,8 @@ textarea:focus {
 }
 
 .restore-row > svg {
+  align-self: start;
+  margin-top: 2px;
   color: #9a9ba4;
 }
 
@@ -3565,7 +3566,27 @@ textarea:focus {
 
 @media (max-width: 780px) {
   .settings-toolbar {
+    flex-wrap: nowrap;
+    min-height: 66px;
     padding: 0 16px;
+  }
+
+  .settings-toolbar .profile-toolbar-left {
+    flex: 1 1 auto;
+    min-width: 0;
+  }
+
+  .settings-toolbar .toolbar-actions {
+    flex: 0 0 auto;
+    width: auto;
+    gap: 0;
+    justify-content: flex-end;
+  }
+
+  .settings-toolbar .profile-toolbar-avatar {
+    width: 34px;
+    height: 34px;
+    margin-left: 0;
   }
 
   .settings-surface {

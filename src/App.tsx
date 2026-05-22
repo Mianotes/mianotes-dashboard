@@ -1893,14 +1893,14 @@ function SettingsScreen({
           )}
           <section className="settings-card settings-storage-card" aria-labelledby="settings-storage-title">
             <div className="settings-card-intro">
-              <h2 id="settings-storage-title">Database</h2>
+              <h2 id="settings-storage-title">Switch database</h2>
               <p>
-                <strong>Switch database</strong> Each database has its own notes, folders, users, settings, and agent activity.
-                Choose the database you want this instance to use.
+                Each database has its own notes, folders, users, settings, and agent activity. Choose the database you
+                want this instance to use.
               </p>
             </div>
             <div className="settings-storage-panel">
-              <Database size={30} />
+              <Database size={24} />
               <span>
                 <strong>{isLoadingStorageSettings ? "Loading database..." : databaseLabel}</strong>
                 <small>Current database</small>
@@ -1924,19 +1924,19 @@ function SettingsScreen({
             </div>
             {isLoadingArchivedFolders ? (
               <div className="settings-empty-state settings-restore-empty">
-                <Loader2 className="spin" size={18} />
+                <Loader2 className="spin" size={24} />
                 Loading archived folders...
               </div>
             ) : archivedFolders.length === 0 ? (
               <div className="settings-empty-state settings-restore-empty">
-                <History size={18} />
+                <History size={24} />
                 No archived folders yet.
               </div>
             ) : (
               <div className="restore-list">
                 {archivedFolders.map((folder) => (
                   <div className="restore-row" key={folder.id}>
-                    <Folder size={27} />
+                    <Folder size={24} />
                     <div className="restore-row-copy">
                       <strong>{folder.name}</strong>
                       <span>{folder.path ?? `Archived on ${formatSettingsDate(folder.archived_at)}`}</span>
