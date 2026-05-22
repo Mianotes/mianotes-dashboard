@@ -165,6 +165,42 @@ type StorageSwitchResponse = {
   session_ended: boolean;
 };
 
+type PublishThemeRecord = {
+  id: string;
+  name: string;
+  description: string;
+  version: string;
+};
+
+type PublishDraftRecord = {
+  theme: string;
+  folder_id?: string | null;
+  site_configuration: Record<string, unknown>;
+  navigation: Array<Record<string, unknown>>;
+  updated_notes: Array<Record<string, unknown>>;
+  generated_at: string;
+};
+
+type PublishPreviewRecord = {
+  theme: string;
+  folder_id?: string | null;
+  note_count: number;
+  output_path: string;
+};
+
+type PublishResultRecord = {
+  id: string;
+  theme: string;
+  version: string;
+  folder_id?: string | null;
+  note_count: number;
+  html_path: string;
+  markdown_path: string;
+  url_path: string;
+  site_url: string;
+  created_at: string;
+};
+
 type EmailCheckResponse = {
   user_id: string | null;
   is_first_user?: boolean;
@@ -181,7 +217,7 @@ type DashboardUiState = {
   currentPage: number;
 };
 
-type WorkspaceView = "notes" | "profile" | "settings";
+type WorkspaceView = "notes" | "profile" | "publish" | "settings";
 
 type NavigationSnapshot = DashboardUiState & {
   workspaceView: WorkspaceView;
@@ -623,6 +659,16 @@ export function App() {
     setIsAccountOpen(false);
     setIsSidebarOpen(false);
     window.scrollTo(0, 0);
+  }
+
+  function openPublish() {
+    clearSearch();
+    pushNavigationSnapshot();
+    setWorkspaceView("publish");
+    setOpenedNoteId(null);
+    setIsAccountOpen(false);
+    setIsSidebarOpen(false);
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }
 
   function handleDatabaseSwitched() {
@@ -1257,7 +1303,12 @@ export function App() {
             </div>
           </div>
 
-          <div className="sidebar-reserved-space" aria-hidden="true" />
+          <div className="sidebar-publish">
+            <button className="sidebar-publish-button" type="button" onClick={openPublish}>
+              <Upload size={17} />
+              <span>Publish</span>
+            </button>
+          </div>
         </aside>
 
         <section className="workspace">
@@ -1445,6 +1496,12 @@ export function App() {
               onOpenSettings={openSettings}
               onFoldersRestored={loadWorkspace}
               onDatabaseSwitched={handleDatabaseSwitched}
+            />
+          ) : workspaceView === "publish" ? (
+            <PublishScreen
+              folders={folders}
+              selectedFolderId={selectedFolderId}
+              onBack={goBack}
             />
           ) : workspaceView === "profile" ? (
             <ProfileScreen
@@ -1696,6 +1753,270 @@ function profileTags(user: UserRecord, notes: NoteRecord[], folders: FolderRecor
     note.tags?.forEach((tag) => tagMap.set(tag.id, tag));
   });
   return Array.from(tagMap.values()).sort((first, second) => first.name.localeCompare(second.name));
+}
+
+function prettyJson(value: unknown) {
+  return JSON.stringify(value, null, 2);
+}
+
+function parseJsonBlock<T>(label: string, value: string): T {
+  try {
+    return JSON.parse(value) as T;
+  } catch {
+    throw new Error(`${label} must be valid JSON.`);
+  }
+}
+
+function PublishScreen({
+  folders,
+  selectedFolderId,
+  onBack
+}: {
+  folders: FolderRecord[];
+  selectedFolderId: string | "all";
+  onBack: () => void;
+}) {
+  const [themes, setThemes] = useState<PublishThemeRecord[]>([]);
+  const [theme, setTheme] = useState("mianotes");
+  const [folderId, setFolderId] = useState<string | "all">(selectedFolderId);
+  const [siteConfig, setSiteConfig] = useState("{}");
+  const [navigation, setNavigation] = useState("[]");
+  const [updatedNotes, setUpdatedNotes] = useState("[]");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isPublishing, setIsPublishing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [preview, setPreview] = useState<PublishPreviewRecord | null>(null);
+  const [result, setResult] = useState<PublishResultRecord | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadThemes() {
+      try {
+        const items = await apiFetch<PublishThemeRecord[]>("/api/publish/themes");
+        if (cancelled) return;
+        setThemes(items);
+        setTheme((current) => (
+          items.some((item) => item.id === current) ? current : items[0]?.id ?? current
+        ));
+      } catch (caughtError) {
+        if (!cancelled) {
+          setError(caughtError instanceof Error ? caughtError.message : "Could not load publish themes.");
+        }
+      }
+    }
+
+    void loadThemes();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function loadDraft() {
+      setIsLoading(true);
+      setError(null);
+      setPreview(null);
+      setResult(null);
+      try {
+        const folderParam = folderId === "all" ? "" : `&folder_id=${encodeURIComponent(folderId)}`;
+        const draft = await apiFetch<PublishDraftRecord>(
+          `/api/publish/draft?theme=${encodeURIComponent(theme)}${folderParam}`
+        );
+        if (cancelled) return;
+        setSiteConfig(prettyJson(draft.site_configuration));
+        setNavigation(prettyJson(draft.navigation));
+        setUpdatedNotes(prettyJson(draft.updated_notes));
+      } catch (caughtError) {
+        if (!cancelled) {
+          setError(caughtError instanceof Error ? caughtError.message : "Could not prepare publish draft.");
+        }
+      } finally {
+        if (!cancelled) {
+          setIsLoading(false);
+        }
+      }
+    }
+
+    void loadDraft();
+    return () => {
+      cancelled = true;
+    };
+  }, [folderId, theme]);
+
+  function publishPayload() {
+    return {
+      folder_id: folderId === "all" ? null : folderId,
+      theme,
+      site_configuration: parseJsonBlock<Record<string, unknown>>("Site configuration", siteConfig),
+      navigation: parseJsonBlock<Array<Record<string, unknown>>>("Navigation", navigation),
+      updated_notes: parseJsonBlock<Array<Record<string, unknown>>>("Updated notes", updatedNotes)
+    };
+  }
+
+  async function previewSite() {
+    setError(null);
+    setResult(null);
+    try {
+      const payload = publishPayload();
+      const nextPreview = await apiFetch<PublishPreviewRecord>("/api/publish/preview", {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+      setPreview(nextPreview);
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : "Could not preview the static site.");
+    }
+  }
+
+  async function publishSite(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    setPreview(null);
+    setResult(null);
+    setIsPublishing(true);
+    try {
+      const payload = publishPayload();
+      const nextResult = await apiFetch<PublishResultRecord>("/api/publish", {
+        method: "POST",
+        body: JSON.stringify(payload)
+      });
+      setResult(nextResult);
+    } catch (caughtError) {
+      setError(caughtError instanceof Error ? caughtError.message : "Could not publish the static site.");
+    } finally {
+      setIsPublishing(false);
+    }
+  }
+
+  return (
+    <section className="publish-screen">
+      <header className="note-toolbar publish-toolbar">
+        <button className="icon-button back-button" type="button" aria-label="Back" onClick={onBack}>
+          <ChevronLeft size={18} />
+        </button>
+        <div className="breadcrumb publish-breadcrumb">
+          <span className="current">Publish</span>
+        </div>
+      </header>
+
+      <form className="publish-document" onSubmit={publishSite}>
+        {error && (
+          <div className="dashboard-notice publish-notice" role="alert">
+            <span>{error}</span>
+            <button type="button" aria-label="Dismiss message" onClick={() => setError(null)}>
+              <X size={14} />
+            </button>
+          </div>
+        )}
+
+        {preview && (
+          <div className="publish-status" role="status">
+            <strong>Preview ready</strong>
+            <span>{preview.note_count} notes will be written to {preview.output_path}.</span>
+          </div>
+        )}
+
+        {result && (
+          <div className="publish-status success" role="status">
+            <strong>Published</strong>
+            <span>{result.note_count} notes are available at <a href={mediaPath(result.site_url)} target="_blank" rel="noreferrer">the static site</a>.</span>
+          </div>
+        )}
+
+        <div className="publish-document-header">
+          <div>
+            <span className="publish-kicker">Static HTML</span>
+            <h1>Publish your notes</h1>
+            <p>
+              Review the generated configuration, navigation, and updated notes before
+              Mianotes builds a static HTML site.
+            </p>
+          </div>
+          <div className="publish-controls">
+            <label>
+              Theme
+              <select value={theme} onChange={(event) => setTheme(event.target.value)}>
+                {themes.map((item) => (
+                  <option value={item.id} key={item.id}>{item.name}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Folder
+              <select value={folderId} onChange={(event) => setFolderId(event.target.value)}>
+                <option value="all">All folders</option>
+                {folders.map((folder) => (
+                  <option value={folder.id} key={folder.id}>{folder.name}</option>
+                ))}
+              </select>
+            </label>
+          </div>
+        </div>
+
+        {isLoading ? (
+          <div className="publish-loading">
+            <Loader2 className="spin" size={24} />
+            <span>Preparing publish draft...</span>
+          </div>
+        ) : (
+          <div className="publish-blocks">
+            <JsonBlock
+              title="Site configuration"
+              value={siteConfig}
+              onChange={setSiteConfig}
+            />
+            <JsonBlock
+              title="Navigation"
+              value={navigation}
+              onChange={setNavigation}
+            />
+            <JsonBlock
+              title="Updated notes"
+              value={updatedNotes}
+              onChange={setUpdatedNotes}
+            />
+          </div>
+        )}
+
+        <footer className="publish-actions">
+          <button className="secondary-action" type="button" onClick={previewSite} disabled={isLoading || isPublishing}>
+            Preview
+          </button>
+          <button className="primary-action" type="submit" disabled={isLoading || isPublishing}>
+            {isPublishing ? <Loader2 className="spin" size={16} /> : <Upload size={16} />}
+            Publish site
+          </button>
+        </footer>
+      </form>
+    </section>
+  );
+}
+
+function JsonBlock({
+  title,
+  value,
+  onChange
+}: {
+  title: string;
+  value: string;
+  onChange: (value: string) => void;
+}) {
+  return (
+    <section className="json-block">
+      <header>
+        <h2>{title}</h2>
+        <span>JSON</span>
+      </header>
+      <textarea
+        spellCheck={false}
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+      />
+    </section>
+  );
 }
 
 
