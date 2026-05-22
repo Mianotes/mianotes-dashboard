@@ -2195,8 +2195,8 @@ button {
   min-width: 0;
   overflow: hidden;
   color: #202128;
-  font-size: 15px;
-  font-weight: 500;
+  font-size: 14px;
+  font-weight: 400;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
