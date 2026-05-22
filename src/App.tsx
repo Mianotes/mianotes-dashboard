@@ -119,6 +119,31 @@ type StorageCapacityRecord = {
   cache_expires_at: string;
 };
 
+type StorageLocationRecord = {
+  id: string;
+  name: string;
+  folder_path: string;
+  database_path: string;
+  is_active: boolean;
+  database_exists: boolean;
+  notes_count?: number | null;
+  users_count?: number | null;
+  last_updated_at?: string | null;
+};
+
+type StorageSettingsRecord = {
+  active_location: string;
+  database_file: string;
+  data_dir: string;
+  database_path: string;
+  locations: StorageLocationRecord[];
+};
+
+type StorageSwitchResponse = {
+  storage: StorageSettingsRecord;
+  session_ended: boolean;
+};
+
 type EmailCheckResponse = {
   user_id: string | null;
   is_first_user?: boolean;
@@ -577,6 +602,31 @@ export function App() {
     setIsAccountOpen(false);
     setIsSidebarOpen(false);
     window.scrollTo(0, 0);
+  }
+
+  function handleDatabaseSwitched() {
+    window.localStorage.removeItem(dashboardUiStateKey);
+    navigationStackRef.current = [];
+    setCurrentUser(null);
+    setUsers([]);
+    setFolders([]);
+    setTags([]);
+    setNotes([]);
+    setStorageCapacity(null);
+    setSelectedView("recent");
+    setSelectedUserId("all");
+    setSelectedFolderId("all");
+    setSelectedTag("all");
+    setOpenedNoteId(null);
+    setSearchQuery("");
+    setCurrentPage(1);
+    setIsWorkspaceLoaded(false);
+    setWorkspaceView("notes");
+    setProfileUserId("all");
+    setNoteIdToEditOnOpen(null);
+    setIsAccountOpen(false);
+    setIsSidebarOpen(false);
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }
 
   function openProfileTag(userId: string, tagSlug: string) {
@@ -1373,6 +1423,7 @@ export function App() {
               onOpenProfile={openProfile}
               onOpenSettings={openSettings}
               onFoldersRestored={loadWorkspace}
+              onDatabaseSwitched={handleDatabaseSwitched}
             />
           ) : workspaceView === "profile" ? (
             <ProfileScreen
@@ -1634,7 +1685,8 @@ function SettingsScreen({
   onSignOut,
   onOpenProfile,
   onOpenSettings,
-  onFoldersRestored
+  onFoldersRestored,
+  onDatabaseSwitched
 }: {
   currentUser: UserRecord;
   storageCapacity: StorageCapacityRecord | null;
@@ -1643,9 +1695,13 @@ function SettingsScreen({
   onOpenProfile: (profileId?: string | "all") => void;
   onOpenSettings: () => void;
   onFoldersRestored: () => void | Promise<void>;
+  onDatabaseSwitched: () => void;
 }) {
   const [archivedFolders, setArchivedFolders] = useState<FolderRecord[]>([]);
+  const [storageSettings, setStorageSettings] = useState<StorageSettingsRecord | null>(null);
   const [isLoadingArchivedFolders, setIsLoadingArchivedFolders] = useState(true);
+  const [isLoadingStorageSettings, setIsLoadingStorageSettings] = useState(true);
+  const [isDatabaseModalOpen, setIsDatabaseModalOpen] = useState(false);
   const [restoringFolderId, setRestoringFolderId] = useState<string | null>(null);
   const [settingsError, setSettingsError] = useState<string | null>(null);
   const [settingsMessage, setSettingsMessage] = useState<string | null>(null);
@@ -1654,6 +1710,7 @@ function SettingsScreen({
 
   useEffect(() => {
     void loadArchivedFolders();
+    void loadStorageSettings();
   }, []);
 
   useEffect(() => {
@@ -1697,6 +1754,18 @@ function SettingsScreen({
     }
   }
 
+  async function loadStorageSettings() {
+    setIsLoadingStorageSettings(true);
+    try {
+      const settings = await apiFetch<StorageSettingsRecord>("/api/settings/storage");
+      setStorageSettings(settings);
+    } catch (error) {
+      setSettingsError(error instanceof Error ? error.message : "Could not load database settings.");
+    } finally {
+      setIsLoadingStorageSettings(false);
+    }
+  }
+
   async function restoreFolder(folder: FolderRecord) {
     setRestoringFolderId(folder.id);
     setSettingsError(null);
@@ -1716,8 +1785,8 @@ function SettingsScreen({
     }
   }
 
-  const dataDirName = storageCapacity?.data_dir?.replace(/\/$/, "").split("/").pop() || "data";
-  const databasePath = `${dataDirName}/mia.db`;
+  const databasePath = storageSettings?.database_path ?? `${storageCapacity?.data_dir ?? "data"}/mia.db`;
+  const databaseLabel = databasePath.replace(/\/$/, "").split("/").slice(-2).join("/");
 
   return (
     <>
@@ -1826,16 +1895,23 @@ function SettingsScreen({
             <div className="settings-card-intro">
               <h2 id="settings-storage-title">Database</h2>
               <p>
-                Choose the folder that contains the Mianotes database for this instance. If mia.db is missing, Mianotes
-                creates a new empty database and the dashboard starts with no notes.
+                Switch database. Each database has its own notes, folders, users, settings, and agent activity.
+                Choose the database you want this instance to use.
               </p>
             </div>
             <div className="settings-storage-panel">
               <Database size={30} />
-              <strong>{databasePath}</strong>
-              <span className="settings-text-action disabled" aria-disabled="true">
-                Choose folder
+              <span>
+                <strong>{isLoadingStorageSettings ? "Loading database..." : databaseLabel}</strong>
+                <small>Current database</small>
               </span>
+              <button
+                className="settings-text-action"
+                type="button"
+                onClick={() => setIsDatabaseModalOpen(true)}
+              >
+                Change database
+              </button>
             </div>
           </section>
           <section className="settings-card settings-restore-card" aria-labelledby="settings-restore-title">
@@ -1881,8 +1957,239 @@ function SettingsScreen({
           </section>
         </div>
       </section>
+      {isDatabaseModalOpen && storageSettings && (
+        <DatabaseSwitchModal
+          storageSettings={storageSettings}
+          onClose={() => setIsDatabaseModalOpen(false)}
+          onSettingsChanged={setStorageSettings}
+          onDatabaseSwitched={onDatabaseSwitched}
+        />
+      )}
     </>
   );
+}
+
+function DatabaseSwitchModal({
+  storageSettings,
+  onClose,
+  onSettingsChanged,
+  onDatabaseSwitched
+}: {
+  storageSettings: StorageSettingsRecord;
+  onClose: () => void;
+  onSettingsChanged: (settings: StorageSettingsRecord) => void;
+  onDatabaseSwitched: () => void;
+}) {
+  const [selectedLocationId, setSelectedLocationId] = useState(storageSettings.active_location);
+  const [folderPath, setFolderPath] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const activeLocation = storageSettings.locations.find((location) => location.is_active)
+    ?? storageSettings.locations[0];
+  const availableLocations = storageSettings.locations.filter((location) => !location.is_active);
+  const selectedLocation = storageSettings.locations.find((location) => location.id === selectedLocationId);
+  const trimmedFolderPath = folderPath.trim();
+  const shouldCreateDatabase = Boolean(trimmedFolderPath);
+  const canSubmit = shouldCreateDatabase || Boolean(selectedLocation && !selectedLocation.is_active);
+  const primaryLabel = shouldCreateDatabase ? "Create database" : "Switch database";
+
+  async function switchToLocation(locationId: string) {
+    await apiFetch<StorageSwitchResponse>("/api/settings/storage/active", {
+      method: "PATCH",
+      body: JSON.stringify({ location_id: locationId })
+    });
+    onDatabaseSwitched();
+  }
+
+  async function submit() {
+    if (!canSubmit || isSubmitting) return;
+    setIsSubmitting(true);
+    setError(null);
+    try {
+      if (shouldCreateDatabase) {
+        const name = databaseNameFromPath(trimmedFolderPath);
+        const nextSettings = await apiFetch<StorageSettingsRecord>("/api/settings/storage/locations", {
+          method: "POST",
+          body: JSON.stringify({ name, folder_path: trimmedFolderPath })
+        });
+        onSettingsChanged(nextSettings);
+        const createdLocation = nextSettings.locations.find(
+          (location) => location.folder_path === trimmedFolderPath || location.name === name
+        ) ?? nextSettings.locations[nextSettings.locations.length - 1];
+        await switchToLocation(createdLocation.id);
+        return;
+      }
+      if (selectedLocation) {
+        await switchToLocation(selectedLocation.id);
+      }
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Could not switch database.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  return (
+    <div className="modal-backdrop" role="presentation" onClick={onClose}>
+      <section
+        className="modal folder-modal database-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="database-switch-title"
+        onClick={(event) => event.stopPropagation()}
+      >
+        <div className="folder-modal-header database-modal-header">
+          <div>
+            <h2 id="database-switch-title">Switch database</h2>
+            <p>
+              Each database has its own notes, folders, users, settings, and agent activity. Choose a database or
+              create a new one.
+            </p>
+          </div>
+          <button className="icon-button" type="button" aria-label="Close" onClick={onClose}>
+            <X size={18} />
+          </button>
+        </div>
+        <div className="folder-modal-body database-modal-body">
+          {error && <div className="modal-notice danger">{error}</div>}
+          <DatabaseLocationGroup title="Current database">
+            {activeLocation && (
+              <DatabaseLocationButton
+                location={activeLocation}
+                selected
+                badge="Current database"
+                onSelect={() => setSelectedLocationId(activeLocation.id)}
+              />
+            )}
+          </DatabaseLocationGroup>
+          <DatabaseLocationGroup title={availableLocations.length > 0 ? "Available databases" : "Create a new database"}>
+            {availableLocations.length > 0 ? (
+              availableLocations.map((location) => (
+                <DatabaseLocationButton
+                  key={location.id}
+                  location={location}
+                  selected={selectedLocationId === location.id}
+                  onSelect={() => {
+                    setFolderPath("");
+                    setSelectedLocationId(location.id);
+                  }}
+                />
+              ))
+            ) : (
+              <div className="database-empty-state">
+                <Folder size={38} />
+                <strong>No other databases were found.</strong>
+                <span>Create a new Mianotes database in an allowed folder.</span>
+              </div>
+            )}
+            <div className={`database-create-card ${shouldCreateDatabase ? "selected" : ""}`}>
+              <div className="database-create-icon">
+                <Folder size={22} />
+              </div>
+              <label className="database-path-field">
+                <span>Folder path</span>
+                <div className="database-path-row">
+                  <input
+                    id="database-folder-path"
+                    value={folderPath}
+                    placeholder="/path/to/folder"
+                    onChange={(event) => {
+                      setFolderPath(event.target.value);
+                      setSelectedLocationId("");
+                    }}
+                  />
+                  <button type="button" onClick={() => document.getElementById("database-folder-path")?.focus()}>
+                    Browse
+                  </button>
+                </div>
+                <small>Mianotes will create mia.db in the selected folder.</small>
+              </label>
+            </div>
+          </DatabaseLocationGroup>
+        </div>
+        <div className="folder-modal-actions database-modal-actions">
+          <button className="secondary-action-button" type="button" onClick={onClose}>
+            Cancel
+          </button>
+          <button
+            className="primary-action-button"
+            type="button"
+            disabled={!canSubmit || isSubmitting}
+            onClick={() => void submit()}
+          >
+            {isSubmitting ? <Loader2 className="spin" size={16} /> : <Database size={16} />}
+            {primaryLabel}
+          </button>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function DatabaseLocationGroup({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className="database-location-group">
+      <h3>{title}</h3>
+      {children}
+    </div>
+  );
+}
+
+function DatabaseLocationButton({
+  location,
+  selected,
+  badge,
+  onSelect
+}: {
+  location: StorageLocationRecord;
+  selected: boolean;
+  badge?: string;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      className={`database-location-row ${selected ? "selected" : ""}`}
+      type="button"
+      onClick={onSelect}
+    >
+      <span className={`database-radio ${selected ? "selected" : ""}`} />
+      <Database size={26} />
+      <span className="database-location-copy">
+        <strong>{location.name}</strong>
+        <small>{compactDatabasePath(location.database_path)}</small>
+        {!location.database_exists ? (
+          <small>mia.db does not exist yet. Mianotes will create it when selected.</small>
+        ) : (
+          <small>{databaseStatsText(location)}</small>
+        )}
+      </span>
+      {badge ? <span className="database-current-badge">{badge}</span> : <ChevronRight size={18} />}
+    </button>
+  );
+}
+
+function databaseNameFromPath(path: string) {
+  const parts = path.replace(/\/$/, "").split("/");
+  return parts[parts.length - 1] || "New workspace";
+}
+
+function compactDatabasePath(path: string) {
+  const parts = path.split("/");
+  return parts.length > 3 ? parts.slice(-3).join("/") : path;
+}
+
+function databaseStatsText(location: StorageLocationRecord) {
+  const bits = [];
+  if (typeof location.notes_count === "number") {
+    bits.push(`${location.notes_count} note${location.notes_count === 1 ? "" : "s"}`);
+  }
+  if (typeof location.users_count === "number") {
+    bits.push(`${location.users_count} user${location.users_count === 1 ? "" : "s"}`);
+  }
+  if (location.last_updated_at) {
+    bits.push(`Last updated ${new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric" }).format(new Date(location.last_updated_at))}`);
+  }
+  return bits.join("  •  ") || "Ready to use";
 }
 
 function ProfileScreen({
@@ -3430,7 +3737,7 @@ function NotePanel({
       )}
       <div className="note-section-divider" />
       <section className="comments-box">
-        <h3>Ask Mia</h3>
+        <h3>Prompt</h3>
         {isIndexingNote && (
           <p className="mia-disabled-note">
             Mia is still indexing this note. You can ask questions once the content is ready.

@@ -2714,6 +2714,202 @@ textarea:focus {
   background: #f7f7f8;
 }
 
+.database-modal {
+  width: min(560px, calc(100vw - 32px));
+}
+
+.database-modal-body {
+  gap: 22px;
+}
+
+.database-location-group {
+  display: grid;
+  gap: 8px;
+}
+
+.database-location-group h3 {
+  margin: 0 0 4px;
+  color: #17181d;
+  font-size: 13px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.database-location-row {
+  display: grid;
+  grid-template-columns: 18px 32px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 13px;
+  width: 100%;
+  min-height: 76px;
+  padding: 12px 14px;
+  border: 1px solid #dedfe5;
+  border-radius: 8px;
+  color: #4c4e58;
+  background: #ffffff;
+  text-align: left;
+}
+
+.database-location-row:hover {
+  border-color: #c2c4ce;
+}
+
+.database-location-row.selected {
+  border-color: #bcd4ff;
+  background: #f4f8ff;
+}
+
+.database-radio {
+  width: 14px;
+  height: 14px;
+  border: 2px solid #a8abb5;
+  border-radius: 999px;
+}
+
+.database-radio.selected {
+  border: 5px solid #2f77ff;
+}
+
+.database-location-row > svg {
+  color: #737681;
+}
+
+.database-location-copy {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.database-location-copy strong {
+  overflow: hidden;
+  color: #17181d;
+  font-size: 14px;
+  line-height: 1.2;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.database-location-copy small {
+  overflow: hidden;
+  color: #636672;
+  font-size: 12px;
+  line-height: 1.25;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.database-current-badge {
+  padding: 5px 8px;
+  border: 1px solid #cce0ff;
+  border-radius: 6px;
+  color: #1d63e9;
+  background: #eaf2ff;
+  font-size: 11px;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.database-empty-state {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  padding: 28px 18px;
+  border: 1px dashed #d7d9e1;
+  border-radius: 10px;
+  color: #777a85;
+  text-align: center;
+}
+
+.database-empty-state svg {
+  color: #b7bac4;
+}
+
+.database-empty-state strong {
+  color: #4c4e58;
+  font-size: 13px;
+}
+
+.database-empty-state span {
+  max-width: 270px;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.database-create-card {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  gap: 14px;
+  margin-top: 8px;
+  padding: 18px;
+  border: 1px dashed #d2d4dc;
+  border-radius: 10px;
+  background: #ffffff;
+}
+
+.database-create-card.selected {
+  border-color: #bcd4ff;
+  background: #f7fbff;
+}
+
+.database-create-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 999px;
+  color: #2f77ff;
+  background: #edf4ff;
+}
+
+.database-path-field {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+
+.database-path-field > span {
+  color: #2c2e37;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.database-path-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.database-path-row input {
+  min-width: 0;
+}
+
+.database-path-row button {
+  min-height: 38px;
+  padding: 0 14px;
+  border: 1px solid #d7d9e1;
+  border-radius: 7px;
+  color: #30323b;
+  background: #ffffff;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.database-path-row button:hover {
+  border-color: #bfc1ca;
+}
+
+.database-path-field small {
+  color: #666975;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.database-modal-actions {
+  border-top: 1px solid #e0e1e7;
+}
+
 .spin {
   animation: spin 900ms linear infinite;
 }
@@ -3226,17 +3422,36 @@ textarea:focus {
 }
 
 .settings-storage-panel strong {
+  display: block;
   color: var(--ink);
   font-size: 18px;
   line-height: 1.2;
   font-weight: 700;
 }
 
+.settings-storage-panel small {
+  display: block;
+  margin-top: 5px;
+  color: #8d8f98;
+  font-size: 13px;
+  line-height: 1.2;
+}
+
 .settings-text-action {
   justify-self: end;
-  color: #9a9ba4;
+  min-height: 36px;
+  padding: 0 16px;
+  border: 1px solid #dedfe5;
+  border-radius: 8px;
+  color: #363842;
+  background: #ffffff;
   font-size: 14px;
   font-weight: 600;
+}
+
+.settings-text-action:hover {
+  border-color: #bfc1ca;
+  color: #17181d;
 }
 
 .settings-text-action.disabled {
