@@ -37,6 +37,7 @@ import {
 import { forwardRef } from "react";
 import { cpp } from "@codemirror/lang-cpp";
 import { css } from "@codemirror/lang-css";
+import { go } from "@codemirror/lang-go";
 import { java } from "@codemirror/lang-java";
 import { javascript } from "@codemirror/lang-javascript";
 import { php } from "@codemirror/lang-php";
@@ -59,6 +60,7 @@ const codeBlockLanguages = [
   { name: "Ruby", alias: ["ruby", "rb"], support: StreamLanguage.define(ruby) },
   { name: "PHP", alias: ["php"], support: php({ plain: true }) },
   { name: "Java", alias: ["java"], support: java() },
+  { name: "Go", alias: ["go", "golang"], support: go() },
   { name: "C++", alias: ["cpp", "c++", "cc", "cxx"], support: cpp() },
   { name: "C#", alias: ["csharp", "c#", "cs"], support: StreamLanguage.define(csharp) },
   { name: "SQL", alias: ["sql"], support: sql() }

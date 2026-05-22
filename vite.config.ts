@@ -3,6 +3,11 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
+  resolve: {
+    alias: {
+      "@codemirror/language-data": new URL("./src/codemirrorLanguageDataShim.ts", import.meta.url).pathname
+    }
+  },
   build: {
     chunkSizeWarningLimit: 700
   },
