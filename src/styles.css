@@ -160,6 +160,11 @@ button {
   color: #7b7c86;
 }
 
+.nav-item .pin-icon {
+  fill: currentColor;
+  stroke: none;
+}
+
 .nav-item small {
   min-width: 24px;
   padding: 3px 7px;

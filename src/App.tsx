@@ -45,6 +45,7 @@ function PinIcon({ size = 18 }: { size?: number }) {
   return (
     <svg
       aria-hidden="true"
+      className="pin-icon"
       width={size}
       height={size}
       viewBox="0 0 24 24"
@@ -52,7 +53,7 @@ function PinIcon({ size = 18 }: { size?: number }) {
     >
       <path
         fill="currentColor"
-        d="M7 2h10v2h-1v7.15L18 13v2h-5.2v7h-1.6v-7H6v-2l2-1.85V4H7V2Zm3 2v8.05L8.98 13h6.04L14 12.05V4h-4Z"
+        d="M8 2h8v2h-1v7.1l3 2.9v2h-5v6h-2v-6H6v-2l3-2.9V4H8V2Z"
       />
     </svg>
   );
