@@ -2004,7 +2004,7 @@ function DatabaseSwitchModal({
   const [selectedLocationId, setSelectedLocationId] = useState("");
   const [databaseName, setDatabaseName] = useState("");
   const [folderPath, setFolderPath] = useState("");
-  const [isCreateFormOpen, setIsCreateFormOpen] = useState(true);
+  const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const activeLocation = storageSettings.locations.find((location) => location.is_active)
