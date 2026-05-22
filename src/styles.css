@@ -190,7 +190,6 @@ button {
 
 .folder-more-button:hover {
   color: #202128;
-  background: #ffffff;
 }
 
 .folder-actions-menu:has(.folder-actions-popover) .folder-note-count {
