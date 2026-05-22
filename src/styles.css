@@ -3536,7 +3536,7 @@ textarea:focus {
 
 .settings-storage-panel {
   display: grid;
-  grid-template-columns: 44px 1fr auto;
+  grid-template-columns: 38px 1fr auto;
   align-items: center;
   gap: 0;
   min-height: 96px;
@@ -3547,9 +3547,9 @@ textarea:focus {
 
 .settings-storage-panel svg {
   align-self: start;
-  width: 24px;
-  height: 24px;
-  margin-top: 4px;
+  width: 19px;
+  height: 19px;
+  margin-top: 5px;
   color: #a0a2aa;
 }
 
@@ -3603,7 +3603,7 @@ textarea:focus {
 
 .restore-row {
   display: grid;
-  grid-template-columns: 42px minmax(0, 1fr) auto;
+  grid-template-columns: 38px minmax(0, 1fr);
   align-items: center;
   gap: 0;
   min-height: 54px;
@@ -3613,7 +3613,9 @@ textarea:focus {
 
 .restore-row > svg {
   align-self: start;
-  margin-top: 4px;
+  width: 19px;
+  height: 19px;
+  margin-top: 5px;
   color: #9a9ba4;
 }
 
@@ -3731,10 +3733,7 @@ textarea:focus {
 }
 
 .publish-document-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 28px;
+  display: block;
   padding-bottom: 28px;
   border-bottom: 1px solid #e3e4e8;
 }
@@ -3766,9 +3765,12 @@ textarea:focus {
 
 .publish-controls {
   display: grid;
-  grid-template-columns: repeat(2, minmax(150px, 1fr));
+  grid-template-columns: repeat(3, minmax(150px, 1fr)) auto;
+  align-items: end;
   gap: 12px;
-  min-width: 330px;
+  min-width: 0;
+  padding: 20px 0 24px;
+  border-bottom: 1px solid #e3e4e8;
 }
 
 .publish-controls label {
@@ -3791,6 +3793,10 @@ textarea:focus {
   text-transform: none;
 }
 
+.publish-controls .primary-action {
+  min-width: 118px;
+}
+
 .publish-loading {
   display: flex;
   align-items: center;
@@ -3798,6 +3804,13 @@ textarea:focus {
   padding: 40px 0;
   color: #747581;
   font-size: 14px;
+}
+
+.publish-prompt {
+  padding: 32px 0;
+  color: #747581;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .publish-blocks {
@@ -3828,6 +3841,14 @@ textarea:focus {
   color: #1f2026;
   font-size: 15px;
   line-height: 1.3;
+}
+
+.json-block p {
+  margin: 4px 0 0;
+  color: #747581;
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.45;
 }
 
 .json-block header span {
@@ -3917,8 +3938,7 @@ textarea:focus {
   }
 
   .publish-document-header {
-    display: grid;
-    gap: 18px;
+    padding-bottom: 22px;
   }
 
   .publish-document-header h1 {
