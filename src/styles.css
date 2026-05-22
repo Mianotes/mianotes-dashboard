@@ -2677,6 +2677,11 @@ textarea:focus {
   line-height: 1.4;
 }
 
+.modal-notice.danger {
+  color: #8f2931;
+  background: #fde2e6;
+}
+
 .segmented {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -2903,6 +2908,12 @@ textarea:focus {
   color: #666975;
   font-size: 12px;
   line-height: 1.35;
+}
+
+.database-create-button {
+  grid-column: 2;
+  justify-self: end;
+  min-width: 168px;
 }
 
 .database-modal-actions {
@@ -3368,7 +3379,7 @@ textarea:focus {
 .settings-content > h1 {
   margin: 0 0 26px;
   color: var(--ink);
-  font-size: 34px;
+  font-size: 28px;
   line-height: 1.05;
   font-weight: 700;
 }
@@ -3399,6 +3410,11 @@ textarea:focus {
   color: #9a9ba4;
   font-size: 15px;
   line-height: 1.5;
+}
+
+.settings-card-intro p strong {
+  color: #17181d;
+  font-weight: 700;
 }
 
 .settings-storage-card {
@@ -3557,7 +3573,7 @@ textarea:focus {
   }
 
   .settings-content > h1 {
-    font-size: 28px;
+    font-size: 24px;
   }
 
   .settings-card-intro {

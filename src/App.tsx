@@ -1895,7 +1895,7 @@ function SettingsScreen({
             <div className="settings-card-intro">
               <h2 id="settings-storage-title">Database</h2>
               <p>
-                Switch database. Each database has its own notes, folders, users, settings, and agent activity.
+                <strong>Switch database</strong> Each database has its own notes, folders, users, settings, and agent activity.
                 Choose the database you want this instance to use.
               </p>
             </div>
@@ -1991,7 +1991,7 @@ function DatabaseSwitchModal({
   const trimmedFolderPath = folderPath.trim();
   const shouldCreateDatabase = Boolean(trimmedFolderPath);
   const canSubmit = shouldCreateDatabase || Boolean(selectedLocation && !selectedLocation.is_active);
-  const primaryLabel = shouldCreateDatabase ? "Create database" : "Switch database";
+  const showSwitchAction = availableLocations.length > 0 && !shouldCreateDatabase;
 
   async function switchToLocation(locationId: string) {
     await apiFetch<StorageSwitchResponse>("/api/settings/storage/active", {
@@ -2079,7 +2079,7 @@ function DatabaseSwitchModal({
               <div className="database-empty-state">
                 <Folder size={38} />
                 <strong>No other databases were found.</strong>
-                <span>Create a new Mianotes database in an allowed folder.</span>
+                <span>Choose a folder where Mianotes can create a new database.</span>
               </div>
             )}
             <div className={`database-create-card ${shouldCreateDatabase ? "selected" : ""}`}>
@@ -2104,6 +2104,15 @@ function DatabaseSwitchModal({
                 </div>
                 <small>Mianotes will create mia.db in the selected folder.</small>
               </label>
+              <button
+                className="primary-action-button database-create-button"
+                type="button"
+                disabled={!shouldCreateDatabase || isSubmitting}
+                onClick={() => void submit()}
+              >
+                {isSubmitting && shouldCreateDatabase ? <Loader2 className="spin" size={16} /> : <Database size={16} />}
+                Create database
+              </button>
             </div>
           </DatabaseLocationGroup>
         </div>
@@ -2111,15 +2120,17 @@ function DatabaseSwitchModal({
           <button className="secondary-action-button" type="button" onClick={onClose}>
             Cancel
           </button>
-          <button
-            className="primary-action-button"
-            type="button"
-            disabled={!canSubmit || isSubmitting}
-            onClick={() => void submit()}
-          >
-            {isSubmitting ? <Loader2 className="spin" size={16} /> : <Database size={16} />}
-            {primaryLabel}
-          </button>
+          {showSwitchAction && (
+            <button
+              className="primary-action-button"
+              type="button"
+              disabled={!canSubmit || isSubmitting}
+              onClick={() => void submit()}
+            >
+              {isSubmitting ? <Loader2 className="spin" size={16} /> : <Database size={16} />}
+              Switch database
+            </button>
+          )}
         </div>
       </section>
     </div>
