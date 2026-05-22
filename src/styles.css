@@ -3517,7 +3517,7 @@ textarea:focus {
   display: grid;
   grid-template-columns: 42px minmax(0, 1fr) auto;
   align-items: center;
-  gap: 12px;
+  gap: 0;
   min-height: 54px;
   padding: 0;
   background: transparent;
