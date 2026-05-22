@@ -2763,6 +2763,15 @@ textarea:focus {
   border-color: #c2c4ce;
 }
 
+.database-location-row:disabled {
+  cursor: default;
+  opacity: 1;
+}
+
+.database-location-row:disabled:hover {
+  border-color: #dedfe5;
+}
+
 .database-location-row.selected {
   border-color: #bcd4ff;
   background: #f4f8ff;
@@ -2845,6 +2854,28 @@ textarea:focus {
   line-height: 1.45;
 }
 
+.database-create-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  justify-self: start;
+  min-height: 32px;
+  margin-top: 2px;
+  padding: 0;
+  border: 0;
+  color: #2c2e37;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.database-create-link:hover {
+  color: #000000;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .database-create-card {
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr);
@@ -2923,6 +2954,11 @@ textarea:focus {
 
 .database-modal-actions {
   border-top: 1px solid #e0e1e7;
+}
+
+.database-modal-actions .database-switch-button {
+  min-width: 176px;
+  justify-content: center;
 }
 
 .spin {
