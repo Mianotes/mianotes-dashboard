@@ -1,4 +1,5 @@
 :root {
+  --ink: #18181c;
   --slate-2: #f5f5f7;
   --slate-7: #a0a1aa;
   --slate-8: #858691;
@@ -161,8 +162,8 @@ button {
 }
 
 .nav-item .pin-icon {
-  fill: currentColor;
-  stroke: none;
+  fill: none;
+  stroke: currentColor;
 }
 
 .nav-item small {
@@ -2788,6 +2789,10 @@ textarea:focus {
   border: 5px solid #2f77ff;
 }
 
+.database-radio-hidden {
+  visibility: hidden;
+}
+
 .database-location-row > svg {
   color: #737681;
 }
@@ -2916,28 +2921,12 @@ textarea:focus {
 }
 
 .database-path-row {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  gap: 8px;
+  display: block;
 }
 
 .database-path-row input {
+  width: 100%;
   min-width: 0;
-}
-
-.database-path-row button {
-  min-height: 38px;
-  padding: 0 14px;
-  border: 1px solid #d7d9e1;
-  border-radius: 7px;
-  color: #30323b;
-  background: #ffffff;
-  font-size: 13px;
-  font-weight: 600;
-}
-
-.database-path-row button:hover {
-  border-color: #bfc1ca;
 }
 
 .database-path-field small {

@@ -52,8 +52,12 @@ function PinIcon({ size = 18 }: { size?: number }) {
       xmlns="http://www.w3.org/2000/svg"
     >
       <path
-        fill="currentColor"
-        d="M8 2h8v2h-1v7.1l3 2.9v2h-5v6h-2v-6H6v-2l3-2.9V4H8V2Z"
+        d="M8 3h8l-1.4 2v6.5l3.4 3.1V17h-5v4l-1 1-1-1v-4H6v-2.4l3.4-3.1V5L8 3Z"
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="2"
       />
     </svg>
   );
@@ -2130,9 +2134,6 @@ function DatabaseSwitchModal({
                         setSelectedLocationId("");
                       }}
                     />
-                    <button type="button" onClick={() => document.getElementById("database-folder-path")?.focus()}>
-                      Browse
-                    </button>
                   </div>
                   <small>Mianotes will create mia.db in the selected folder.</small>
                 </label>
@@ -2190,14 +2191,19 @@ function DatabaseLocationButton({
   badge?: string;
   onSelect?: () => void;
 }) {
+  const isInteractive = Boolean(onSelect);
+
   return (
     <button
-      className={`database-location-row ${selected ? "selected" : ""}`}
+      className={`database-location-row ${selected ? "selected" : ""} ${isInteractive ? "" : "read-only"}`}
       type="button"
-      disabled={!onSelect}
+      disabled={!isInteractive}
       onClick={onSelect}
     >
-      <span className={`database-radio ${selected ? "selected" : ""}`} />
+      <span
+        className={`database-radio ${selected ? "selected" : ""} ${isInteractive ? "" : "database-radio-hidden"}`}
+        aria-hidden={!isInteractive}
+      />
       <Database size={26} />
       <span className="database-location-copy">
         <strong>{location.name}</strong>
