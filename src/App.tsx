@@ -48,12 +48,11 @@ function PinIcon({ size = 18 }: { size?: number }) {
       width={size}
       height={size}
       viewBox="0 0 24 24"
-      fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
       <path
         fill="currentColor"
-        d="M8.25 3a1 1 0 0 1 1-1h5.5a1 1 0 0 1 1 1v1.25h.75a1 1 0 1 1 0 2h-.75v3.08l2.7 2.7a1 1 0 0 1-.7 1.71H13v6.26a1 1 0 1 1-2 0v-6.26H6.26a1 1 0 0 1-.7-1.7l2.69-2.7V6.25H7.5a1 1 0 0 1 0-2h.75V3Zm2 3.25v3.5c0 .27-.11.52-.29.71l-1.28 1.28h6.64l-1.28-1.28a1 1 0 0 1-.29-.7V6.25h-3.5Z"
+        d="M7 2h10v2h-1v7.15L18 13v2h-5.2v7h-1.6v-7H6v-2l2-1.85V4H7V2Zm3 2v8.05L8.98 13h6.04L14 12.05V4h-4Z"
       />
     </svg>
   );
