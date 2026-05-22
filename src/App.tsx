@@ -3194,6 +3194,9 @@ function NotePanel({
         body: JSON.stringify({ text: nextText })
       });
       setDraftText(nextText);
+      if (isEditing) {
+        markdownEditorRef.current?.setMarkdown(nextText);
+      }
       setMiaResponse(null);
       setMiaError(null);
       await onRefresh();
