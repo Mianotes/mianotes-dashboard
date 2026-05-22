@@ -3148,3 +3148,169 @@ textarea:focus {
     display: none;
   }
 }
+
+.settings-surface {
+  min-height: 620px;
+  padding: 28px 32px 72px;
+  background: #fbfbfc;
+}
+
+.settings-page-section {
+  max-width: 1180px;
+  margin: 0 auto 42px;
+}
+
+.settings-page-section h1 {
+  margin: 0 0 22px;
+  color: var(--ink);
+  font-size: 28px;
+  line-height: 1.1;
+}
+
+.settings-section-copy {
+  margin: -10px 0 24px;
+  color: var(--slate-7);
+  font-size: 15px;
+}
+
+.settings-card {
+  overflow: hidden;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  background: #fff;
+}
+
+.settings-card-header {
+  padding: 24px 28px;
+  border-bottom: 1px solid var(--line);
+}
+
+.settings-card-header h2 {
+  margin: 0 0 6px;
+  color: var(--ink);
+  font-size: 18px;
+}
+
+.settings-card-header p {
+  margin: 0;
+  color: var(--slate-7);
+  font-size: 14px;
+}
+
+.settings-card-body {
+  padding: 28px;
+}
+
+.settings-storage-row,
+.restore-row {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  padding: 22px 24px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+}
+
+.settings-storage-row svg,
+.restore-row > svg {
+  flex: 0 0 auto;
+  color: var(--slate-7);
+}
+
+.settings-storage-row strong,
+.restore-row-copy strong {
+  display: block;
+  color: var(--ink);
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.settings-storage-row span,
+.restore-row-copy span {
+  display: block;
+  margin-top: 4px;
+  color: var(--slate-7);
+  font-size: 14px;
+}
+
+.settings-muted-action {
+  margin-left: auto;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.restore-list {
+  display: grid;
+  gap: 12px;
+}
+
+.restore-row-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.restore-row-copy span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.restore-action {
+  min-width: 118px;
+  justify-content: center;
+}
+
+.settings-empty-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 28px;
+  border: 1px dashed var(--line);
+  border-radius: 12px;
+  color: var(--slate-7);
+  text-align: center;
+}
+
+.settings-notice {
+  max-width: 1180px;
+  margin: 0 auto 18px;
+}
+
+.dashboard-notice.success {
+  border-color: #b7e4c4;
+  color: #1d6b35;
+  background: #eaf8ef;
+}
+
+@media (max-width: 780px) {
+  .settings-surface {
+    padding: 20px 16px 48px;
+  }
+
+  .settings-page-section h1 {
+    font-size: 24px;
+  }
+
+  .settings-card-body,
+  .settings-card-header {
+    padding: 20px;
+  }
+
+  .settings-storage-row,
+  .restore-row {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    padding: 18px;
+  }
+
+  .settings-muted-action {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .restore-action {
+    width: 100%;
+  }
+}

@@ -5,6 +5,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock3,
+  Database,
   Edit3,
   Eye,
   File,
@@ -57,8 +58,10 @@ type FolderRecord = {
   user_id: string;
   name: string;
   slug: string;
+  path?: string | null;
   is_pinned: boolean;
   archived_at: string | null;
+  archived_by_user_id?: string | null;
 };
 
 type TagRecord = {
@@ -132,8 +135,10 @@ type DashboardUiState = {
   currentPage: number;
 };
 
+type WorkspaceView = "notes" | "profile" | "settings";
+
 type NavigationSnapshot = DashboardUiState & {
-  workspaceView: "notes" | "profile";
+  workspaceView: WorkspaceView;
   profileUserId: string | "all";
   noteIdToEditOnOpen: string | null;
 };
@@ -149,6 +154,17 @@ const apiBase = import.meta.env.VITE_API_BASE_URL ?? "";
 const dashboardUiStateKey = "mianotes.dashboard.uiState";
 const notesPerPage = 10;
 const avatarTones = ["magenta", "violet", "blue", "sky", "cyan"] as const;
+
+const formatSettingsDate = (value?: string | null) => {
+  if (!value) {
+    return "Unknown date";
+  }
+  return new Date(value).toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric"
+  });
+};
 
 const defaultDashboardUiState: DashboardUiState = {
   selectedView: "recent",
@@ -416,7 +432,7 @@ export function App() {
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [isViewFilterOpen, setIsViewFilterOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [workspaceView, setWorkspaceView] = useState<"notes" | "profile">("notes");
+  const [workspaceView, setWorkspaceView] = useState<WorkspaceView>("notes");
   const [profileUserId, setProfileUserId] = useState<string | "all">("all");
   const [openFolderMenuId, setOpenFolderMenuId] = useState<string | null>(null);
   const [renamingFolder, setRenamingFolder] = useState<FolderRecord | null>(null);
@@ -547,6 +563,16 @@ export function App() {
     pushNavigationSnapshot();
     setWorkspaceView("profile");
     setProfileUserId(profileId);
+    setOpenedNoteId(null);
+    setIsAccountOpen(false);
+    setIsSidebarOpen(false);
+    window.scrollTo(0, 0);
+  }
+
+  function openSettings() {
+    clearSearch();
+    pushNavigationSnapshot();
+    setWorkspaceView("settings");
     setOpenedNoteId(null);
     setIsAccountOpen(false);
     setIsSidebarOpen(false);
@@ -1311,7 +1337,7 @@ export function App() {
                           <span>Users</span>
                         </button>
                         {currentUser.is_admin && (
-                          <button type="button" role="menuitem">
+                          <button type="button" role="menuitem" onClick={openSettings}>
                             <Settings size={16} />
                             <span>Settings</span>
                           </button>
@@ -1338,7 +1364,17 @@ export function App() {
             </header>
           )}
 
-          {workspaceView === "profile" ? (
+          {workspaceView === "settings" ? (
+            <SettingsScreen
+              currentUser={currentUser}
+              storageCapacity={storageCapacity}
+              onBack={goBack}
+              onSignOut={() => void logout(setCurrentUser)}
+              onOpenProfile={openProfile}
+              onOpenSettings={openSettings}
+              onFoldersRestored={loadWorkspace}
+            />
+          ) : workspaceView === "profile" ? (
             <ProfileScreen
               users={users}
               notes={notes}
@@ -1366,6 +1402,7 @@ export function App() {
                 setProfileUserId(createdUser.id);
               }}
               onSelectTag={openProfileTag}
+              onOpenSettings={openSettings}
             />
           ) : (
             <>
@@ -1589,6 +1626,271 @@ function profileTags(user: UserRecord, notes: NoteRecord[], folders: FolderRecor
   return Array.from(tagMap.values()).sort((first, second) => first.name.localeCompare(second.name));
 }
 
+
+function SettingsScreen({
+  currentUser,
+  storageCapacity,
+  onBack,
+  onSignOut,
+  onOpenProfile,
+  onOpenSettings,
+  onFoldersRestored
+}: {
+  currentUser: UserRecord;
+  storageCapacity: StorageCapacityRecord | null;
+  onBack: () => void;
+  onSignOut: () => void;
+  onOpenProfile: (profileId?: string | "all") => void;
+  onOpenSettings: () => void;
+  onFoldersRestored: () => void | Promise<void>;
+}) {
+  const [archivedFolders, setArchivedFolders] = useState<FolderRecord[]>([]);
+  const [isLoadingArchivedFolders, setIsLoadingArchivedFolders] = useState(true);
+  const [restoringFolderId, setRestoringFolderId] = useState<string | null>(null);
+  const [settingsError, setSettingsError] = useState<string | null>(null);
+  const [settingsMessage, setSettingsMessage] = useState<string | null>(null);
+  const [isAccountOpen, setIsAccountOpen] = useState(false);
+  const accountMenuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    void loadArchivedFolders();
+  }, []);
+
+  useEffect(() => {
+    if (!isAccountOpen) return;
+
+    function closeAccountMenu(event: PointerEvent) {
+      if (
+        event.target instanceof Node
+        && accountMenuRef.current
+        && !accountMenuRef.current.contains(event.target)
+      ) {
+        setIsAccountOpen(false);
+      }
+    }
+
+    function closeAccountMenuOnEscape(event: globalThis.KeyboardEvent) {
+      if (event.key === "Escape") {
+        setIsAccountOpen(false);
+      }
+    }
+
+    document.addEventListener("pointerdown", closeAccountMenu);
+    document.addEventListener("keydown", closeAccountMenuOnEscape);
+
+    return () => {
+      document.removeEventListener("pointerdown", closeAccountMenu);
+      document.removeEventListener("keydown", closeAccountMenuOnEscape);
+    };
+  }, [isAccountOpen]);
+
+  async function loadArchivedFolders() {
+    setIsLoadingArchivedFolders(true);
+    setSettingsError(null);
+    try {
+      const items = await apiFetch<FolderRecord[]>("/api/folders?include_archived=true");
+      setArchivedFolders(items.filter((folder) => Boolean(folder.archived_at)));
+    } catch (error) {
+      setSettingsError(error instanceof Error ? error.message : "Could not load archived folders.");
+    } finally {
+      setIsLoadingArchivedFolders(false);
+    }
+  }
+
+  async function restoreFolder(folder: FolderRecord) {
+    setRestoringFolderId(folder.id);
+    setSettingsError(null);
+    setSettingsMessage(null);
+    try {
+      const restoredFolder = await apiFetch<FolderRecord>(`/api/folders/${folder.id}/restore`, {
+        method: "POST",
+        body: JSON.stringify({})
+      });
+      setArchivedFolders((items) => items.filter((item) => item.id !== folder.id));
+      setSettingsMessage(`Restored "${restoredFolder.name}".`);
+      await onFoldersRestored();
+    } catch (error) {
+      setSettingsError(error instanceof Error ? error.message : "Could not restore this folder.");
+    } finally {
+      setRestoringFolderId(null);
+    }
+  }
+
+  const databasePath = storageCapacity?.data_dir
+    ? `${storageCapacity.data_dir.replace(/\/$/, "")}/mia.db`
+    : "./data/mia.db";
+
+  return (
+    <>
+      <header className="toolbar profile-toolbar settings-toolbar">
+        <div className="profile-toolbar-left">
+          <button className="back-square-button" onClick={onBack} aria-label="Back to notes">
+            <ChevronLeft size={16} />
+          </button>
+          <div className="breadcrumb">
+            <span>Settings</span>
+            <span className="current">
+              <ChevronRight size={14} />
+              Restore notes
+            </span>
+          </div>
+        </div>
+        <div className="toolbar-actions">
+          <div className="account-menu profile-account-menu" ref={accountMenuRef}>
+            <button
+              className="account-avatar-button"
+              type="button"
+              aria-expanded={isAccountOpen}
+              aria-haspopup="menu"
+              onClick={() => setIsAccountOpen((value) => !value)}
+            >
+              <UserAvatar user={currentUser} className="profile-toolbar-avatar" />
+            </button>
+            {isAccountOpen && (
+              <div className="account-popover" role="menu">
+                <div className="account-popover-header">
+                  <UserAvatar user={currentUser} className="account-popover-avatar" />
+                  <TypewriterText text={currentUser.name} />
+                </div>
+                <div className="account-popover-group">
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setIsAccountOpen(false);
+                      onOpenProfile(currentUser.id);
+                    }}
+                  >
+                    <User size={16} />
+                    <span>Profile</span>
+                  </button>
+                  <button
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setIsAccountOpen(false);
+                      onOpenProfile("all");
+                    }}
+                  >
+                    <Users size={16} />
+                    <span>Users</span>
+                  </button>
+                  {currentUser.is_admin && (
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setIsAccountOpen(false);
+                        onOpenSettings();
+                      }}
+                    >
+                      <Settings size={16} />
+                      <span>Settings</span>
+                    </button>
+                  )}
+                </div>
+                <div className="account-popover-group">
+                  <button
+                    className="danger"
+                    type="button"
+                    role="menuitem"
+                    onClick={() => {
+                      setIsAccountOpen(false);
+                      onSignOut();
+                    }}
+                  >
+                    <LogOut size={16} />
+                    <span>Sign out</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+      <section className="settings-surface">
+        {settingsError && (
+          <div className="dashboard-notice settings-notice" role="alert">
+            <span>{settingsError}</span>
+            <button type="button" aria-label="Dismiss" onClick={() => setSettingsError(null)}>
+              <X size={16} />
+            </button>
+          </div>
+        )}
+        {settingsMessage && (
+          <div className="dashboard-notice success settings-notice" role="status">
+            <span>{settingsMessage}</span>
+            <button type="button" aria-label="Dismiss" onClick={() => setSettingsMessage(null)}>
+              <X size={16} />
+            </button>
+          </div>
+        )}
+        <section className="settings-page-section">
+          <h1>Storage</h1>
+          <div className="settings-card">
+            <div className="settings-card-body">
+              <div className="settings-storage-row">
+                <Database size={28} />
+                <div>
+                  <strong>{databasePath}</strong>
+                  <span>If the database does not exist, it will be created.</span>
+                </div>
+                <span className="settings-muted-action">Edit</span>
+              </div>
+            </div>
+          </div>
+        </section>
+        <section className="settings-page-section">
+          <h1>Restore notes</h1>
+          <p className="settings-section-copy">
+            Restore folders that were removed from the sidebar. Notes and source files are moved back from the archive.
+          </p>
+          <div className="settings-card">
+            <div className="settings-card-header">
+              <h2>Archived folders</h2>
+              <p>Restored folders become visible in the sidebar again.</p>
+            </div>
+            <div className="settings-card-body">
+              {isLoadingArchivedFolders ? (
+                <div className="settings-empty-state">
+                  <Loader2 className="spin" size={18} />
+                  Loading archived folders...
+                </div>
+              ) : archivedFolders.length === 0 ? (
+                <div className="settings-empty-state">
+                  <History size={18} />
+                  No archived folders yet.
+                </div>
+              ) : (
+                <div className="restore-list">
+                  {archivedFolders.map((folder) => (
+                    <div className="restore-row" key={folder.id}>
+                      <Folder size={24} />
+                      <div className="restore-row-copy">
+                        <strong>{folder.name}</strong>
+                        <span>{folder.path ?? `Archived on ${formatSettingsDate(folder.archived_at)}`}</span>
+                      </div>
+                      <button
+                        className="secondary-action-button restore-action"
+                        type="button"
+                        disabled={restoringFolderId === folder.id}
+                        onClick={() => void restoreFolder(folder)}
+                      >
+                        {restoringFolderId === folder.id ? <Loader2 className="spin" size={15} /> : <History size={15} />}
+                        Restore
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+      </section>
+    </>
+  );
+}
+
 function ProfileScreen({
   users,
   notes,
@@ -1600,7 +1902,8 @@ function ProfileScreen({
   onSignOut,
   onUserUpdated,
   onUserCreated,
-  onSelectTag
+  onSelectTag,
+  onOpenSettings
 }: {
   users: UserRecord[];
   notes: NoteRecord[];
@@ -1613,6 +1916,7 @@ function ProfileScreen({
   onUserUpdated: (user: UserRecord) => void;
   onUserCreated: (user: UserRecord) => void;
   onSelectTag: (userId: string, tagSlug: string) => void;
+  onOpenSettings: () => void;
 }) {
   const selectedUser = selectedUserId === "all"
     ? null
@@ -1908,7 +2212,14 @@ function ProfileScreen({
                     <span>Users</span>
                   </button>
                   {currentUser.is_admin && (
-                    <button type="button" role="menuitem">
+                    <button
+                      type="button"
+                      role="menuitem"
+                      onClick={() => {
+                        setIsAccountOpen(false);
+                        onOpenSettings();
+                      }}
+                    >
                       <Settings size={16} />
                       <span>Settings</span>
                     </button>
