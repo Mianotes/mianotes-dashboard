@@ -175,17 +175,11 @@ type PublishThemeRecord = {
 type PublishDraftRecord = {
   theme: string;
   folder_id?: string | null;
+  tag_id?: string | null;
   site_configuration: Record<string, unknown>;
   navigation: Array<Record<string, unknown>>;
   updated_notes: Array<Record<string, unknown>>;
   generated_at: string;
-};
-
-type PublishPreviewRecord = {
-  theme: string;
-  folder_id?: string | null;
-  note_count: number;
-  output_path: string;
 };
 
 type PublishResultRecord = {
@@ -193,6 +187,7 @@ type PublishResultRecord = {
   theme: string;
   version: string;
   folder_id?: string | null;
+  tag_id?: string | null;
   note_count: number;
   html_path: string;
   markdown_path: string;
@@ -1500,6 +1495,7 @@ export function App() {
           ) : workspaceView === "publish" ? (
             <PublishScreen
               folders={folders}
+              tags={tags}
               selectedFolderId={selectedFolderId}
               onBack={goBack}
             />
@@ -1769,23 +1765,27 @@ function parseJsonBlock<T>(label: string, value: string): T {
 
 function PublishScreen({
   folders,
+  tags,
   selectedFolderId,
   onBack
 }: {
   folders: FolderRecord[];
+  tags: TagRecord[];
   selectedFolderId: string | "all";
   onBack: () => void;
 }) {
   const [themes, setThemes] = useState<PublishThemeRecord[]>([]);
   const [theme, setTheme] = useState("mianotes");
   const [folderId, setFolderId] = useState<string | "all">(selectedFolderId);
+  const [tagId, setTagId] = useState<string | "all">("all");
   const [siteConfig, setSiteConfig] = useState("{}");
   const [navigation, setNavigation] = useState("[]");
   const [updatedNotes, setUpdatedNotes] = useState("[]");
-  const [isLoading, setIsLoading] = useState(true);
+  const [hasDraft, setHasDraft] = useState(false);
+  const [isLoadingThemes, setIsLoadingThemes] = useState(true);
+  const [isPreparing, setIsPreparing] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [preview, setPreview] = useState<PublishPreviewRecord | null>(null);
   const [result, setResult] = useState<PublishResultRecord | null>(null);
 
   useEffect(() => {
@@ -1803,6 +1803,10 @@ function PublishScreen({
         if (!cancelled) {
           setError(caughtError instanceof Error ? caughtError.message : "Could not load publish themes.");
         }
+      } finally {
+        if (!cancelled) {
+          setIsLoadingThemes(false);
+        }
       }
     }
 
@@ -1812,43 +1816,16 @@ function PublishScreen({
     };
   }, []);
 
-  useEffect(() => {
-    let cancelled = false;
-
-    async function loadDraft() {
-      setIsLoading(true);
-      setError(null);
-      setPreview(null);
-      setResult(null);
-      try {
-        const folderParam = folderId === "all" ? "" : `&folder_id=${encodeURIComponent(folderId)}`;
-        const draft = await apiFetch<PublishDraftRecord>(
-          `/api/publish/draft?theme=${encodeURIComponent(theme)}${folderParam}`
-        );
-        if (cancelled) return;
-        setSiteConfig(prettyJson(draft.site_configuration));
-        setNavigation(prettyJson(draft.navigation));
-        setUpdatedNotes(prettyJson(draft.updated_notes));
-      } catch (caughtError) {
-        if (!cancelled) {
-          setError(caughtError instanceof Error ? caughtError.message : "Could not prepare publish draft.");
-        }
-      } finally {
-        if (!cancelled) {
-          setIsLoading(false);
-        }
-      }
-    }
-
-    void loadDraft();
-    return () => {
-      cancelled = true;
-    };
-  }, [folderId, theme]);
+  function resetDraft() {
+    setHasDraft(false);
+    setResult(null);
+    setError(null);
+  }
 
   function publishPayload() {
     return {
       folder_id: folderId === "all" ? null : folderId,
+      tag_id: tagId === "all" ? null : tagId,
       theme,
       site_configuration: parseJsonBlock<Record<string, unknown>>("Site configuration", siteConfig),
       navigation: parseJsonBlock<Array<Record<string, unknown>>>("Navigation", navigation),
@@ -1856,25 +1833,36 @@ function PublishScreen({
     };
   }
 
-  async function previewSite() {
+  async function prepareDraft() {
     setError(null);
     setResult(null);
+    setIsPreparing(true);
     try {
-      const payload = publishPayload();
-      const nextPreview = await apiFetch<PublishPreviewRecord>("/api/publish/preview", {
-        method: "POST",
-        body: JSON.stringify(payload)
-      });
-      setPreview(nextPreview);
+      const params = new URLSearchParams({ theme });
+      if (folderId !== "all") {
+        params.set("folder_id", folderId);
+      }
+      if (tagId !== "all") {
+        params.set("tag_id", tagId);
+      }
+      const draft = await apiFetch<PublishDraftRecord>(`/api/publish/draft?${params.toString()}`);
+      setSiteConfig(prettyJson(draft.site_configuration));
+      setNavigation(prettyJson(draft.navigation));
+      setUpdatedNotes(prettyJson(draft.updated_notes));
+      setHasDraft(true);
     } catch (caughtError) {
-      setError(caughtError instanceof Error ? caughtError.message : "Could not preview the static site.");
+      setError(caughtError instanceof Error ? caughtError.message : "Could not prepare publish draft.");
+    } finally {
+      setIsPreparing(false);
     }
   }
 
   async function publishSite(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!hasDraft) {
+      return;
+    }
     setError(null);
-    setPreview(null);
     setResult(null);
     setIsPublishing(true);
     try {
@@ -1884,6 +1872,7 @@ function PublishScreen({
         body: JSON.stringify(payload)
       });
       setResult(nextResult);
+      setHasDraft(false);
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : "Could not publish the static site.");
     } finally {
@@ -1912,13 +1901,6 @@ function PublishScreen({
           </div>
         )}
 
-        {preview && (
-          <div className="publish-status" role="status">
-            <strong>Preview ready</strong>
-            <span>{preview.note_count} notes will be written to {preview.output_path}.</span>
-          </div>
-        )}
-
         {result && (
           <div className="publish-status success" role="status">
             <strong>Published</strong>
@@ -1935,33 +1917,73 @@ function PublishScreen({
               Mianotes builds a static HTML site.
             </p>
           </div>
+        </div>
+
+        {!result && (
           <div className="publish-controls">
             <label>
-              Theme
-              <select value={theme} onChange={(event) => setTheme(event.target.value)}>
-                {themes.map((item) => (
-                  <option value={item.id} key={item.id}>{item.name}</option>
-                ))}
-              </select>
-            </label>
-            <label>
               Folder
-              <select value={folderId} onChange={(event) => setFolderId(event.target.value)}>
+              <select
+                value={folderId}
+                onChange={(event) => {
+                  setFolderId(event.target.value);
+                  resetDraft();
+                }}
+              >
                 <option value="all">All folders</option>
                 {folders.map((folder) => (
                   <option value={folder.id} key={folder.id}>{folder.name}</option>
                 ))}
               </select>
             </label>
+            <label>
+              Tags
+              <select
+                value={tagId}
+                onChange={(event) => {
+                  setTagId(event.target.value);
+                  resetDraft();
+                }}
+              >
+                <option value="all">All tags</option>
+                {tags.map((tag) => (
+                  <option value={tag.id} key={tag.id}>{tag.name}</option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Theme
+              <select
+                value={theme}
+                onChange={(event) => {
+                  setTheme(event.target.value);
+                  resetDraft();
+                }}
+                disabled={isLoadingThemes}
+              >
+                {themes.map((item) => (
+                  <option value={item.id} key={item.id}>{item.name}</option>
+                ))}
+              </select>
+            </label>
+            <button
+              className="primary-action"
+              type="button"
+              onClick={prepareDraft}
+              disabled={isLoadingThemes || isPreparing || isPublishing}
+            >
+              {isPreparing ? <Loader2 className="spin" size={16} /> : <ChevronRight size={16} />}
+              Continue
+            </button>
           </div>
-        </div>
+        )}
 
-        {isLoading ? (
+        {isPreparing ? (
           <div className="publish-loading">
             <Loader2 className="spin" size={24} />
             <span>Preparing publish draft...</span>
           </div>
-        ) : (
+        ) : hasDraft ? (
           <div className="publish-blocks">
             <JsonBlock
               title="Site configuration"
@@ -1970,26 +1992,31 @@ function PublishScreen({
             />
             <JsonBlock
               title="Navigation"
+              description="These are the navigation items the site will display on the left hand sidebar."
               value={navigation}
               onChange={setNavigation}
             />
             <JsonBlock
               title="Updated notes"
+              description="List of new and edited files since you last published the site."
               value={updatedNotes}
               onChange={setUpdatedNotes}
             />
           </div>
-        )}
+        ) : !result ? (
+          <div className="publish-prompt">
+            Choose a folder, tags, and theme, then continue to review the publishing document.
+          </div>
+        ) : null}
 
-        <footer className="publish-actions">
-          <button className="secondary-action" type="button" onClick={previewSite} disabled={isLoading || isPublishing}>
-            Preview
-          </button>
-          <button className="primary-action" type="submit" disabled={isLoading || isPublishing}>
-            {isPublishing ? <Loader2 className="spin" size={16} /> : <Upload size={16} />}
-            Publish site
-          </button>
-        </footer>
+        {hasDraft && !result && (
+          <footer className="publish-actions">
+            <button className="primary-action" type="submit" disabled={isPublishing}>
+              {isPublishing ? <Loader2 className="spin" size={16} /> : <Upload size={16} />}
+              Publish
+            </button>
+          </footer>
+        )}
       </form>
     </section>
   );
@@ -1997,17 +2024,22 @@ function PublishScreen({
 
 function JsonBlock({
   title,
+  description,
   value,
   onChange
 }: {
   title: string;
+  description?: string;
   value: string;
   onChange: (value: string) => void;
 }) {
   return (
     <section className="json-block">
       <header>
-        <h2>{title}</h2>
+        <div>
+          <h2>{title}</h2>
+          {description ? <p>{description}</p> : null}
+        </div>
         <span>JSON</span>
       </header>
       <textarea
