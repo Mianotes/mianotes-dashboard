@@ -48,15 +48,15 @@ function PinIcon({ size = 18 }: { size?: number }) {
       className="pin-icon"
       width={size}
       height={size}
-      viewBox="0 0 24 24"
+      viewBox="0 0 32 32"
       xmlns="http://www.w3.org/2000/svg"
     >
       <path
-        d="M8 3h8l-1.4 2v6.5l3.4 3.1V17h-5v4l-1 1-1-1v-4H6v-2.4l3.4-3.1V5L8 3Z"
+        d="M20 3L14 10H9L6 13L11 18L4 25V28H7L14 21L19 26L22 23V18L29 12L20 3Z"
         fill="none"
         stroke="currentColor"
-        strokeLinecap="round"
         strokeLinejoin="round"
+        strokeLinecap="round"
         strokeWidth="2"
       />
     </svg>

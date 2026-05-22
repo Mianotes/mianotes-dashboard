@@ -3468,7 +3468,7 @@ textarea:focus {
 .settings-storage-panel strong {
   display: block;
   color: var(--ink);
-  font-size: 18px;
+  font-size: 15px;
   line-height: 1.2;
   font-weight: 700;
 }
@@ -3536,7 +3536,7 @@ textarea:focus {
 .restore-row-copy strong {
   display: block;
   color: var(--ink);
-  font-size: 17px;
+  font-size: 15px;
   line-height: 1.2;
   font-weight: 700;
 }
