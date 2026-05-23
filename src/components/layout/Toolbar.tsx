@@ -1,21 +1,17 @@
 import {
   ChevronDown,
-  ChevronRight,
   History,
-  LogOut,
   Menu,
   Search,
-  Settings,
   Star,
   Tags,
   User,
-  Users,
   X
 } from "lucide-react";
 import type { RefCallback } from "react";
 import type { FolderRecord, TagRecord, UserRecord } from "../../api/types";
-import { TypewriterText } from "../ui/TypewriterText";
-import { UserAvatar } from "../ui/UserAvatar";
+import { AccountMenu } from "./AccountMenu";
+import { Breadcrumb } from "./Breadcrumb";
 
 type ToolbarProps = {
   isSidebarOpen: boolean;
@@ -85,25 +81,26 @@ export function Toolbar({
       >
         <Menu size={20} />
       </button>
-      <div className="breadcrumb">
-        <span>Folder</span>
-        <span className={breadcrumbItems.length === 0 && !selectedTag ? "current" : undefined}>
-          <ChevronRight size={14} />
-          {selectedFolder?.name ?? "All folders"}
-        </span>
-        {breadcrumbItems.map((item, index) => (
-          <span key={`${item}-${index}`} className={index === breadcrumbItems.length - 1 ? "current" : undefined}>
-            <ChevronRight size={14} />
-            {item}
-          </span>
-        ))}
+      <Breadcrumb
+        items={[
+          { label: "Folder" },
+          {
+            label: selectedFolder?.name ?? "All folders",
+            current: breadcrumbItems.length === 0 && !selectedTag
+          },
+          ...breadcrumbItems.map((item, index) => ({
+            label: item,
+            current: index === breadcrumbItems.length - 1
+          }))
+        ]}
+      >
         {selectedTag && (
           <button className="breadcrumb-filter-chip" type="button" onClick={onClearTag}>
             {selectedTag.name}
             <X size={12} />
           </button>
         )}
-      </div>
+      </Breadcrumb>
       <div className="toolbar-actions">
         <div className="search-area">
           <label className="search-box">
@@ -178,47 +175,16 @@ export function Toolbar({
           </select>
           <ChevronDown className="select-button-chevron" size={12} />
         </label>
-        <div className="account-menu" ref={accountMenuRef}>
-          <button
-            className="account-avatar-button"
-            type="button"
-            aria-expanded={isAccountOpen}
-            aria-haspopup="menu"
-            onClick={onToggleAccount}
-          >
-            <UserAvatar user={currentUser} />
-          </button>
-          {isAccountOpen && (
-            <div className="account-popover" role="menu">
-              <div className="account-popover-header">
-                <UserAvatar user={currentUser} className="account-popover-avatar" />
-                <TypewriterText text={currentUser.name} />
-              </div>
-              <div className="account-popover-group">
-                <button type="button" role="menuitem" onClick={() => onOpenProfile(currentUser.id)}>
-                  <User size={16} />
-                  <span>Profile</span>
-                </button>
-                <button type="button" role="menuitem" onClick={() => onOpenProfile("all")}>
-                  <Users size={16} />
-                  <span>Users</span>
-                </button>
-                {currentUser.is_admin && (
-                  <button type="button" role="menuitem" onClick={onOpenSettings}>
-                    <Settings size={16} />
-                    <span>Settings</span>
-                  </button>
-                )}
-              </div>
-              <div className="account-popover-group">
-                <button className="danger" type="button" role="menuitem" onClick={onSignOut}>
-                  <LogOut size={16} />
-                  <span>Sign out</span>
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+        <AccountMenu
+          currentUser={currentUser}
+          isOpen={isAccountOpen}
+          menuRef={accountMenuRef}
+          onToggle={onToggleAccount}
+          onOpenProfile={() => onOpenProfile(currentUser.id)}
+          onOpenUsers={() => onOpenProfile("all")}
+          onOpenSettings={onOpenSettings}
+          onSignOut={onSignOut}
+        />
       </div>
     </header>
   );

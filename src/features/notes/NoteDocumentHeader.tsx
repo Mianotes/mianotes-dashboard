@@ -1,5 +1,6 @@
-import { ChevronLeft, ChevronRight, Edit3, Loader2 } from "lucide-react";
+import { ChevronLeft, Edit3, Loader2 } from "lucide-react";
 import type { NoteRecord } from "../../api/types";
+import { Breadcrumb } from "../../components/layout/Breadcrumb";
 import { NoteActionsMenu } from "./NoteActionsMenu";
 
 type NoteDocumentHeaderProps = {
@@ -38,13 +39,10 @@ export function NoteDocumentHeader({
       <button className="back-square-button" onClick={onClose} aria-label="Back to notes">
         <ChevronLeft size={16} />
       </button>
-      <div className="note-document-breadcrumb">
-        <span>Folder</span>
-        <span className="current">
-          <ChevronRight size={14} />
-          {folderLabel}
-        </span>
-      </div>
+      <Breadcrumb
+        className="note-document-breadcrumb"
+        items={[{ label: "Folder" }, { label: folderLabel, current: true }]}
+      />
       <div className="panel-actions">
         {isEditing ? (
           <>

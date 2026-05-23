@@ -9,6 +9,7 @@ import type {
   PublishThemeRecord,
   TagRecord
 } from "../../api/types";
+import { Breadcrumb } from "../../components/layout/Breadcrumb";
 import { JsonBlock } from "./JsonBlock";
 
 function prettyJson(value: unknown) {
@@ -146,9 +147,7 @@ export function PublishScreen({
         <button className="icon-button back-button" type="button" aria-label="Back" onClick={onBack}>
           <ChevronLeft size={18} />
         </button>
-        <div className="breadcrumb publish-breadcrumb">
-          <span className="current">Publish</span>
-        </div>
+        <Breadcrumb className="publish-breadcrumb" items={[{ label: "Publish", current: true }]} />
       </header>
 
       <form className="publish-document" onSubmit={publishSite}>

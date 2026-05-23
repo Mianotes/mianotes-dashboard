@@ -1080,33 +1080,7 @@ button {
 }
 
 .note-document-breadcrumb {
-  display: flex;
-  align-items: center;
-  gap: 4px;
   min-width: 0;
-  color: #3f414b;
-  font-size: 14px;
-}
-
-.note-document-breadcrumb span,
-.note-document-breadcrumb strong {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  min-width: 0;
-  white-space: nowrap;
-}
-
-.note-document-breadcrumb strong {
-  overflow: hidden;
-  color: #1f2026;
-  font-weight: 700;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.note-document-breadcrumb .current {
-  font-weight: 700;
 }
 
 .note-document-title {
@@ -3485,11 +3459,6 @@ textarea:focus {
   padding: 0 28px;
 }
 
-.settings-breadcrumb {
-  font-size: 13px;
-  color: var(--slate-7);
-}
-
 .settings-surface {
   min-height: 720px;
   padding: 42px 48px 78px;
@@ -3697,7 +3666,7 @@ textarea:focus {
 }
 
 .publish-breadcrumb {
-  font-size: 14px;
+  min-width: 0;
 }
 
 .publish-document {

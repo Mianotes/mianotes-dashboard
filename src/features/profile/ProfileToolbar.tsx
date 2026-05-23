@@ -1,18 +1,14 @@
 import {
   ChevronDown,
   ChevronLeft,
-  ChevronRight,
   Edit3,
   Loader2,
-  LogOut,
-  Settings,
-  User,
-  Users
+  User
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { UserRecord } from "../../api/types";
-import { TypewriterText } from "../../components/ui/TypewriterText";
-import { UserAvatar } from "../../components/ui/UserAvatar";
+import { AccountMenu } from "../../components/layout/AccountMenu";
+import { Breadcrumb } from "../../components/layout/Breadcrumb";
 
 export function ProfileToolbar({
   users,
@@ -90,13 +86,7 @@ export function ProfileToolbar({
         <button className="back-square-button" onClick={onBack} aria-label="Back to notes">
           <ChevronLeft size={16} />
         </button>
-        <div className="breadcrumb">
-          <span>Users</span>
-          <span className="current">
-            <ChevronRight size={14} />
-            {toolbarName}
-          </span>
-        </div>
+        <Breadcrumb items={[{ label: "Users" }, { label: toolbarName, current: true }]} />
       </div>
       <div className="toolbar-actions">
         {isAddingUser ? (
@@ -164,76 +154,30 @@ export function ProfileToolbar({
           </select>
           <ChevronDown className="select-button-chevron" size={12} />
         </label>
-        <div className="account-menu profile-account-menu" ref={accountMenuRef}>
-          <button
-            className="account-avatar-button"
-            type="button"
-            aria-expanded={isAccountOpen}
-            aria-haspopup="menu"
-            onClick={() => setIsAccountOpen((value) => !value)}
-          >
-            <UserAvatar user={currentUser} className="profile-toolbar-avatar" />
-          </button>
-          {isAccountOpen && (
-            <div className="account-popover" role="menu">
-              <div className="account-popover-header">
-                <UserAvatar user={currentUser} className="account-popover-avatar" />
-                <TypewriterText text={currentUser.name} />
-              </div>
-              <div className="account-popover-group">
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    setIsAccountOpen(false);
-                    onSelectUser(currentUser.id);
-                  }}
-                >
-                  <User size={16} />
-                  <span>Profile</span>
-                </button>
-                <button
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    setIsAccountOpen(false);
-                    onSelectUser("all");
-                  }}
-                >
-                  <Users size={16} />
-                  <span>Users</span>
-                </button>
-                {currentUser.is_admin && (
-                  <button
-                    type="button"
-                    role="menuitem"
-                    onClick={() => {
-                      setIsAccountOpen(false);
-                      onOpenSettings();
-                    }}
-                  >
-                    <Settings size={16} />
-                    <span>Settings</span>
-                  </button>
-                )}
-              </div>
-              <div className="account-popover-group">
-                <button
-                  className="danger"
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    setIsAccountOpen(false);
-                    onSignOut();
-                  }}
-                >
-                  <LogOut size={16} />
-                  <span>Sign out</span>
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
+        <AccountMenu
+          className="profile-account-menu"
+          avatarClassName="profile-toolbar-avatar"
+          currentUser={currentUser}
+          isOpen={isAccountOpen}
+          menuRef={accountMenuRef}
+          onToggle={() => setIsAccountOpen((value) => !value)}
+          onOpenProfile={() => {
+            setIsAccountOpen(false);
+            onSelectUser(currentUser.id);
+          }}
+          onOpenUsers={() => {
+            setIsAccountOpen(false);
+            onSelectUser("all");
+          }}
+          onOpenSettings={() => {
+            setIsAccountOpen(false);
+            onOpenSettings();
+          }}
+          onSignOut={() => {
+            setIsAccountOpen(false);
+            onSignOut();
+          }}
+        />
       </div>
     </header>
   );
