@@ -1,0 +1,145 @@
+import { FileText, Link, Loader2, Plus, Upload, X } from "lucide-react";
+import { useState } from "react";
+import type { FormEvent } from "react";
+import { apiFetch } from "../../api/client";
+import type { FolderRecord, NoteRecord } from "../../api/types";
+
+export function AddNoteDialog({
+  folders,
+  selectedFolderId,
+  onClose,
+  onCreated,
+  onError
+}: {
+  folders: FolderRecord[];
+  selectedFolderId: string | "all";
+  onClose: () => void;
+  onCreated: (note: NoteRecord, shouldEdit: boolean) => Promise<void>;
+  onError: (message: string | null) => void;
+}) {
+  const [mode, setMode] = useState<"text" | "link" | "file">("text");
+  const shouldChooseFolder = selectedFolderId === "all";
+  const [folderId, setFolderId] = useState(shouldChooseFolder ? "" : selectedFolderId);
+  const [title, setTitle] = useState("");
+  const [text, setText] = useState("");
+  const [url, setUrl] = useState("");
+  const [file, setFile] = useState<File | null>(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const cleanTitle = title.trim();
+  const cleanUrl = url.trim();
+  const canCreate =
+    Boolean(folderId)
+    && (
+      (mode === "text" && cleanTitle.length > 0)
+      || (mode === "link" && cleanTitle.length > 0 && cleanUrl.length > 0)
+      || (mode === "file" && cleanTitle.length > 0 && Boolean(file))
+    );
+
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (!canCreate) return;
+    setIsSaving(true);
+    onError(null);
+    try {
+      let createdNote: NoteRecord;
+      let shouldEdit = false;
+      if (mode === "text") {
+        createdNote = await apiFetch<NoteRecord>("/api/notes/from-text", {
+          method: "POST",
+          body: JSON.stringify({ folder_id: folderId, title: cleanTitle, text: text.trim() || " " })
+        });
+        shouldEdit = true;
+      } else if (mode === "link") {
+        createdNote = await apiFetch<NoteRecord>("/api/notes/from-url", {
+          method: "POST",
+          body: JSON.stringify({ folder_id: folderId, title: cleanTitle, url: cleanUrl })
+        });
+      } else if (file) {
+        const formData = new FormData();
+        formData.set("folder_id", folderId);
+        formData.set("title", cleanTitle);
+        formData.set("file", file);
+        createdNote = await apiFetch<NoteRecord>("/api/notes/from-file", { method: "POST", body: formData });
+      } else {
+        return;
+      }
+      await onCreated(createdNote, shouldEdit);
+    } catch (err) {
+      onError(err instanceof Error ? err.message : "Could not add note");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  return (
+    <div className="modal-backdrop" role="dialog" aria-modal="true">
+      <form className="modal folder-modal add-note-modal" onSubmit={submit}>
+        <div className="folder-modal-header">
+          <div>
+            <h2>Add note</h2>
+            <p>Create a note, index a link, or upload a .pdf, .docx, .xls, .csv, .png, .jpg, .mp3, or .m4a file.</p>
+          </div>
+          <button className="icon-button" type="button" onClick={onClose} aria-label="Close"><X size={20} /></button>
+        </div>
+        <div className="folder-modal-body">
+          <div className="segmented" aria-label="Note source type">
+            <button type="button" className={mode === "text" ? "selected" : ""} onClick={() => setMode("text")}><FileText size={17} />Text</button>
+            <button type="button" className={mode === "link" ? "selected" : ""} onClick={() => setMode("link")}><Link size={17} />Link</button>
+            <button type="button" className={mode === "file" ? "selected" : ""} onClick={() => setMode("file")}><Upload size={17} />File</button>
+          </div>
+          {shouldChooseFolder && (
+            <label className="field-label">
+              <span>Folder</span>
+              <select value={folderId} onChange={(event) => setFolderId(event.target.value)} required>
+                <option value="">Choose a folder</option>
+                {folders.map((folder) => <option key={folder.id} value={folder.id}>{folder.name}</option>)}
+              </select>
+            </label>
+          )}
+          <label className="field-label">
+            <span>Title</span>
+            <input
+              autoFocus
+              required
+              value={title}
+              onChange={(event) => setTitle(event.target.value)}
+            />
+          </label>
+          {mode === "text" && (
+            <label className="field-label">
+              <span>Text (optional)</span>
+              <textarea value={text} onChange={(event) => setText(event.target.value)} placeholder="Paste notes, agent output, or rough thoughts" />
+            </label>
+          )}
+          {mode === "link" && (
+            <label className="field-label">
+              <span>URL</span>
+              <input required type="url" value={url} onChange={(event) => setUrl(event.target.value)} placeholder="https://example.com/article" />
+              <small className="field-help">Mia will save a draft now, then replace it with the page contents once indexing is complete.</small>
+            </label>
+          )}
+          {mode === "file" && (
+            <div className="field-label">
+              <span>File</span>
+              <label className="file-picker">
+                <input required type="file" onChange={(event) => setFile(event.target.files?.[0] ?? null)} />
+                <span className="file-picker-button">
+                  <Upload size={16} />
+                  Choose file
+                </span>
+                <span className={`file-picker-name${file ? "" : " is-empty"}`}>{file?.name ?? "No file selected"}</span>
+              </label>
+            </div>
+          )}
+        </div>
+        <div className="folder-modal-actions">
+          <button className="primary-button create-note-button" disabled={isSaving || !canCreate}>
+            {isSaving ? <Loader2 className="spin" size={17} /> : <Plus size={17} />}
+            Create note
+          </button>
+          <button className="text-button" type="button" onClick={onClose}>Cancel</button>
+        </div>
+      </form>
+    </div>
+  );
+}

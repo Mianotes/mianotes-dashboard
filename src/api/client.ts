@@ -1,0 +1,43 @@
+export const apiBase = import.meta.env.VITE_API_BASE_URL ?? "";
+
+export function apiPath(path: string) {
+  return `${apiBase}${path}`;
+}
+
+export function mediaPath(path: string) {
+  if (/^https?:\/\//.test(path)) {
+    return path;
+  }
+  return apiPath(path);
+}
+
+export function versionedMediaPath(path: string, version = Date.now()) {
+  const separator = path.includes("?") ? "&" : "?";
+  return `${path}${separator}v=${version}`;
+}
+
+export async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const headers = new Headers(options.headers);
+  if (!(options.body instanceof FormData) && !headers.has("Content-Type")) {
+    headers.set("Content-Type", "application/json");
+  }
+  const response = await fetch(apiPath(path), {
+    ...options,
+    headers,
+    credentials: "include"
+  });
+  if (!response.ok) {
+    let message = response.statusText;
+    try {
+      const payload = await response.json();
+      message = payload.detail ?? payload.error?.message ?? message;
+    } catch {
+      // Keep the status text when the response body is not JSON.
+    }
+    throw new Error(Array.isArray(message) ? message.map((item) => item.msg).join(", ") : message);
+  }
+  if (response.status === 204) {
+    return undefined as T;
+  }
+  return response.json() as Promise<T>;
+}

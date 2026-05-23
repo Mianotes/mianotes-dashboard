@@ -3742,7 +3742,6 @@ textarea:focus {
 .publish-document-header {
   display: block;
   padding-bottom: 28px;
-  border-bottom: 1px solid #e3e4e8;
 }
 
 .publish-kicker {
@@ -3777,7 +3776,6 @@ textarea:focus {
   gap: 12px;
   min-width: 0;
   padding: 20px 0 24px;
-  border-bottom: 1px solid #e3e4e8;
 }
 
 .publish-controls label {
@@ -3811,13 +3809,6 @@ textarea:focus {
   padding: 40px 0;
   color: #747581;
   font-size: 14px;
-}
-
-.publish-prompt {
-  padding: 32px 0;
-  color: #747581;
-  font-size: 14px;
-  line-height: 1.5;
 }
 
 .publish-blocks {
