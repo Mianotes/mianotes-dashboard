@@ -146,7 +146,6 @@ export function PublishScreen({
         body: JSON.stringify(payload)
       });
       setResult(nextResult);
-      setHasDraft(false);
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : "Could not publish the static site.");
     } finally {
@@ -202,71 +201,69 @@ export function PublishScreen({
           </div>
         )}
 
-        {!result && (
-          <div className="publish-steps">
+        <div className="publish-steps">
+          <PublishStep
+            number={1}
+            description="Choose the folders you want to export, filter them by tag, and select the HTML theme you would like to use."
+          >
+            <PublishControls
+              folders={folders}
+              folderId={folderId}
+              isLoadingThemes={isLoadingThemes}
+              isPreparing={isPreparing}
+              isPublishing={isPublishing}
+              tagId={tagId}
+              tags={tags}
+              theme={theme}
+              themes={themes}
+              onContinue={prepareDraft}
+              onFolderChange={(nextFolderId) => {
+                setFolderId(nextFolderId);
+                resetDraft();
+              }}
+              onTagChange={(nextTagId) => {
+                setTagId(nextTagId);
+                resetDraft();
+              }}
+              onThemeChange={(nextTheme) => {
+                setTheme(nextTheme);
+                resetDraft();
+              }}
+            />
+          </PublishStep>
+
+          {isPreparing ? (
+            <div className="publish-loading">
+              <Loader2 className="spin" size={24} />
+              <span>Preparing publish draft...</span>
+            </div>
+          ) : null}
+
+          {hasDraft ? (
             <PublishStep
-              number={1}
-              description="Choose the folders you want to export, filter them by tag, and select the HTML theme you would like to use."
+              className="publish-step-review"
+              number={2}
+              description="Review the generated configuration, navigation, and updated notes before Mianotes builds a static HTML site."
             >
-              <PublishControls
-                folders={folders}
-                folderId={folderId}
-                isLoadingThemes={isLoadingThemes}
-                isPreparing={isPreparing}
-                isPublishing={isPublishing}
-                tagId={tagId}
-                tags={tags}
-                theme={theme}
-                themes={themes}
-                onContinue={prepareDraft}
-                onFolderChange={(nextFolderId) => {
-                  setFolderId(nextFolderId);
-                  resetDraft();
-                }}
-                onTagChange={(nextTagId) => {
-                  setTagId(nextTagId);
-                  resetDraft();
-                }}
-                onThemeChange={(nextTheme) => {
-                  setTheme(nextTheme);
-                  resetDraft();
-                }}
-              />
-            </PublishStep>
-
-            {isPreparing ? (
-              <div className="publish-loading">
-                <Loader2 className="spin" size={24} />
-                <span>Preparing publish draft...</span>
+              <div className="publish-blocks">
+                <JsonBlock title="Site configuration" value={siteConfig} onChange={setSiteConfig} />
+                <JsonBlock
+                  title="Navigation"
+                  description="These are the navigation items the site will display on the left hand sidebar."
+                  value={navigation}
+                  onChange={setNavigation}
+                />
+                <UpdatedNotesTable notes={updatedNotes} />
               </div>
-            ) : null}
-
-            {hasDraft ? (
-              <PublishStep
-                className="publish-step-review"
-                number={2}
-                description="Review the generated configuration, navigation, and updated notes before Mianotes builds a static HTML site."
-              >
-                <div className="publish-blocks">
-                  <JsonBlock title="Site configuration" value={siteConfig} onChange={setSiteConfig} />
-                  <JsonBlock
-                    title="Navigation"
-                    description="These are the navigation items the site will display on the left hand sidebar."
-                    value={navigation}
-                    onChange={setNavigation}
-                  />
-                  <UpdatedNotesTable notes={updatedNotes} />
-                </div>
-                <footer className="publish-actions">
-                  <button className="primary-action" type="submit" disabled={isPublishing}>
-                    {isPublishing ? <Loader2 className="spin" size={16} /> : <Upload size={16} />}
-                    Publish
-                  </button>
-                </footer>
-              </PublishStep>
-            ) : null}
-          </div>
-        )}
+              <footer className="publish-actions">
+                <button className="primary-action" type="submit" disabled={isPublishing}>
+                  {isPublishing ? <Loader2 className="spin" size={16} /> : <Upload size={16} />}
+                  Publish
+                </button>
+              </footer>
+            </PublishStep>
+          ) : null}
+        </div>
       </form>
     </section>
   );
