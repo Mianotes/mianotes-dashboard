@@ -186,6 +186,7 @@ export function DashboardShell({
             />
           ) : navigation.workspaceView === "publish" ? (
             <PublishScreen
+              key={navigation.publishResetKey}
               folders={folders}
               tags={tags}
               currentUser={currentUser}

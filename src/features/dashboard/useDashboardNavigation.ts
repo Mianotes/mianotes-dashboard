@@ -50,6 +50,7 @@ export function useDashboardNavigation({
   const [workspaceView, setWorkspaceView] = useState<WorkspaceView>(
     workspaceViewForRoute(initialRoute)
   );
+  const [publishResetKey, setPublishResetKey] = useState(0);
   const [profileUserId, setProfileUserId] = useState<string | "all">(
     profileUserIdForRoute(initialRoute)
   );
@@ -217,7 +218,12 @@ export function useDashboardNavigation({
     });
   }, [resetWorkspaceData, restoreNavigationSnapshot]);
 
-  const { openProfile, openSettings, openPublish, openProfileTag } = useWorkspaceNavigation({
+  const {
+    openProfile,
+    openSettings,
+    openPublish: openPublishView,
+    openProfileTag
+  } = useWorkspaceNavigation({
     clearSearch,
     currentUserId,
     pushNavigationSnapshot,
@@ -232,6 +238,11 @@ export function useDashboardNavigation({
     setIsAccountOpen,
     setIsSidebarOpen
   });
+
+  const openPublish = useCallback(() => {
+    setPublishResetKey((current) => current + 1);
+    openPublishView();
+  }, [openPublishView]);
 
   useNavigationHistory({
     openedNoteId,
@@ -257,6 +268,7 @@ export function useDashboardNavigation({
     isViewFilterOpen,
     isSidebarOpen,
     workspaceView,
+    publishResetKey,
     profileUserId,
     openFolderMenuId,
     renamingFolder,
