@@ -1,8 +1,9 @@
-import { Edit3, Eye, Loader2, MoreVertical, MoveRight, Share2, Trash2 } from "lucide-react";
+import { Edit3, Eye, Loader2, MoreVertical, Share2, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { SyntheticEvent } from "react";
 import { mediaPath } from "../../api/client";
 import type { NoteRecord } from "../../api/types";
+import { MoveNoteIcon } from "../../components/icons/MoveNoteIcon";
 
 type NoteActionsMenuProps = {
   note: NoteRecord;
@@ -133,7 +134,7 @@ export function NoteActionsMenu({
             title={!canChangeNote ? cannotChangeNoteMessage : undefined}
             onClick={() => void runAndClose(onMove)}
           >
-            <MoveRight size={15} />
+            <MoveNoteIcon size={15} />
             Move
           </button>
           <button type="button" role="menuitem" onClick={() => void runAndClose(onShare)}>

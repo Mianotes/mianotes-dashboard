@@ -1,7 +1,8 @@
-import { FolderInput, Loader2, X } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import type { FolderRecord, NoteRecord } from "../../api/types";
+import { MoveNoteIcon } from "../../components/icons/MoveNoteIcon";
 import { Modal } from "../../components/ui/Modal";
 
 type MoveNoteResult = { ok: true } | { ok: false; error: string };
@@ -84,7 +85,7 @@ export function MoveNoteDialog({
       </div>
       <div className="folder-modal-actions">
         <button className="primary-button move-note-button" disabled={isMoving || !canMove}>
-          {isMoving ? <Loader2 className="spin" size={17} /> : <FolderInput size={17} />}
+          {isMoving ? <Loader2 className="spin" size={17} /> : <MoveNoteIcon size={17} />}
           Move note
         </button>
         <button className="text-button" type="button" onClick={onClose}>Cancel</button>
