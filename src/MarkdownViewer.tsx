@@ -34,7 +34,8 @@ import {
   toolbarPlugin,
   UndoRedo
 } from "@mdxeditor/editor";
-import { forwardRef } from "react";
+import { forwardRef, useCallback, useEffect, useRef } from "react";
+import type { ForwardedRef, MutableRefObject } from "react";
 import { cpp } from "@codemirror/lang-cpp";
 import { css } from "@codemirror/lang-css";
 import { go } from "@codemirror/lang-go";
@@ -222,20 +223,51 @@ type MarkdownEditorProps = {
   markdown: string;
   onChange: (markdown: string) => void;
   imageUploadHandler?: ImageUploadHandler;
+  autoFocus?: boolean;
+  onAutoFocused?: () => void;
 };
+
+function assignForwardedRef<T>(ref: ForwardedRef<T>, value: T | null) {
+  if (typeof ref === "function") {
+    ref(value);
+    return;
+  }
+  if (ref) {
+    (ref as MutableRefObject<T | null>).current = value;
+  }
+}
 
 export const MarkdownEditor = forwardRef<MDXEditorMethods, MarkdownEditorProps>(function MarkdownEditor(
   {
     id,
     markdown,
     onChange,
-    imageUploadHandler
+    imageUploadHandler,
+    autoFocus = false,
+    onAutoFocused
   },
   ref
 ) {
+  const editorRef = useRef<MDXEditorMethods | null>(null);
+  const setEditorRef = useCallback((editor: MDXEditorMethods | null) => {
+    editorRef.current = editor;
+    assignForwardedRef(ref, editor);
+  }, [ref]);
+
+  useEffect(() => {
+    if (!autoFocus) return;
+
+    const timeout = window.setTimeout(() => {
+      editorRef.current?.focus();
+      onAutoFocused?.();
+    }, 80);
+
+    return () => window.clearTimeout(timeout);
+  }, [autoFocus, id, onAutoFocused]);
+
   return (
     <MDXEditor
-      ref={ref}
+      ref={setEditorRef}
       key={`${id}-editing`}
       markdown={markdown}
       onChange={(nextMarkdown) => onChange(nextMarkdown)}

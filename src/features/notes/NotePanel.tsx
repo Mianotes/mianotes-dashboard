@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { MDXEditorMethods } from "@mdxeditor/editor";
 import { apiFetch } from "../../api/client";
 import type { NoteRecord, UserRecord } from "../../api/types";
@@ -32,6 +32,7 @@ export function NotePanel({
   onDeleted: () => Promise<void>;
 }) {
   const [isEditing, setIsEditing] = useState(false);
+  const [shouldFocusEditor, setShouldFocusEditor] = useState(false);
   const [draftText, setDraftText] = useState(noteBodyMarkdown(note.text ?? ""));
   const [noteError, setNoteError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -39,13 +40,19 @@ export function NotePanel({
   const markdownEditorRef = useRef<MDXEditorMethods | null>(null);
 
   useEffect(() => {
+    const shouldOpenInEdit = Boolean(startInEdit);
     setNoteError(null);
-    setIsEditing(startInEdit);
+    setIsEditing(shouldOpenInEdit);
+    setShouldFocusEditor(shouldOpenInEdit);
     setDraftText(noteBodyMarkdown(note.text ?? ""));
-    if (startInEdit) {
+    if (shouldOpenInEdit) {
       onStartInEditConsumed?.();
     }
   }, [note?.id]);
+
+  const handleEditorFocused = useCallback(() => {
+    setShouldFocusEditor(false);
+  }, []);
 
   useEffect(() => {
     if (!isEditing) {
@@ -240,7 +247,9 @@ export function NotePanel({
         canChangeNote={canChangeNote}
         cannotChangeNoteMessage={cannotChangeNoteMessage}
         editorRef={markdownEditorRef}
+        autoFocusEditor={shouldFocusEditor}
         onDraftTextChange={setDraftText}
+        onEditorFocused={handleEditorFocused}
         onSave={() => void saveMarkdown()}
         imageUploadHandler={uploadEditorImage}
       />

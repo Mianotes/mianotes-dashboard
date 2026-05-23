@@ -17,7 +17,9 @@ type NoteContentProps = {
   canChangeNote: boolean;
   cannotChangeNoteMessage: string;
   editorRef: RefObject<MDXEditorMethods | null>;
+  autoFocusEditor: boolean;
   onDraftTextChange: (markdown: string) => void;
+  onEditorFocused: () => void;
   onSave: () => void;
   imageUploadHandler: (image: File) => Promise<string>;
 };
@@ -32,7 +34,9 @@ export function NoteContent({
   canChangeNote,
   cannotChangeNoteMessage,
   editorRef,
+  autoFocusEditor,
   onDraftTextChange,
+  onEditorFocused,
   onSave,
   imageUploadHandler
 }: NoteContentProps) {
@@ -49,6 +53,8 @@ export function NoteContent({
               markdown={draftText}
               onChange={onDraftTextChange}
               imageUploadHandler={imageUploadHandler}
+              autoFocus={autoFocusEditor}
+              onAutoFocused={onEditorFocused}
             />
           </Suspense>
         </div>
