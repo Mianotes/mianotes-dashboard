@@ -4,6 +4,7 @@ import { apiFetch } from "../../api/client";
 import type { NoteRecord, UserRecord } from "../../api/types";
 import { UserAvatar } from "../../components/ui/UserAvatar";
 import { relativeTime } from "../../utils/format";
+import { appUrlForPath, noteRoutePath } from "../../utils/internalRoutes";
 import { badgeTone, isNoteIndexing, noteExcerpt, sourceIcon } from "../../utils/notes";
 import { NoteActionsMenu } from "./NoteActionsMenu";
 
@@ -43,8 +44,7 @@ export function NoteRow({
   }
 
   async function copyShareLink() {
-    const shareUrl = note.note_url ? new URL(note.note_url, window.location.origin).toString() : window.location.href;
-    await navigator.clipboard?.writeText(shareUrl);
+    await navigator.clipboard?.writeText(appUrlForPath(noteRoutePath(note.id)));
   }
 
   async function deleteNote() {

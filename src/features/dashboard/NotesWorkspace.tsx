@@ -16,9 +16,9 @@ type NotesWorkspaceProps = {
   visibleStart: number;
   visibleEnd: number;
   onDismissError: () => void;
-  onStartInEditConsumed: () => void;
   onBack: () => void;
   onRefreshOpenedNote: () => Promise<void>;
+  onNoteEditModeChange: (isEditing: boolean) => void;
   onOpenedNoteDeleted: () => Promise<void>;
   onAdd: () => void;
   onOpenNote: (note: NoteRecord, edit?: boolean) => void;
@@ -42,9 +42,9 @@ export function NotesWorkspace({
   visibleStart,
   visibleEnd,
   onDismissError,
-  onStartInEditConsumed,
   onBack,
   onRefreshOpenedNote,
+  onNoteEditModeChange,
   onOpenedNoteDeleted,
   onAdd,
   onOpenNote,
@@ -72,9 +72,9 @@ export function NotesWorkspace({
             folderLabel={openedNote.folder?.name ?? selectedFolder?.name ?? "All folders"}
             currentUser={currentUser}
             startInEdit={noteIdToEditOnOpen === openedNote.id}
-            onStartInEditConsumed={onStartInEditConsumed}
             onClose={onBack}
             onRefresh={onRefreshOpenedNote}
+            onEditModeChange={onNoteEditModeChange}
             onMove={onMoveNote}
             onDeleted={onOpenedNoteDeleted}
           />

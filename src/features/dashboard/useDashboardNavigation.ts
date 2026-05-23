@@ -9,6 +9,14 @@ import {
   defaultDashboardUiState,
   readDashboardUiState
 } from "../../utils/dashboardState";
+import {
+  applyRouteToDashboardState,
+  noteEditIdForRoute,
+  pendingFolderNameForRoute,
+  profileUserIdForRoute,
+  readInternalRoute,
+  workspaceViewForRoute
+} from "../../utils/internalRoutes";
 import type { DashboardView } from "./useDashboardNotes";
 import { useNavigationHistory } from "./useNavigationHistory";
 import { useWorkspaceNavigation } from "./useWorkspaceNavigation";
@@ -22,7 +30,11 @@ export function useDashboardNavigation({
   currentUserId,
   resetWorkspaceData
 }: UseDashboardNavigationArgs) {
-  const initialUiState = useMemo(() => readDashboardUiState(), []);
+  const initialRoute = useMemo(() => readInternalRoute(), []);
+  const initialUiState = useMemo(
+    () => applyRouteToDashboardState(readDashboardUiState(), initialRoute),
+    [initialRoute]
+  );
   const [selectedView, setSelectedView] = useState<DashboardView>(initialUiState.selectedView);
   const [selectedUserId, setSelectedUserId] = useState<string | "all">(initialUiState.selectedUserId);
   const [selectedFolderId, setSelectedFolderId] = useState<string | "all">(initialUiState.selectedFolderId);
@@ -35,11 +47,20 @@ export function useDashboardNavigation({
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const [isViewFilterOpen, setIsViewFilterOpen] = useState(false);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [workspaceView, setWorkspaceView] = useState<WorkspaceView>("notes");
-  const [profileUserId, setProfileUserId] = useState<string | "all">("all");
+  const [workspaceView, setWorkspaceView] = useState<WorkspaceView>(
+    workspaceViewForRoute(initialRoute)
+  );
+  const [profileUserId, setProfileUserId] = useState<string | "all">(
+    profileUserIdForRoute(initialRoute)
+  );
   const [openFolderMenuId, setOpenFolderMenuId] = useState<string | null>(null);
   const [renamingFolder, setRenamingFolder] = useState<FolderRecord | null>(null);
-  const [noteIdToEditOnOpen, setNoteIdToEditOnOpen] = useState<string | null>(null);
+  const [noteIdToEditOnOpen, setNoteIdToEditOnOpen] = useState<string | null>(
+    noteEditIdForRoute(initialRoute)
+  );
+  const [pendingFolderRoute, setPendingFolderRoute] = useState<string | null>(
+    pendingFolderNameForRoute(initialRoute)
+  );
   const openedNoteIdRef = useRef<string | null>(initialUiState.openedNoteId);
   const navigationStackRef = useRef<NavigationSnapshot[]>([]);
 
@@ -240,6 +261,7 @@ export function useDashboardNavigation({
     openFolderMenuId,
     renamingFolder,
     noteIdToEditOnOpen,
+    pendingFolderRoute,
     setSelectedView,
     setSelectedUserId,
     setSelectedFolderId,
@@ -257,6 +279,7 @@ export function useDashboardNavigation({
     setOpenFolderMenuId,
     setRenamingFolder,
     setNoteIdToEditOnOpen,
+    setPendingFolderRoute,
     clearSelectedTag,
     navigationSnapshot,
     pushNavigationSnapshot,

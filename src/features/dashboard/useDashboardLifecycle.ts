@@ -1,5 +1,6 @@
 import { useEffect } from "react";
 import { writeDashboardUiState } from "../../utils/dashboardState";
+import { findFolderForRoute, routePathForState } from "../../utils/internalRoutes";
 import { hasUsableNoteContent } from "../../utils/notes";
 import type { DashboardNavigation } from "./useDashboardNavigation";
 import type { DashboardNotes } from "./useDashboardNotes";
@@ -35,12 +36,19 @@ export function useDashboardLifecycle({
     openedNoteId,
     searchQuery,
     currentPage,
+    workspaceView,
+    profileUserId,
+    noteIdToEditOnOpen,
+    pendingFolderRoute,
     setSelectedUserId,
     setSelectedFolderId,
     setSelectedTag,
     setOpenedNoteId,
     setCurrentPage,
-    setProfileUserId
+    setWorkspaceView,
+    setProfileUserId,
+    setNoteIdToEditOnOpen,
+    setPendingFolderRoute
   } = navigation;
   const { totalPages, clampedPage, openedNote, hasPendingNotes } = notesView;
 
@@ -56,6 +64,18 @@ export function useDashboardLifecycle({
 
   useEffect(() => {
     if (!currentUser || !isWorkspaceLoaded) return;
+
+    if (pendingFolderRoute) {
+      const folder = findFolderForRoute(folders, pendingFolderRoute);
+      setWorkspaceView("notes");
+      setSelectedFolderId(folder?.id ?? "all");
+      setSelectedTag("all");
+      setOpenedNoteId(null);
+      setNoteIdToEditOnOpen(null);
+      setCurrentPage(1);
+      setPendingFolderRoute(null);
+      return;
+    }
 
     setProfileUserId((current) => (
       current === "all" || users.some((user) => user.id === current)
@@ -79,11 +99,16 @@ export function useDashboardLifecycle({
     folders,
     isWorkspaceLoaded,
     notes,
+    pendingFolderRoute,
+    setCurrentPage,
+    setNoteIdToEditOnOpen,
     setOpenedNoteId,
     setProfileUserId,
+    setPendingFolderRoute,
     setSelectedFolderId,
     setSelectedTag,
     setSelectedUserId,
+    setWorkspaceView,
     tags,
     users
   ]);
@@ -125,7 +150,7 @@ export function useDashboardLifecycle({
   ]);
 
   useEffect(() => {
-    if (!currentUser || !isWorkspaceLoaded) return;
+    if (!currentUser || !isWorkspaceLoaded || pendingFolderRoute) return;
 
     writeDashboardUiState({
       selectedView,
@@ -146,6 +171,44 @@ export function useDashboardLifecycle({
     selectedTag,
     selectedUserId,
     selectedView
+  ]);
+
+  useEffect(() => {
+    if (!currentUser || !isWorkspaceLoaded || pendingFolderRoute) return;
+
+    const nextPath = routePathForState(
+      {
+        workspaceView,
+        selectedView,
+        selectedUserId,
+        selectedFolderId,
+        selectedTag,
+        openedNoteId,
+        searchQuery,
+        currentPage: clampedPage,
+        profileUserId,
+        noteIdToEditOnOpen
+      },
+      folders
+    );
+    if (window.location.pathname !== nextPath) {
+      window.history.replaceState({ mianotesView: "dashboard" }, "", nextPath);
+    }
+  }, [
+    clampedPage,
+    currentUser,
+    folders,
+    isWorkspaceLoaded,
+    noteIdToEditOnOpen,
+    openedNoteId,
+    pendingFolderRoute,
+    profileUserId,
+    searchQuery,
+    selectedFolderId,
+    selectedTag,
+    selectedUserId,
+    selectedView,
+    workspaceView
   ]);
 
   useEffect(() => {

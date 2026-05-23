@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { MDXEditorMethods } from "@mdxeditor/editor";
 import { apiFetch } from "../../api/client";
 import type { NoteRecord, UserRecord } from "../../api/types";
+import { appUrlForPath, noteRoutePath } from "../../utils/internalRoutes";
 import { isNoteIndexing, noteBodyMarkdown } from "../../utils/notes";
 import { AskMiaPanel } from "./AskMiaPanel";
 import { NoteAuthorMeta } from "./NoteAuthorMeta";
@@ -17,9 +18,9 @@ export function NotePanel({
   folderLabel,
   currentUser,
   startInEdit = false,
-  onStartInEditConsumed,
   onClose,
   onRefresh,
+  onEditModeChange,
   onMove,
   onDeleted
 }: {
@@ -27,9 +28,9 @@ export function NotePanel({
   folderLabel: string;
   currentUser: UserRecord;
   startInEdit?: boolean;
-  onStartInEditConsumed?: () => void;
   onClose: () => void;
   onRefresh: () => Promise<void>;
+  onEditModeChange: (isEditing: boolean) => void;
   onMove: (note: NoteRecord) => void;
   onDeleted: () => Promise<void>;
 }) {
@@ -47,9 +48,6 @@ export function NotePanel({
     setIsEditing(shouldOpenInEdit);
     setShouldFocusEditor(shouldOpenInEdit);
     setDraftText(noteBodyMarkdown(note.text ?? ""));
-    if (shouldOpenInEdit) {
-      onStartInEditConsumed?.();
-    }
   }, [note?.id]);
 
   const handleEditorFocused = useCallback(() => {
@@ -151,6 +149,7 @@ export function NotePanel({
       setDraftText(nextText);
       setMiaError(null);
       setIsEditing(false);
+      onEditModeChange(false);
       await onRefresh();
     } catch (err) {
       const message = err instanceof Error ? err.message : "Could not save note";
@@ -179,8 +178,7 @@ export function NotePanel({
   }, [canChangeNote, draftText, isEditing, isSaving, note.id]);
 
   async function copyShareLink() {
-    const shareUrl = note.note_url ? new URL(note.note_url, window.location.origin).toString() : window.location.href;
-    await navigator.clipboard?.writeText(shareUrl);
+    await navigator.clipboard?.writeText(appUrlForPath(noteRoutePath(note.id)));
   }
 
   async function deleteNote() {
@@ -202,6 +200,17 @@ export function NotePanel({
     }
   }
 
+  function startEditing() {
+    setIsEditing(true);
+    onEditModeChange(true);
+  }
+
+  function cancelEditing() {
+    setDraftText(noteMarkdownBody);
+    setIsEditing(false);
+    onEditModeChange(false);
+  }
+
   return (
     <section className={`note-panel ${isEditing ? "editing" : ""}`}>
       <NoteDocumentHeader
@@ -214,11 +223,8 @@ export function NotePanel({
         cannotChangeNoteMessage={cannotChangeNoteMessage}
         onClose={onClose}
         onSave={saveMarkdown}
-        onCancel={() => {
-          setDraftText(noteMarkdownBody);
-          setIsEditing(false);
-        }}
-        onEdit={() => setIsEditing(true)}
+        onCancel={cancelEditing}
+        onEdit={startEditing}
         onMove={() => onMove(note)}
         onShare={copyShareLink}
         onDelete={deleteNote}

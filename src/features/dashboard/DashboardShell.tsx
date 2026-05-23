@@ -227,11 +227,14 @@ export function DashboardShell({
               visibleStart={visibleStart}
               visibleEnd={visibleEnd}
               onDismissError={() => setError(null)}
-              onStartInEditConsumed={() => navigation.setNoteIdToEditOnOpen(null)}
               onBack={navigation.goBack}
               onRefreshOpenedNote={async () => {
                 if (!openedNote) return;
                 await refreshNote(openedNote.id);
+              }}
+              onNoteEditModeChange={(isEditing) => {
+                if (!openedNote) return;
+                navigation.setNoteIdToEditOnOpen(isEditing ? openedNote.id : null);
               }}
               onOpenedNoteDeleted={async () => {
                 navigation.setOpenedNoteId(null);
