@@ -1,5 +1,6 @@
 import { ChevronLeft, Edit3, Loader2 } from "lucide-react";
 import type { NoteRecord } from "../../api/types";
+import { FolderIcon } from "../../components/icons/FolderIcon";
 import { Breadcrumb } from "../../components/layout/Breadcrumb";
 import { NoteActionsMenu } from "./NoteActionsMenu";
 
@@ -41,7 +42,7 @@ export function NoteDocumentHeader({
       </button>
       <Breadcrumb
         className="note-document-breadcrumb"
-        items={[{ label: "Folder" }, { label: folderLabel, current: true }]}
+        items={[{ label: "Folder", icon: <FolderIcon size={18} /> }, { label: folderLabel, current: true }]}
       />
       <div className="panel-actions">
         {isEditing ? (

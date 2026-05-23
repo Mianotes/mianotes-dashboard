@@ -421,6 +421,23 @@ button {
   margin-bottom: 2px;
 }
 
+.breadcrumb-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  color: currentColor;
+  font-style: normal;
+}
+
+.breadcrumb-icon svg {
+  display: block;
+  width: 18px;
+  height: 18px;
+}
+
 .breadcrumb span {
   display: inline-flex;
   align-items: center;

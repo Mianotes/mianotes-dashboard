@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 export type BreadcrumbItem = {
   key?: string;
   label: string;
+  icon?: ReactNode;
   current?: boolean;
 };
 
@@ -21,6 +22,7 @@ export function Breadcrumb({ items, className, children }: BreadcrumbProps) {
       {items.map((item, index) => (
         <span key={item.key ?? `${item.label}-${index}`} className={item.current ? "current" : undefined}>
           {index > 0 ? <ChevronRight size={14} /> : null}
+          {item.icon ? <i className="breadcrumb-icon" aria-hidden="true">{item.icon}</i> : null}
           {item.label}
         </span>
       ))}

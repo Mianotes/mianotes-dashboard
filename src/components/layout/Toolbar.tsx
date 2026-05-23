@@ -10,6 +10,8 @@ import {
 } from "lucide-react";
 import type { RefCallback } from "react";
 import type { FolderRecord, TagRecord, UserRecord } from "../../api/types";
+import { DashboardIcon } from "../icons/DashboardIcon";
+import { FolderIcon } from "../icons/FolderIcon";
 import { AccountMenu } from "./AccountMenu";
 import { Breadcrumb } from "./Breadcrumb";
 
@@ -70,6 +72,22 @@ export function Toolbar({
   onOpenSettings,
   onSignOut
 }: ToolbarProps) {
+  const rootBreadcrumbItems = selectedFolder
+    ? [
+        { label: "Folder", icon: <FolderIcon size={18} /> },
+        {
+          label: selectedFolder.name,
+          current: breadcrumbItems.length === 0 && !selectedTag
+        }
+      ]
+    : [
+        {
+          label: "Dashboard",
+          icon: <DashboardIcon size={18} />,
+          current: breadcrumbItems.length === 0 && !selectedTag
+        }
+      ];
+
   return (
     <header className="toolbar">
       <button
@@ -83,11 +101,7 @@ export function Toolbar({
       </button>
       <Breadcrumb
         items={[
-          { label: "Folder" },
-          {
-            label: selectedFolder?.name ?? "All folders",
-            current: breadcrumbItems.length === 0 && !selectedTag
-          },
+          ...rootBreadcrumbItems,
           ...breadcrumbItems.map((item, index) => ({
             label: item,
             current: index === breadcrumbItems.length - 1
