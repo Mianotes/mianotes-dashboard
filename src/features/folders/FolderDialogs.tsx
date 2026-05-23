@@ -3,6 +3,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { apiFetch } from "../../api/client";
 import type { FolderRecord } from "../../api/types";
+import { Modal } from "../../components/ui/Modal";
 
 export function AddFolderDialog({
   onClose,
@@ -36,11 +37,10 @@ export function AddFolderDialog({
   }
 
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true">
-      <form className="modal folder-modal" onSubmit={submit}>
+    <Modal as="form" className="folder-modal" labelledBy="add-folder-title" onClose={onClose} onSubmit={submit}>
         <div className="folder-modal-header">
           <div>
-            <h2>Add folder</h2>
+            <h2 id="add-folder-title">Add folder</h2>
             <p>Anyone signed in can view this folder and add notes to it.</p>
           </div>
           <button className="icon-button" type="button" onClick={onClose} aria-label="Close"><X size={20} /></button>
@@ -74,8 +74,7 @@ export function AddFolderDialog({
           </button>
           <button className="text-button" type="button" onClick={onClose}>Cancel</button>
         </div>
-      </form>
-    </div>
+    </Modal>
   );
 }
 
@@ -109,11 +108,10 @@ export function RenameFolderDialog({
   }
 
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true">
-      <form className="modal folder-modal" onSubmit={submit}>
+    <Modal as="form" className="folder-modal" labelledBy="rename-folder-title" onClose={onClose} onSubmit={submit}>
         <div className="folder-modal-header">
           <div>
-            <h2>Rename folder</h2>
+            <h2 id="rename-folder-title">Rename folder</h2>
             <p>Update the folder name shown to everyone signed in.</p>
           </div>
           <button className="icon-button" type="button" onClick={onClose} aria-label="Close"><X size={20} /></button>
@@ -141,7 +139,6 @@ export function RenameFolderDialog({
           </button>
           <button className="text-button" type="button" onClick={onClose}>Cancel</button>
         </div>
-      </form>
-    </div>
+    </Modal>
   );
 }

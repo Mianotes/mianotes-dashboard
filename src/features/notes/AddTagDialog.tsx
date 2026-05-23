@@ -1,6 +1,7 @@
 import { Loader2, Plus, X } from "lucide-react";
 import { useState } from "react";
 import type { FormEvent } from "react";
+import { Modal } from "../../components/ui/Modal";
 
 type AddTagDialogProps = {
   existingTags: string[];
@@ -38,11 +39,10 @@ export function AddTagDialog({ existingTags, onClose, onAdd }: AddTagDialogProps
   }
 
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true">
-      <form className="modal folder-modal" onSubmit={submit}>
+    <Modal as="form" className="folder-modal" labelledBy="add-tag-title" onClose={onClose} onSubmit={submit}>
         <div className="folder-modal-header">
           <div>
-            <h2>Add tag</h2>
+            <h2 id="add-tag-title">Add tag</h2>
             <p>Tags help people filter and find related notes.</p>
           </div>
           <button className="icon-button" type="button" onClick={onClose} aria-label="Close">
@@ -69,7 +69,6 @@ export function AddTagDialog({ existingTags, onClose, onAdd }: AddTagDialogProps
             Cancel
           </button>
         </div>
-      </form>
-    </div>
+    </Modal>
   );
 }

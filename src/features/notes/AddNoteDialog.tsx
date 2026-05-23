@@ -3,6 +3,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { apiFetch } from "../../api/client";
 import type { FolderRecord, NoteRecord } from "../../api/types";
+import { Modal } from "../../components/ui/Modal";
 
 export function AddNoteDialog({
   folders,
@@ -72,11 +73,10 @@ export function AddNoteDialog({
   }
 
   return (
-    <div className="modal-backdrop" role="dialog" aria-modal="true">
-      <form className="modal folder-modal add-note-modal" onSubmit={submit}>
+    <Modal as="form" className="folder-modal add-note-modal" labelledBy="add-note-title" onClose={onClose} onSubmit={submit}>
         <div className="folder-modal-header">
           <div>
-            <h2>Add note</h2>
+            <h2 id="add-note-title">Add note</h2>
             <p>Create a note, index a link, or upload a .pdf, .docx, .xls, .csv, .png, .jpg, .mp3, or .m4a file.</p>
           </div>
           <button className="icon-button" type="button" onClick={onClose} aria-label="Close"><X size={20} /></button>
@@ -139,7 +139,6 @@ export function AddNoteDialog({
           </button>
           <button className="text-button" type="button" onClick={onClose}>Cancel</button>
         </div>
-      </form>
-    </div>
+    </Modal>
   );
 }

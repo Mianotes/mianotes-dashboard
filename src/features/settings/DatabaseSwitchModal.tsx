@@ -7,6 +7,7 @@ import type {
   StorageSettingsRecord,
   StorageSwitchResponse
 } from "../../api/types";
+import { Modal } from "../../components/ui/Modal";
 
 type DatabaseSwitchModalProps = {
   storageSettings: StorageSettingsRecord;
@@ -79,14 +80,7 @@ export function DatabaseSwitchModal({
   }
 
   return (
-    <div className="modal-backdrop" role="presentation" onClick={onClose}>
-      <section
-        className="modal folder-modal database-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="database-switch-title"
-        onClick={(event) => event.stopPropagation()}
-      >
+    <Modal className="folder-modal database-modal" labelledBy="database-switch-title" onClose={onClose}>
         <div className="folder-modal-header database-modal-header">
           <div>
             <h2 id="database-switch-title">Switch database</h2>
@@ -155,18 +149,20 @@ export function DatabaseSwitchModal({
           ) : (
             <DatabaseLocationGroup title="Available databases">
               {availableLocations.length > 0 ? (
-                availableLocations.map((location) => (
-                  <DatabaseLocationButton
-                    key={location.id}
-                    location={location}
-                    selected={selectedLocationId === location.id}
-                    onSelect={() => {
-                      setFolderPath("");
-                      setDatabaseName("");
-                      setSelectedLocationId(location.id);
-                    }}
-                  />
-                ))
+                <div className="database-location-scroll">
+                  {availableLocations.map((location) => (
+                    <DatabaseLocationButton
+                      key={location.id}
+                      location={location}
+                      selected={selectedLocationId === location.id}
+                      onSelect={() => {
+                        setFolderPath("");
+                        setDatabaseName("");
+                        setSelectedLocationId(location.id);
+                      }}
+                    />
+                  ))}
+                </div>
               ) : (
                 <div className="database-empty-state">
                   <Folder size={38} />
@@ -207,8 +203,7 @@ export function DatabaseSwitchModal({
             </button>
           )}
         </div>
-      </section>
-    </div>
+    </Modal>
   );
 }
 
