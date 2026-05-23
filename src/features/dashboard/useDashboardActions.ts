@@ -6,6 +6,7 @@ import type { DashboardNavigation } from "./useDashboardNavigation";
 import type { WorkspaceData } from "./useWorkspaceData";
 
 export type FolderUpdateResult = { ok: true } | { ok: false; error: string };
+export type NoteMoveResult = { ok: true } | { ok: false; error: string };
 
 type UseDashboardActionsArgs = {
   workspace: WorkspaceData;
@@ -22,6 +23,7 @@ export function useDashboardActions({
 }: UseDashboardActionsArgs) {
   const {
     loadWorkspace,
+    addOrMergeNote,
     refreshNotes: refreshWorkspaceNotes,
     refreshNote,
     toggleNoteStar: toggleWorkspaceNoteStar
@@ -92,6 +94,26 @@ export function useDashboardActions({
     }
   }, [setError, toggleWorkspaceNoteStar]);
 
+  const moveNote = useCallback(async (
+    note: NoteRecord,
+    folderId: string
+  ): Promise<NoteMoveResult> => {
+    setError(null);
+    try {
+      const updatedNote = await apiFetch<NoteRecord>(`/api/notes/${note.id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ folder_id: folderId })
+      });
+      addOrMergeNote({ ...updatedNote, folder_id: updatedNote.folder?.id ?? folderId });
+      await refreshNotes();
+      return { ok: true };
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Could not move note";
+      setError(message);
+      return { ok: false, error: message };
+    }
+  }, [addOrMergeNote, refreshNotes, setError]);
+
   const openNote = useCallback(async (note: NoteRecord, startInEdit = false) => {
     const previousScreen = navigationSnapshot();
     try {
@@ -118,6 +140,7 @@ export function useDashboardActions({
     deleteFolder,
     refreshNotes,
     openNote,
+    moveNote,
     toggleNoteStar
   };
 }

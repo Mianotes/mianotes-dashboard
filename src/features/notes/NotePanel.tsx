@@ -20,6 +20,7 @@ export function NotePanel({
   onStartInEditConsumed,
   onClose,
   onRefresh,
+  onMove,
   onDeleted
 }: {
   note: NoteRecord;
@@ -29,6 +30,7 @@ export function NotePanel({
   onStartInEditConsumed?: () => void;
   onClose: () => void;
   onRefresh: () => Promise<void>;
+  onMove: (note: NoteRecord) => void;
   onDeleted: () => Promise<void>;
 }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -217,6 +219,7 @@ export function NotePanel({
           setIsEditing(false);
         }}
         onEdit={() => setIsEditing(true)}
+        onMove={() => onMove(note)}
         onShare={copyShareLink}
         onDelete={deleteNote}
       />

@@ -2660,6 +2660,10 @@ textarea:focus {
   min-width: 142px;
 }
 
+.move-note-button {
+  min-width: 132px;
+}
+
 .field-help {
   color: #72747e;
   font-size: 13px;

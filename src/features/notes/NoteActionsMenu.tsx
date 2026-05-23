@@ -1,4 +1,4 @@
-import { Edit3, Eye, Loader2, MoreVertical, Share2, Trash2 } from "lucide-react";
+import { Edit3, Eye, Loader2, MoreVertical, MoveRight, Share2, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { SyntheticEvent } from "react";
 import { mediaPath } from "../../api/client";
@@ -10,6 +10,7 @@ type NoteActionsMenuProps = {
   cannotChangeNoteMessage: string;
   isDeleting?: boolean;
   onEdit: () => void;
+  onMove: () => void;
   onShare: () => void | Promise<void>;
   onDelete: () => void | Promise<void>;
 };
@@ -20,6 +21,7 @@ export function NoteActionsMenu({
   cannotChangeNoteMessage,
   isDeleting = false,
   onEdit,
+  onMove,
   onShare,
   onDelete
 }: NoteActionsMenuProps) {
@@ -123,6 +125,16 @@ export function NoteActionsMenu({
           >
             <Edit3 size={15} />
             Edit
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            disabled={!canChangeNote}
+            title={!canChangeNote ? cannotChangeNoteMessage : undefined}
+            onClick={() => void runAndClose(onMove)}
+          >
+            <MoveRight size={15} />
+            Move
           </button>
           <button type="button" role="menuitem" onClick={() => void runAndClose(onShare)}>
             <Share2 size={15} />

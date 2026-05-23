@@ -1,8 +1,10 @@
+import { useState } from "react";
 import type { MutableRefObject } from "react";
-import type { UserRecord } from "../../api/types";
+import type { NoteRecord, UserRecord } from "../../api/types";
 import logoUrl from "../../assets/logo_small.png";
 import { Sidebar } from "../../components/layout/Sidebar";
 import { Toolbar } from "../../components/layout/Toolbar";
+import { MoveNoteDialog } from "../notes/MoveNoteDialog";
 import { ProfileScreen } from "../profile/ProfileScreen";
 import { PublishScreen } from "../publish/PublishScreen";
 import { SettingsScreen } from "../settings/SettingsScreen";
@@ -40,6 +42,7 @@ export function DashboardShell({
   error,
   setError
 }: DashboardShellProps) {
+  const [movingNote, setMovingNote] = useState<NoteRecord | null>(null);
   const setAccountMenuRef = (node: HTMLDivElement | null) => {
     refs.accountMenuRef.current = node;
   };
@@ -78,6 +81,9 @@ export function DashboardShell({
     visibleEnd,
     openedNote
   } = notesView;
+  const activeMovingNote = movingNote
+    ? notes.find((note) => note.id === movingNote.id) ?? movingNote
+    : null;
 
   return (
     <main className="screen">
@@ -233,6 +239,7 @@ export function DashboardShell({
               }}
               onAdd={navigation.openAddNote}
               onOpenNote={(note, edit) => void actions.openNote(note, edit)}
+              onMoveNote={setMovingNote}
               onToggleStar={(note) => void actions.toggleNoteStar(note)}
               onNotesDeleted={actions.refreshNotes}
               onError={setError}
@@ -288,6 +295,15 @@ export function DashboardShell({
           return result;
         }}
       />
+
+      {activeMovingNote && (
+        <MoveNoteDialog
+          note={activeMovingNote}
+          folders={folders}
+          onClose={() => setMovingNote(null)}
+          onMove={actions.moveNote}
+        />
+      )}
     </main>
   );
 }

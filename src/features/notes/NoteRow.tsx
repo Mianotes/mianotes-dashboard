@@ -13,6 +13,7 @@ type NoteRowProps = {
   onClick: () => void;
   onToggleStar: () => void;
   onEdit: () => void;
+  onMove: () => void;
   onDeleted: () => Promise<void>;
   onError: (message: string | null) => void;
 };
@@ -23,6 +24,7 @@ export function NoteRow({
   onClick,
   onToggleStar,
   onEdit,
+  onMove,
   onDeleted,
   onError
 }: NoteRowProps) {
@@ -112,6 +114,7 @@ export function NoteRow({
           canChangeNote={canChangeNote}
           cannotChangeNoteMessage={cannotChangeNoteMessage}
           onEdit={onEdit}
+          onMove={onMove}
           onShare={copyShareLink}
           onDelete={deleteNote}
         />

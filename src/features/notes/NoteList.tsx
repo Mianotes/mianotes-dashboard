@@ -13,6 +13,7 @@ type NoteListProps = {
   visibleEnd: number;
   onAdd: () => void;
   onOpenNote: (note: NoteRecord, edit?: boolean) => void;
+  onMoveNote: (note: NoteRecord) => void;
   onToggleStar: (note: NoteRecord) => void;
   onDeleted: () => Promise<void>;
   onError: (message: string | null) => void;
@@ -29,6 +30,7 @@ export function NoteList({
   visibleEnd,
   onAdd,
   onOpenNote,
+  onMoveNote,
   onToggleStar,
   onDeleted,
   onError,
@@ -48,6 +50,7 @@ export function NoteList({
               onToggleStar={() => onToggleStar(note)}
               onClick={() => onOpenNote(note)}
               onEdit={() => onOpenNote(note, true)}
+              onMove={() => onMoveNote(note)}
               onDeleted={onDeleted}
               onError={onError}
             />

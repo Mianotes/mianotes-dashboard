@@ -16,6 +16,7 @@ type NoteDocumentHeaderProps = {
   onSave: () => void | Promise<void>;
   onCancel: () => void;
   onEdit: () => void;
+  onMove: () => void;
   onShare: () => void | Promise<void>;
   onDelete: () => void | Promise<void>;
 };
@@ -32,6 +33,7 @@ export function NoteDocumentHeader({
   onSave,
   onCancel,
   onEdit,
+  onMove,
   onShare,
   onDelete
 }: NoteDocumentHeaderProps) {
@@ -73,6 +75,7 @@ export function NoteDocumentHeader({
               cannotChangeNoteMessage={cannotChangeNoteMessage}
               isDeleting={isDeleting}
               onEdit={onEdit}
+              onMove={onMove}
               onShare={onShare}
               onDelete={onDelete}
             />
