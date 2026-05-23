@@ -161,7 +161,12 @@ button {
   color: #7b7c86;
 }
 
+.nav-item .dashboard-icon,
+.nav-item .folder-icon,
 .nav-item .pin-icon {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
   fill: none;
   stroke: currentColor;
 }
@@ -263,17 +268,17 @@ button {
   color: #d99ba0;
 }
 
-.nav-item.active,
 .nav-item:hover {
   border-left-color: #15161a;
   color: #1f2026;
   background: #ededee;
 }
 
-.nav-item.active-soft {
+.nav-item.active {
   border-left-color: #15161a;
   color: #1f2026;
-  background: #f1f1f3;
+  background: #ededee;
+  font-weight: 600;
 }
 
 .sidebar-section {
@@ -376,12 +381,6 @@ button {
   width: 44%;
   height: 100%;
   background: #17181d;
-}
-
-.nav-mark-icon {
-  width: 20px;
-  height: 20px;
-  object-fit: contain;
 }
 
 .workspace {

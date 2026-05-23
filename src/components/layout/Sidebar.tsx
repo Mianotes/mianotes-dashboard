@@ -1,7 +1,8 @@
-import { Edit3, Folder, MoreVertical, Plus, Trash2, Upload } from "lucide-react";
+import { Edit3, MoreVertical, Plus, Trash2, Upload } from "lucide-react";
 import type { RefCallback } from "react";
 import type { FolderRecord, StorageCapacityRecord, UserRecord, WorkspaceView } from "../../api/types";
-import logoMarkUrl from "../../assets/mianotes_mark.svg";
+import { DashboardIcon } from "../icons/DashboardIcon";
+import { FolderIcon } from "../icons/FolderIcon";
 import { PinIcon } from "../icons/PinIcon";
 import { folderPermissionMessage } from "../../utils/folders";
 import { formatStorageSize, mianotesStoragePercent } from "../../utils/format";
@@ -62,7 +63,7 @@ export function Sidebar({
           className={`nav-item ${workspaceView === "notes" && selectedFolderId === "all" ? "active" : ""}`}
           onClick={onSelectDashboard}
         >
-          <img className="nav-mark-icon" src={logoMarkUrl} alt="" />
+          <DashboardIcon size={18} />
           <span>Dashboard</span>
         </button>
       </nav>
@@ -80,7 +81,7 @@ export function Sidebar({
           return (
             <div
               key={folder.id}
-              className={`nav-item folder-nav-item ${selectedFolderId === folder.id ? "active-soft" : ""}`}
+              className={`nav-item folder-nav-item ${selectedFolderId === folder.id ? "active" : ""}`}
               role="button"
               tabIndex={0}
               onClick={() => onSelectFolder(folder.id)}
@@ -90,7 +91,7 @@ export function Sidebar({
                 onSelectFolder(folder.id);
               }}
             >
-              {folder.is_pinned ? <PinIcon size={18} /> : <Folder size={19} />}
+              {folder.is_pinned ? <PinIcon size={18} /> : <FolderIcon size={18} />}
               <span>{folder.name}</span>
               <div
                 className="folder-actions-menu"
