@@ -1,5 +1,5 @@
 import { Loader2, Upload, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { apiFetch, mediaPath } from "../../api/client";
 import type {
@@ -28,6 +28,11 @@ function parseJsonBlock<T>(label: string, value: string): T {
     throw new Error(`${label} must be valid JSON.`);
   }
 }
+
+type PublishJsonErrors = {
+  siteConfig?: string;
+  navigation?: string;
+};
 
 export function PublishScreen({
   folders,
@@ -60,7 +65,19 @@ export function PublishScreen({
   const [isPreparing, setIsPreparing] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [jsonErrors, setJsonErrors] = useState<PublishJsonErrors>({});
   const [result, setResult] = useState<PublishResultRecord | null>(null);
+  const noticeRef = useRef<HTMLDivElement | null>(null);
+  const statusRef = useRef<HTMLDivElement | null>(null);
+  const siteConfigRef = useRef<HTMLDivElement | null>(null);
+  const navigationRef = useRef<HTMLDivElement | null>(null);
+
+  function scrollToElement(element: HTMLElement | null) {
+    if (!element) return;
+    window.requestAnimationFrame(() => {
+      element.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -90,19 +107,68 @@ export function PublishScreen({
     };
   }, []);
 
+  useEffect(() => {
+    if (result) {
+      scrollToElement(statusRef.current);
+    }
+  }, [result]);
+
+  useEffect(() => {
+    if (error) {
+      scrollToElement(noticeRef.current);
+    }
+  }, [error]);
+
   function resetDraft() {
     setHasDraft(false);
     setResult(null);
     setError(null);
+    setJsonErrors({});
   }
 
-  function publishPayload() {
+  function validatePublishPayload() {
+    let nextSiteConfig: Record<string, unknown> | null = null;
+    let nextNavigation: Array<Record<string, unknown>> | null = null;
+    const nextErrors: PublishJsonErrors = {};
+
+    try {
+      const parsedSiteConfig = parseJsonBlock<unknown>("Site configuration", siteConfig);
+      if (!parsedSiteConfig || Array.isArray(parsedSiteConfig) || typeof parsedSiteConfig !== "object") {
+        nextErrors.siteConfig = "Site configuration must be a JSON object.";
+      } else {
+        nextSiteConfig = parsedSiteConfig as Record<string, unknown>;
+      }
+    } catch (caughtError) {
+      nextErrors.siteConfig = caughtError instanceof Error
+        ? caughtError.message
+        : "Site configuration must be valid JSON.";
+    }
+
+    try {
+      const parsedNavigation = parseJsonBlock<unknown>("Navigation", navigation);
+      if (!Array.isArray(parsedNavigation)) {
+        nextErrors.navigation = "Navigation must be a JSON array.";
+      } else {
+        nextNavigation = parsedNavigation as Array<Record<string, unknown>>;
+      }
+    } catch (caughtError) {
+      nextErrors.navigation = caughtError instanceof Error
+        ? caughtError.message
+        : "Navigation must be valid JSON.";
+    }
+
+    setJsonErrors(nextErrors);
+    if (nextErrors.siteConfig || nextErrors.navigation || !nextSiteConfig || !nextNavigation) {
+      scrollToElement(nextErrors.navigation ? navigationRef.current : siteConfigRef.current);
+      return null;
+    }
+
     return {
       folder_id: folderId === "all" ? null : folderId,
       tag_id: tagId === "all" ? null : tagId,
       theme,
-      site_configuration: parseJsonBlock<Record<string, unknown>>("Site configuration", siteConfig),
-      navigation: parseJsonBlock<Array<Record<string, unknown>>>("Navigation", navigation),
+      site_configuration: nextSiteConfig,
+      navigation: nextNavigation,
       updated_notes: updatedNotes
     };
   }
@@ -110,6 +176,7 @@ export function PublishScreen({
   async function prepareDraft() {
     setError(null);
     setResult(null);
+    setJsonErrors({});
     setIsPreparing(true);
     try {
       const params = new URLSearchParams({ theme });
@@ -138,9 +205,12 @@ export function PublishScreen({
     }
     setError(null);
     setResult(null);
+    const payload = validatePublishPayload();
+    if (!payload) {
+      return;
+    }
     setIsPublishing(true);
     try {
-      const payload = publishPayload();
       const nextResult = await apiFetch<PublishResultRecord>("/api/publish", {
         method: "POST",
         body: JSON.stringify(payload)
@@ -168,7 +238,7 @@ export function PublishScreen({
 
       <form className="publish-document" onSubmit={publishSite}>
         {error && (
-          <div className="dashboard-notice publish-notice" role="alert">
+          <div className="dashboard-notice publish-notice" role="alert" ref={noticeRef}>
             <span>{error}</span>
             <button type="button" aria-label="Dismiss message" onClick={() => setError(null)}>
               <X size={14} />
@@ -184,7 +254,7 @@ export function PublishScreen({
         </div>
 
         {result && (
-          <div className="publish-status success" role="status">
+          <div className="publish-status success" role="status" ref={statusRef}>
             <strong>Your static site is ready.</strong>
             <span>
               {result.note_count} notes have been published. Preview the site in your browser, or download everything
@@ -246,13 +316,29 @@ export function PublishScreen({
               description="Review the generated configuration, navigation, and updated notes before Mianotes builds a static HTML site."
             >
               <div className="publish-blocks">
-                <JsonBlock title="Site configuration" value={siteConfig} onChange={setSiteConfig} />
-                <JsonBlock
-                  title="Navigation"
-                  description="These are the navigation items the site will display on the left hand sidebar."
-                  value={navigation}
-                  onChange={setNavigation}
-                />
+                <div ref={siteConfigRef}>
+                  <JsonBlock
+                    title="Site configuration"
+                    error={jsonErrors.siteConfig}
+                    value={siteConfig}
+                    onChange={(value) => {
+                      setSiteConfig(value);
+                      setJsonErrors((current) => ({ ...current, siteConfig: undefined }));
+                    }}
+                  />
+                </div>
+                <div ref={navigationRef}>
+                  <JsonBlock
+                    title="Navigation"
+                    description="These are the navigation items the site will display on the left hand sidebar."
+                    error={jsonErrors.navigation}
+                    value={navigation}
+                    onChange={(value) => {
+                      setNavigation(value);
+                      setJsonErrors((current) => ({ ...current, navigation: undefined }));
+                    }}
+                  />
+                </div>
                 <UpdatedNotesTable notes={updatedNotes} />
               </div>
               <footer className="publish-actions">

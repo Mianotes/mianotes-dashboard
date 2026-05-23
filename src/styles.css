@@ -4106,6 +4106,20 @@ textarea:focus {
   background: #ffffff;
 }
 
+.json-block.has-error {
+  border-color: #f0a7b2;
+}
+
+.json-block-error {
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0a7b2;
+  color: #8a1f2a;
+  background: #fff0f3;
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: 600;
+}
+
 .json-block header {
   display: flex;
   align-items: center;
