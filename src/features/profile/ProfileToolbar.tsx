@@ -1,14 +1,11 @@
 import {
   ChevronDown,
-  ChevronLeft,
   Edit3,
   Loader2,
   User
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
 import type { UserRecord } from "../../api/types";
-import { AccountMenu } from "../../components/layout/AccountMenu";
-import { Breadcrumb } from "../../components/layout/Breadcrumb";
+import { ScreenToolbar } from "../../components/layout/ScreenToolbar";
 
 export function ProfileToolbar({
   users,
@@ -49,46 +46,16 @@ export function ProfileToolbar({
   onSignOut: () => void;
   onOpenSettings: () => void;
 }) {
-  const [isAccountOpen, setIsAccountOpen] = useState(false);
-  const accountMenuRef = useRef<HTMLDivElement | null>(null);
-
-  useEffect(() => {
-    if (!isAccountOpen) return;
-
-    function closeAccountMenu(event: PointerEvent) {
-      if (
-        event.target instanceof Node
-        && accountMenuRef.current
-        && !accountMenuRef.current.contains(event.target)
-      ) {
-        setIsAccountOpen(false);
-      }
-    }
-
-    function closeAccountMenuOnEscape(event: globalThis.KeyboardEvent) {
-      if (event.key === "Escape") {
-        setIsAccountOpen(false);
-      }
-    }
-
-    document.addEventListener("pointerdown", closeAccountMenu);
-    document.addEventListener("keydown", closeAccountMenuOnEscape);
-
-    return () => {
-      document.removeEventListener("pointerdown", closeAccountMenu);
-      document.removeEventListener("keydown", closeAccountMenuOnEscape);
-    };
-  }, [isAccountOpen]);
-
   return (
-    <header className="toolbar profile-toolbar">
-      <div className="profile-toolbar-left">
-        <button className="back-square-button" onClick={onBack} aria-label="Back to notes">
-          <ChevronLeft size={16} />
-        </button>
-        <Breadcrumb items={[{ label: "Users" }, { label: toolbarName, current: true }]} />
-      </div>
-      <div className="toolbar-actions">
+    <ScreenToolbar
+      breadcrumbItems={[{ label: "Users" }, { label: toolbarName, current: true }]}
+      currentUser={currentUser}
+      onBack={onBack}
+      onOpenProfile={() => onSelectUser(currentUser.id)}
+      onOpenUsers={() => onSelectUser("all")}
+      onOpenSettings={onOpenSettings}
+      onSignOut={onSignOut}
+    >
         {isAddingUser ? (
           <>
             <button
@@ -154,31 +121,6 @@ export function ProfileToolbar({
           </select>
           <ChevronDown className="select-button-chevron" size={12} />
         </label>
-        <AccountMenu
-          className="profile-account-menu"
-          avatarClassName="profile-toolbar-avatar"
-          currentUser={currentUser}
-          isOpen={isAccountOpen}
-          menuRef={accountMenuRef}
-          onToggle={() => setIsAccountOpen((value) => !value)}
-          onOpenProfile={() => {
-            setIsAccountOpen(false);
-            onSelectUser(currentUser.id);
-          }}
-          onOpenUsers={() => {
-            setIsAccountOpen(false);
-            onSelectUser("all");
-          }}
-          onOpenSettings={() => {
-            setIsAccountOpen(false);
-            onOpenSettings();
-          }}
-          onSignOut={() => {
-            setIsAccountOpen(false);
-            onSignOut();
-          }}
-        />
-      </div>
-    </header>
+    </ScreenToolbar>
   );
 }

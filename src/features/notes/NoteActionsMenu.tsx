@@ -1,6 +1,7 @@
 import { Edit3, Eye, Loader2, MoreVertical, Share2, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { SyntheticEvent } from "react";
+import { mediaPath } from "../../api/client";
 import type { NoteRecord } from "../../api/types";
 
 type NoteActionsMenuProps = {
@@ -23,6 +24,7 @@ export function NoteActionsMenu({
   onDelete
 }: NoteActionsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isOpeningSource, setIsOpeningSource] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
@@ -61,6 +63,44 @@ export function NoteActionsMenu({
     setIsOpen(false);
   }
 
+  async function openSourceFile() {
+    const sourceFile = note.source_files?.[0];
+    if (!sourceFile?.url || isOpeningSource) {
+      return;
+    }
+
+    setIsOpeningSource(true);
+    const viewer = window.open("about:blank", "_blank");
+    if (viewer) {
+      viewer.opener = null;
+      viewer.document.title = sourceFile.original_filename;
+      viewer.document.body.textContent = "Opening source file...";
+    }
+    try {
+      const response = await fetch(mediaPath(sourceFile.url), { credentials: "include" });
+      if (!response.ok) {
+        throw new Error("Could not open the source file.");
+      }
+      const blobUrl = URL.createObjectURL(await response.blob());
+      if (viewer) {
+        viewer.location.assign(blobUrl);
+      } else {
+        const link = document.createElement("a");
+        link.href = blobUrl;
+        link.target = "_blank";
+        link.rel = "noreferrer";
+        link.click();
+      }
+      window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+      setIsOpen(false);
+    } catch (error) {
+      viewer?.close();
+      window.alert(error instanceof Error ? error.message : "Could not open the source file.");
+    } finally {
+      setIsOpeningSource(false);
+    }
+  }
+
   return (
     <div className="note-actions-menu" ref={menuRef} onClick={stopRowAction} onKeyDown={stopRowAction}>
       <button
@@ -89,16 +129,15 @@ export function NoteActionsMenu({
             Share
           </button>
           {note.source_files?.[0]?.url ? (
-            <a
-              href={note.source_files[0].url}
-              target="_blank"
-              rel="noreferrer"
+            <button
+              type="button"
               role="menuitem"
-              onClick={() => setIsOpen(false)}
+              disabled={isOpeningSource}
+              onClick={() => void openSourceFile()}
             >
-              <Eye size={15} />
+              {isOpeningSource ? <Loader2 size={15} className="spin" /> : <Eye size={15} />}
               View Source
-            </a>
+            </button>
           ) : (
             <span role="menuitem" aria-disabled="true">
               <Eye size={15} />

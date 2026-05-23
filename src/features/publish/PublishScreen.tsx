@@ -1,16 +1,21 @@
-import { ChevronLeft, Loader2, Upload, X } from "lucide-react";
+import { Loader2, Upload, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { FormEvent } from "react";
 import { apiFetch, mediaPath } from "../../api/client";
 import type {
   FolderRecord,
+  PublishDraftNoteRecord,
   PublishDraftRecord,
   PublishResultRecord,
   PublishThemeRecord,
-  TagRecord
+  TagRecord,
+  UserRecord
 } from "../../api/types";
-import { Breadcrumb } from "../../components/layout/Breadcrumb";
+import { ScreenToolbar } from "../../components/layout/ScreenToolbar";
 import { JsonBlock } from "./JsonBlock";
+import { PublishControls } from "./PublishControls";
+import { PublishStep } from "./PublishStep";
+import { UpdatedNotesTable } from "./UpdatedNotesTable";
 
 function prettyJson(value: unknown) {
   return JSON.stringify(value, null, 2);
@@ -27,21 +32,29 @@ function parseJsonBlock<T>(label: string, value: string): T {
 export function PublishScreen({
   folders,
   tags,
+  currentUser,
   selectedFolderId,
-  onBack
+  onBack,
+  onSignOut,
+  onOpenProfile,
+  onOpenSettings
 }: {
   folders: FolderRecord[];
   tags: TagRecord[];
+  currentUser: UserRecord;
   selectedFolderId: string | "all";
   onBack: () => void;
+  onSignOut: () => void;
+  onOpenProfile: (profileId?: string | "all") => void;
+  onOpenSettings: () => void;
 }) {
   const [themes, setThemes] = useState<PublishThemeRecord[]>([]);
-  const [theme, setTheme] = useState("mianotes");
+  const [theme, setTheme] = useState("mialight");
   const [folderId, setFolderId] = useState<string | "all">(selectedFolderId);
   const [tagId, setTagId] = useState<string | "all">("all");
   const [siteConfig, setSiteConfig] = useState("{}");
   const [navigation, setNavigation] = useState("[]");
-  const [updatedNotes, setUpdatedNotes] = useState("[]");
+  const [updatedNotes, setUpdatedNotes] = useState<PublishDraftNoteRecord[]>([]);
   const [hasDraft, setHasDraft] = useState(false);
   const [isLoadingThemes, setIsLoadingThemes] = useState(true);
   const [isPreparing, setIsPreparing] = useState(false);
@@ -90,7 +103,7 @@ export function PublishScreen({
       theme,
       site_configuration: parseJsonBlock<Record<string, unknown>>("Site configuration", siteConfig),
       navigation: parseJsonBlock<Array<Record<string, unknown>>>("Navigation", navigation),
-      updated_notes: parseJsonBlock<Array<Record<string, unknown>>>("Updated notes", updatedNotes)
+      updated_notes: updatedNotes
     };
   }
 
@@ -109,7 +122,7 @@ export function PublishScreen({
       const draft = await apiFetch<PublishDraftRecord>(`/api/publish/draft?${params.toString()}`);
       setSiteConfig(prettyJson(draft.site_configuration));
       setNavigation(prettyJson(draft.navigation));
-      setUpdatedNotes(prettyJson(draft.updated_notes));
+      setUpdatedNotes(draft.updated_notes);
       setHasDraft(true);
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : "Could not prepare publish draft.");
@@ -143,12 +156,16 @@ export function PublishScreen({
 
   return (
     <section className="publish-screen">
-      <header className="note-toolbar publish-toolbar">
-        <button className="icon-button back-button" type="button" aria-label="Back" onClick={onBack}>
-          <ChevronLeft size={18} />
-        </button>
-        <Breadcrumb className="publish-breadcrumb" items={[{ label: "Publish", current: true }]} />
-      </header>
+      <ScreenToolbar
+        className="settings-toolbar publish-toolbar"
+        breadcrumbItems={[{ label: "Publish", current: true }]}
+        currentUser={currentUser}
+        onBack={onBack}
+        onOpenProfile={() => onOpenProfile(currentUser.id)}
+        onOpenUsers={() => onOpenProfile("all")}
+        onOpenSettings={onOpenSettings}
+        onSignOut={onSignOut}
+      />
 
       <form className="publish-document" onSubmit={publishSite}>
         {error && (
@@ -160,116 +177,95 @@ export function PublishScreen({
           </div>
         )}
 
-        {result && (
-          <div className="publish-status success" role="status">
-            <strong>Published</strong>
-            <span>
-              {result.note_count} notes are available at{" "}
-              <a href={mediaPath(result.site_url)} target="_blank" rel="noreferrer">the static site</a>.
-            </span>
-          </div>
-        )}
-
         <div className="publish-document-header">
           <div>
             <span className="publish-kicker">Static HTML</span>
             <h1>Publish your notes</h1>
-            <p>
-              Review the generated configuration, navigation, and updated notes before
-              Mianotes builds a static HTML site.
-            </p>
           </div>
         </div>
 
-        {!result && (
-          <div className="publish-controls">
-            <label>
-              Folder
-              <select
-                value={folderId}
-                onChange={(event) => {
-                  setFolderId(event.target.value);
-                  resetDraft();
-                }}
-              >
-                <option value="all">All folders</option>
-                {folders.map((folder) => (
-                  <option value={folder.id} key={folder.id}>{folder.name}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Tags
-              <select
-                value={tagId}
-                onChange={(event) => {
-                  setTagId(event.target.value);
-                  resetDraft();
-                }}
-              >
-                <option value="all">All tags</option>
-                {tags.map((tag) => (
-                  <option value={tag.id} key={tag.id}>{tag.name}</option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Theme
-              <select
-                value={theme}
-                onChange={(event) => {
-                  setTheme(event.target.value);
-                  resetDraft();
-                }}
-                disabled={isLoadingThemes}
-              >
-                {themes.map((item) => (
-                  <option value={item.id} key={item.id}>{item.name}</option>
-                ))}
-              </select>
-            </label>
-            <button
-              className="primary-action"
-              type="button"
-              onClick={prepareDraft}
-              disabled={isLoadingThemes || isPreparing || isPublishing}
-            >
-              {isPreparing ? <Loader2 className="spin" size={16} /> : null}
-              Continue
-            </button>
+        {result && (
+          <div className="publish-status success" role="status">
+            <strong>Your static site is ready.</strong>
+            <span>
+              {result.note_count} notes have been published. Preview the site in your browser, or download everything
+              as a ZIP file.
+            </span>
+            <div className="publish-status-actions">
+              <a href={mediaPath(result.site_url)} target="_blank" rel="noreferrer">
+                Preview site
+              </a>
+              <a href={mediaPath(result.download_url)}>
+                Download ZIP
+              </a>
+            </div>
           </div>
         )}
 
-        {isPreparing ? (
-          <div className="publish-loading">
-            <Loader2 className="spin" size={24} />
-            <span>Preparing publish draft...</span>
-          </div>
-        ) : hasDraft ? (
-          <div className="publish-blocks">
-            <JsonBlock title="Site configuration" value={siteConfig} onChange={setSiteConfig} />
-            <JsonBlock
-              title="Navigation"
-              description="These are the navigation items the site will display on the left hand sidebar."
-              value={navigation}
-              onChange={setNavigation}
-            />
-            <JsonBlock
-              title="Updated notes"
-              description="List of new and edited files since you last published the site."
-              value={updatedNotes}
-              onChange={setUpdatedNotes}
-            />
-          </div>
-        ) : null}
+        {!result && (
+          <div className="publish-steps">
+            <PublishStep
+              number={1}
+              description="Choose the folders you want to export, filter them by tag, and select the HTML theme you would like to use."
+            >
+              <PublishControls
+                folders={folders}
+                folderId={folderId}
+                isLoadingThemes={isLoadingThemes}
+                isPreparing={isPreparing}
+                isPublishing={isPublishing}
+                tagId={tagId}
+                tags={tags}
+                theme={theme}
+                themes={themes}
+                onContinue={prepareDraft}
+                onFolderChange={(nextFolderId) => {
+                  setFolderId(nextFolderId);
+                  resetDraft();
+                }}
+                onTagChange={(nextTagId) => {
+                  setTagId(nextTagId);
+                  resetDraft();
+                }}
+                onThemeChange={(nextTheme) => {
+                  setTheme(nextTheme);
+                  resetDraft();
+                }}
+              />
+            </PublishStep>
 
-        {hasDraft && !result && (
-          <footer className="publish-actions">
-            <button className="primary-action" type="submit" disabled={isPublishing}>
-              {isPublishing ? <Loader2 className="spin" size={16} /> : <Upload size={16} />}
-              Publish
-            </button>
-          </footer>
+            {isPreparing ? (
+              <div className="publish-loading">
+                <Loader2 className="spin" size={24} />
+                <span>Preparing publish draft...</span>
+              </div>
+            ) : null}
+
+            {hasDraft ? (
+              <PublishStep
+                className="publish-step-review"
+                number={2}
+                description="Review the generated configuration, navigation, and updated notes before Mianotes builds a static HTML site."
+              >
+                <div className="publish-blocks">
+                  <JsonBlock title="Site configuration" value={siteConfig} onChange={setSiteConfig} />
+                  <JsonBlock
+                    title="Navigation"
+                    description="These are the navigation items the site will display on the left hand sidebar."
+                    value={navigation}
+                    onChange={setNavigation}
+                  />
+                  <UpdatedNotesTable notes={updatedNotes} />
+                </div>
+                <footer className="publish-actions">
+                  <button className="primary-action" type="submit" disabled={isPublishing}>
+                    {isPublishing ? <Loader2 className="spin" size={16} /> : <Upload size={16} />}
+                    Publish
+                  </button>
+                </footer>
+              </PublishStep>
+            ) : null}
+          </div>
         )}
       </form>
     </section>

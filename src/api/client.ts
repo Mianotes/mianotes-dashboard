@@ -4,9 +4,30 @@ export function apiPath(path: string) {
   return `${apiBase}${path}`;
 }
 
+function sameOriginMediaPath(path: string) {
+  if (!/^https?:\/\//.test(path) || apiBase) {
+    return path;
+  }
+  if (typeof window === "undefined") {
+    return path;
+  }
+  const url = new URL(path);
+  const appHost = window.location.hostname;
+  const serviceHost = url.hostname;
+  const isLocalService = (
+    url.port === "8200"
+    && ["127.0.0.1", "localhost", appHost].includes(serviceHost)
+    && ["127.0.0.1", "localhost", serviceHost].includes(appHost)
+  );
+  if (!isLocalService) {
+    return path;
+  }
+  return `${url.pathname}${url.search}${url.hash}`;
+}
+
 export function mediaPath(path: string) {
   if (/^https?:\/\//.test(path)) {
-    return path;
+    return sameOriginMediaPath(path);
   }
   return apiPath(path);
 }

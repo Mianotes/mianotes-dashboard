@@ -8,6 +8,7 @@ import {
   User,
   X
 } from "lucide-react";
+import { useEffect, useRef } from "react";
 import type { RefCallback } from "react";
 import type { FolderRecord, TagRecord, UserRecord } from "../../api/types";
 import { DashboardIcon } from "../icons/DashboardIcon";
@@ -72,6 +73,8 @@ export function Toolbar({
   onOpenSettings,
   onSignOut
 }: ToolbarProps) {
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const searchShortcutLabel = /Mac|iPhone|iPad|iPod/.test(navigator.platform) ? "⌘K" : "Ctrl K";
   const rootBreadcrumbItems = selectedFolder
     ? [
         { label: "Folder", icon: <FolderIcon size={18} /> },
@@ -87,6 +90,18 @@ export function Toolbar({
           current: breadcrumbItems.length === 0 && !selectedTag
         }
       ];
+
+  useEffect(() => {
+    function focusSearch(event: KeyboardEvent) {
+      if ((event.metaKey || event.ctrlKey) && !event.altKey && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        searchInputRef.current?.focus();
+      }
+    }
+
+    document.addEventListener("keydown", focusSearch);
+    return () => document.removeEventListener("keydown", focusSearch);
+  }, []);
 
   return (
     <header className="toolbar">
@@ -120,10 +135,12 @@ export function Toolbar({
           <label className="search-box">
             <Search size={18} />
             <input
+              ref={searchInputRef}
               value={searchQuery}
               onChange={(event) => onSearchChange(event.target.value)}
-              placeholder="Search notes..."
+              placeholder="Search"
             />
+            <span className="search-shortcut" aria-hidden="true">{searchShortcutLabel}</span>
           </label>
           {tagSuggestions.length > 0 && (
             <div className="tag-suggestions" role="listbox" aria-label="Suggested tags">

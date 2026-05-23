@@ -100,11 +100,20 @@ export type StorageSwitchResponse = {
   session_ended: boolean;
 };
 
+export type ServiceApiKeyRecord = {
+  token: string;
+};
+
 export type PublishThemeRecord = {
   id: string;
   name: string;
   description: string;
   version: string;
+};
+
+export type PublishDraftNoteRecord = {
+  title: string;
+  path: string;
 };
 
 export type PublishDraftRecord = {
@@ -113,7 +122,7 @@ export type PublishDraftRecord = {
   tag_id?: string | null;
   site_configuration: Record<string, unknown>;
   navigation: Array<Record<string, unknown>>;
-  updated_notes: Array<Record<string, unknown>>;
+  updated_notes: PublishDraftNoteRecord[];
   generated_at: string;
 };
 
@@ -128,6 +137,7 @@ export type PublishResultRecord = {
   markdown_path: string;
   url_path: string;
   site_url: string;
+  download_url: string;
   created_at: string;
 };
 

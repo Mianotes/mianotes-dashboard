@@ -1,11 +1,53 @@
-import { ChevronLeft, Database, Folder, History, Loader2, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { apiFetch } from "../../api/client";
-import type { FolderRecord, StorageCapacityRecord, StorageSettingsRecord, UserRecord } from "../../api/types";
-import { AccountMenu } from "../../components/layout/AccountMenu";
-import { Breadcrumb } from "../../components/layout/Breadcrumb";
+import { Copy, Database, Folder, History, Loader2, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { apiBase, apiFetch } from "../../api/client";
+import type {
+  FolderRecord,
+  ServiceApiKeyRecord,
+  StorageCapacityRecord,
+  StorageSettingsRecord,
+  UserRecord
+} from "../../api/types";
+import { ScreenToolbar } from "../../components/layout/ScreenToolbar";
 import { formatSettingsDate } from "../../utils/format";
 import { DatabaseSwitchModal } from "./DatabaseSwitchModal";
+
+function ApiKeyLockIcon() {
+  return (
+    <svg
+      aria-hidden="true"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M17 10V8C17 5.23858 14.7614 3 12 3C9.23858 3 7 5.23858 7 8V10M12 14.5V16.5M8.8 21H15.2C16.8802 21 17.7202 21 18.362 20.673C18.9265 20.3854 19.3854 19.9265 19.673 19.362C20 18.7202 20 17.8802 20 16.2V14.8C20 13.1198 20 12.2798 19.673 11.638C19.3854 11.0735 18.9265 10.6146 18.362 10.327C17.7202 10 16.8802 10 15.2 10H8.8C7.11984 10 6.27976 10 5.63803 10.327C5.07354 10.6146 4.6146 11.0735 4.32698 11.638C4 12.2798 4 13.1198 4 14.8V16.2C4 17.8802 4 18.7202 4.32698 19.362C4.6146 19.9265 5.07354 20.3854 5.63803 20.673C6.27976 21 7.11984 21 8.8 21Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+function apiEnvironmentUrl() {
+  if (apiBase) {
+    if (typeof window === "undefined") {
+      return apiBase.replace(/\/$/, "");
+    }
+    return new URL(apiBase, window.location.origin).href.replace(/\/$/, "");
+  }
+  if (typeof window === "undefined") {
+    return "http://127.0.0.1:8200";
+  }
+  if (window.location.port === "8201") {
+    return `${window.location.protocol}//${window.location.hostname}:8200`;
+  }
+  return window.location.origin;
+}
 
 export function SettingsScreen({
   currentUser,
@@ -34,41 +76,13 @@ export function SettingsScreen({
   const [restoringFolderId, setRestoringFolderId] = useState<string | null>(null);
   const [settingsError, setSettingsError] = useState<string | null>(null);
   const [settingsMessage, setSettingsMessage] = useState<string | null>(null);
-  const [isAccountOpen, setIsAccountOpen] = useState(false);
-  const accountMenuRef = useRef<HTMLDivElement | null>(null);
+  const [apiToken, setApiToken] = useState("");
+  const [isCreatingApiToken, setIsCreatingApiToken] = useState(false);
 
   useEffect(() => {
     void loadArchivedFolders();
     void loadStorageSettings();
   }, []);
-
-  useEffect(() => {
-    if (!isAccountOpen) return;
-
-    function closeAccountMenu(event: PointerEvent) {
-      if (
-        event.target instanceof Node
-        && accountMenuRef.current
-        && !accountMenuRef.current.contains(event.target)
-      ) {
-        setIsAccountOpen(false);
-      }
-    }
-
-    function closeAccountMenuOnEscape(event: globalThis.KeyboardEvent) {
-      if (event.key === "Escape") {
-        setIsAccountOpen(false);
-      }
-    }
-
-    document.addEventListener("pointerdown", closeAccountMenu);
-    document.addEventListener("keydown", closeAccountMenuOnEscape);
-
-    return () => {
-      document.removeEventListener("pointerdown", closeAccountMenu);
-      document.removeEventListener("keydown", closeAccountMenuOnEscape);
-    };
-  }, [isAccountOpen]);
 
   async function loadArchivedFolders() {
     setIsLoadingArchivedFolders(true);
@@ -114,45 +128,50 @@ export function SettingsScreen({
     }
   }
 
+  async function createApiToken() {
+    setIsCreatingApiToken(true);
+    setSettingsError(null);
+    setSettingsMessage(null);
+    setApiToken("");
+    try {
+      const createdToken = await apiFetch<ServiceApiKeyRecord>("/api/settings/api-key", {
+        method: "POST",
+        body: JSON.stringify({})
+      });
+      setApiToken(createdToken.token);
+    } catch (error) {
+      setSettingsError(error instanceof Error ? error.message : "Could not create an API key.");
+    } finally {
+      setIsCreatingApiToken(false);
+    }
+  }
+
+  async function copyApiEnvironment() {
+    if (!apiToken) {
+      return;
+    }
+    await navigator.clipboard?.writeText(apiEnvironmentSnippet);
+  }
+
   const databasePath = storageSettings?.database_path ?? `${storageCapacity?.data_dir ?? "data"}/mia.db`;
   const databaseLabel = databasePath.replace(/\/$/, "").split("/").slice(-2).join("/");
+  const apiEnvironmentSnippet = [
+    `export MIANOTES_API_URL="${apiEnvironmentUrl()}"`,
+    `export MIANOTES_API_KEY="${apiToken}"`
+  ].join("\n");
 
   return (
     <>
-      <header className="toolbar profile-toolbar settings-toolbar">
-        <div className="profile-toolbar-left">
-          <button className="back-square-button" onClick={onBack} aria-label="Back to notes">
-            <ChevronLeft size={16} />
-          </button>
-          <Breadcrumb items={[{ label: "Settings", current: true }]} />
-        </div>
-        <div className="toolbar-actions">
-          <AccountMenu
-            className="profile-account-menu"
-            avatarClassName="profile-toolbar-avatar"
-            currentUser={currentUser}
-            isOpen={isAccountOpen}
-            menuRef={accountMenuRef}
-            onToggle={() => setIsAccountOpen((value) => !value)}
-            onOpenProfile={() => {
-              setIsAccountOpen(false);
-              onOpenProfile(currentUser.id);
-            }}
-            onOpenUsers={() => {
-              setIsAccountOpen(false);
-              onOpenProfile("all");
-            }}
-            onOpenSettings={() => {
-              setIsAccountOpen(false);
-              onOpenSettings();
-            }}
-            onSignOut={() => {
-              setIsAccountOpen(false);
-              onSignOut();
-            }}
-          />
-        </div>
-      </header>
+      <ScreenToolbar
+        className="settings-toolbar"
+        breadcrumbItems={[{ label: "Settings", current: true }]}
+        currentUser={currentUser}
+        onBack={onBack}
+        onOpenProfile={() => onOpenProfile(currentUser.id)}
+        onOpenUsers={() => onOpenProfile("all")}
+        onOpenSettings={onOpenSettings}
+        onSignOut={onSignOut}
+      />
       <section className="settings-surface">
         <div className="settings-content">
           <h1>Settings</h1>
@@ -191,10 +210,74 @@ export function SettingsScreen({
                 type="button"
                 onClick={() => setIsDatabaseModalOpen(true)}
               >
-                Change database
+              Change database
               </button>
             </div>
           </section>
+          {currentUser.is_admin && (
+            <section className="settings-card settings-api-card" aria-labelledby="settings-api-title">
+              <div className="settings-card-intro">
+                <h2 id="settings-api-title">Create API Key</h2>
+                <p>
+                  Generate a secure API key so your agents, apps, and external tools can connect to Mia. This key works
+                  across all your mia.db files.
+                </p>
+              </div>
+              <div className="settings-api-panel">
+                <label className="settings-api-field">
+                  <span className="sr-only">API key</span>
+                  <span className="settings-api-input-shell">
+                    <span className="settings-api-icon-shell">
+                      <ApiKeyLockIcon />
+                    </span>
+                    <input
+                      readOnly
+                      aria-disabled="true"
+                      type="text"
+                      value={apiToken}
+                      placeholder="API key"
+                      onFocus={(event) => event.currentTarget.select()}
+                    />
+                  </span>
+                </label>
+                <button
+                  className="settings-api-action"
+                  type="button"
+                  disabled={isCreatingApiToken}
+                  onClick={() => void createApiToken()}
+                >
+                  {isCreatingApiToken ? <Loader2 className="spin" size={18} /> : null}
+                  Create API Key
+                </button>
+              </div>
+              {apiToken ? (
+                <div className="settings-api-created">
+                  <h3>API key created</h3>
+                  <p>Add these environment variables to your agent, app, or tool to connect to Mia.</p>
+                  <div className="settings-api-code-block">
+                    <pre aria-label={apiEnvironmentSnippet}>
+                      <code>
+                        <span className="shell-keyword">export</span>{" "}
+                        <span className="shell-variable">MIANOTES_API_URL</span>=
+                        <span className="shell-value">"{apiEnvironmentUrl()}"</span>
+                        {"\n"}
+                        <span className="shell-keyword">export</span>{" "}
+                        <span className="shell-variable">MIANOTES_API_KEY</span>=
+                        <span className="shell-value">"{apiToken}"</span>
+                      </code>
+                    </pre>
+                    <button type="button" onClick={() => void copyApiEnvironment()}>
+                      <Copy size={16} />
+                      Copy
+                    </button>
+                  </div>
+                  <p className="settings-api-private-note">
+                    Keep this token private. You will not be able to see it again.
+                  </p>
+                </div>
+              ) : null}
+            </section>
+          )}
           <section className="settings-card settings-restore-card" aria-labelledby="settings-restore-title">
             <div className="settings-card-intro">
               <h2 id="settings-restore-title">Restore folders</h2>

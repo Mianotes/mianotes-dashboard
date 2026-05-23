@@ -182,8 +182,12 @@ export function DashboardShell({
             <PublishScreen
               folders={folders}
               tags={tags}
+              currentUser={currentUser}
               selectedFolderId={navigation.selectedFolderId}
               onBack={navigation.goBack}
+              onSignOut={() => void signOut()}
+              onOpenProfile={navigation.openProfile}
+              onOpenSettings={navigation.openSettings}
             />
           ) : navigation.workspaceView === "profile" ? (
             <ProfileScreen
