@@ -249,6 +249,18 @@ export function useDashboardNavigation({
     openJobsView();
   }, [openJobsView]);
 
+  const selectProfileUser = useCallback(
+    (userId: string | "all") => {
+      if (workspaceView === "profile" && userId !== profileUserId) {
+        pushNavigationSnapshot();
+      }
+      setProfileUserId(userId);
+      setIsSidebarOpen(false);
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    },
+    [profileUserId, pushNavigationSnapshot, workspaceView]
+  );
+
   useNavigationHistory({
     openedNoteId,
     openedNoteIdRef,
@@ -309,6 +321,7 @@ export function useDashboardNavigation({
     openAddNote,
     openAddFolder,
     openProfile,
+    selectProfileUser,
     openSettings,
     openPublish,
     openJobs,

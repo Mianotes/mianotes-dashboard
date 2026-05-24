@@ -214,7 +214,7 @@ export function DashboardShell({
               folders={folders}
               currentUser={currentUser}
               selectedUserId={navigation.profileUserId}
-              onSelectUser={navigation.setProfileUserId}
+              onSelectUser={navigation.selectProfileUser}
               onBack={navigation.goBack}
               onSignOut={() => void signOut()}
               onUserUpdated={updateUserInWorkspace}
