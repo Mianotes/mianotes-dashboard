@@ -2918,6 +2918,11 @@ textarea:focus {
   width: min(440px, calc(100vw - 32px));
 }
 
+.profile-admin-modal .primary-button,
+.profile-admin-modal .secondary-action-button {
+  min-height: 42px;
+}
+
 .profile-admin-modal .primary-button {
   padding-right: 24px;
   padding-left: 24px;
