@@ -16,6 +16,33 @@ type UseMiaPromptArgs = {
   onRefresh: () => Promise<void>;
 };
 
+function miaHeadingForPrompt(instructions: string): string | null {
+  const prompt = instructions.trim().replace(/^@mia\s+/i, "").toLowerCase();
+  if (/\b(summarise|summarize|summary)\b/.test(prompt)) {
+    return "Summary";
+  }
+  if (
+    /\bkey points?\b/.test(prompt) ||
+    /\bmain points?\b/.test(prompt) ||
+    /\btakeaways?\b/.test(prompt)
+  ) {
+    return "Key points";
+  }
+  return null;
+}
+
+function withMiaHeading(markdown: string, heading: string | null): string {
+  const text = markdown.trim();
+  if (!heading) return text;
+
+  const escapedHeading = heading.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const headingPattern = new RegExp(`^#\\s+${escapedHeading}\\s*$`, "i");
+  if (headingPattern.test(text.split("\n", 1)[0] ?? "")) {
+    return text;
+  }
+  return `# ${heading}\n\n${text}`;
+}
+
 export function useMiaPrompt({
   note,
   isEditing,
@@ -29,6 +56,7 @@ export function useMiaPrompt({
 }: UseMiaPromptArgs) {
   const [commentBody, setCommentBody] = useState("");
   const [miaResponse, setMiaResponse] = useState<string | null>(null);
+  const [miaResponseHeading, setMiaResponseHeading] = useState<string | null>(null);
   const [miaError, setMiaError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [miaLoadingMessage, setMiaLoadingMessage] = useState("Sending your request to Mia...");
@@ -57,6 +85,7 @@ export function useMiaPrompt({
     clearMiaLoadingTimers();
     setCommentBody("");
     setMiaResponse(null);
+    setMiaResponseHeading(null);
     setMiaError(null);
     setMiaLoadingMessage("Sending your request to Mia...");
     setIsApplyingMia(false);
@@ -85,6 +114,7 @@ export function useMiaPrompt({
     setIsLoading(true);
     startMiaLoadingMessages();
     setMiaResponse(null);
+    setMiaResponseHeading(null);
     setMiaError(null);
 
     const markdown = isEditing ? currentEditorMarkdown() : undefined;
@@ -94,6 +124,7 @@ export function useMiaPrompt({
         body: JSON.stringify({ body, markdown })
       });
       setMiaResponse(result.text);
+      setMiaResponseHeading(miaHeadingForPrompt(trimmedInstructions));
       if (clearInput) setCommentBody("");
       await onRefresh();
     } catch (err) {
@@ -126,7 +157,7 @@ export function useMiaPrompt({
     }
 
     const currentText = currentEditorMarkdown().trim();
-    const miaText = miaResponse.trim();
+    const miaText = withMiaHeading(miaResponse, miaResponseHeading);
     const nextText = mode === "append" && currentText ? `${currentText}\n\n---\n\n${miaText}` : miaText;
 
     setIsApplyingMia(true);
