@@ -219,7 +219,7 @@ export function SettingsScreen({
               <div className="settings-card-intro">
                 <h2 id="settings-team-title">Team access</h2>
                 <p>
-                  Manage who can administer this workspace without adding extra controls to personal profiles.
+                  Choose which team members can manage this workspace.
                 </p>
               </div>
               <div className="settings-team-panel">
