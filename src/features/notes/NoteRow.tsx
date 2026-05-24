@@ -5,7 +5,7 @@ import type { NoteRecord, UserRecord } from "../../api/types";
 import { UserAvatar } from "../../components/ui/UserAvatar";
 import { relativeTime } from "../../utils/format";
 import { appUrlForPath, noteRoutePath } from "../../utils/internalRoutes";
-import { badgeTone, isNoteIndexing, noteExcerpt, sourceIcon } from "../../utils/notes";
+import { badgeTone, isNoteJobActive, isNoteIndexing, noteExcerpt, noteJobBadge, sourceIcon } from "../../utils/notes";
 import { NoteActionsMenu } from "./NoteActionsMenu";
 
 type NoteRowProps = {
@@ -35,7 +35,10 @@ export function NoteRow({
   const tags = note.tags ?? [];
   const isBusy = isNoteIndexing(note);
   const canChangeNote = currentUser.is_admin || note.user_id === currentUser.id || note.user?.id === currentUser.id;
+  const canEditNote = canChangeNote && !isNoteJobActive(note);
   const cannotChangeNoteMessage = `Only ${owner} or an admin can change this note.`;
+  const cannotEditNoteMessage = isNoteJobActive(note) ? "Mia is still processing this note." : cannotChangeNoteMessage;
+  const jobBadge = noteJobBadge(note);
 
   function openRowFromKeyboard(event: ReactKeyboardEvent<HTMLElement>) {
     if (event.key !== "Enter" && event.key !== " ") return;
@@ -94,9 +97,12 @@ export function NoteRow({
         <div className="note-meta-top">
           <span className="folder-name">{folderName}</span>
           <span className={`badge ${badgeTone(note.source_type)}`}><Icon size={15} />{note.source_type}</span>
-          {isBusy && <span className="badge warning"><Loader2 size={14} className="spin" />{note.status.replace("_", " ")}</span>}
+          {isBusy && !jobBadge && <span className="badge warning"><Loader2 size={14} className="spin" />{note.status.replace("_", " ")}</span>}
         </div>
-        <h2>{note.title}</h2>
+        <h2>
+          {note.title}
+          {jobBadge && <span className={`badge ${jobBadge.tone}`}>{jobBadge.label}</span>}
+        </h2>
         <p>{noteExcerpt(note)}</p>
         <div className="note-meta-bottom">
           <UserAvatar user={note.user} name={owner} />
@@ -113,6 +119,8 @@ export function NoteRow({
           note={note}
           canChangeNote={canChangeNote}
           cannotChangeNoteMessage={cannotChangeNoteMessage}
+          canEditNote={canEditNote}
+          cannotEditNoteMessage={cannotEditNoteMessage}
           onEdit={onEdit}
           onMove={onMove}
           onShare={copyShareLink}

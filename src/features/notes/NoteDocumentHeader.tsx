@@ -12,6 +12,8 @@ type NoteDocumentHeaderProps = {
   isDeleting: boolean;
   canChangeNote: boolean;
   cannotChangeNoteMessage: string;
+  canEditNote: boolean;
+  cannotEditNoteMessage: string;
   onClose: () => void;
   onSave: () => void | Promise<void>;
   onCancel: () => void;
@@ -29,6 +31,8 @@ export function NoteDocumentHeader({
   isDeleting,
   canChangeNote,
   cannotChangeNoteMessage,
+  canEditNote,
+  cannotEditNoteMessage,
   onClose,
   onSave,
   onCancel,
@@ -62,8 +66,8 @@ export function NoteDocumentHeader({
             <button
               className="secondary-action-button"
               type="button"
-              disabled={!canChangeNote}
-              title={!canChangeNote ? cannotChangeNoteMessage : undefined}
+              disabled={!canEditNote}
+              title={!canEditNote ? cannotEditNoteMessage : undefined}
               onClick={onEdit}
             >
               <Edit3 size={16} />
@@ -73,6 +77,8 @@ export function NoteDocumentHeader({
               note={note}
               canChangeNote={canChangeNote}
               cannotChangeNoteMessage={cannotChangeNoteMessage}
+              canEditNote={canEditNote}
+              cannotEditNoteMessage={cannotEditNoteMessage}
               isDeleting={isDeleting}
               onEdit={onEdit}
               onMove={onMove}

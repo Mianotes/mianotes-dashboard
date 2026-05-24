@@ -1,5 +1,6 @@
 type NoteTitleProps = {
   title: string;
+  jobBadge: { label: string; tone: "blue" | "danger" } | null;
   titleDraft: string;
   isEditing: boolean;
   isEditingTitle: boolean;
@@ -12,6 +13,7 @@ type NoteTitleProps = {
 
 export function NoteTitle({
   title,
+  jobBadge,
   titleDraft,
   isEditing,
   isEditingTitle,
@@ -41,16 +43,19 @@ export function NoteTitle({
           }}
         />
       ) : (
-        <h1
-          className={isEditing && canChangeNote ? "editable-note-title" : undefined}
-          title={isEditing && canChangeNote ? "Click to edit title" : undefined}
-          onClick={() => {
-            if (!isEditing || !canChangeNote) return;
-            onStartTitleEdit();
-          }}
-        >
-          {title}
-        </h1>
+        <div className="note-title-row">
+          <h1
+            className={isEditing && canChangeNote ? "editable-note-title" : undefined}
+            title={isEditing && canChangeNote ? "Click to edit title" : undefined}
+            onClick={() => {
+              if (!isEditing || !canChangeNote) return;
+              onStartTitleEdit();
+            }}
+          >
+            {title}
+          </h1>
+          {jobBadge && <span className={`badge ${jobBadge.tone}`}>{jobBadge.label}</span>}
+        </div>
       )}
     </div>
   );

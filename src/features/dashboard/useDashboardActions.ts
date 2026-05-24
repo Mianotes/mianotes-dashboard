@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { apiFetch } from "../../api/client";
 import type { FolderRecord, NoteRecord } from "../../api/types";
 import { folderActionErrorMessage } from "../../utils/folders";
+import { isNoteJobActive } from "../../utils/notes";
 import type { DashboardNavigation } from "./useDashboardNavigation";
 import type { WorkspaceData } from "./useWorkspaceData";
 
@@ -117,9 +118,9 @@ export function useDashboardActions({
   const openNote = useCallback(async (note: NoteRecord, startInEdit = false) => {
     const previousScreen = navigationSnapshot();
     try {
-      await refreshNote(note.id);
+      const openedNote = await refreshNote(note.id);
       pushNavigationSnapshot(previousScreen);
-      if (startInEdit) {
+      if (startInEdit && !isNoteJobActive(openedNote)) {
         setNoteIdToEditOnOpen(note.id);
       }
       setOpenedNoteId(note.id);

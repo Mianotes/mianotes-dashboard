@@ -58,16 +58,28 @@ export function hasUsableNoteContent(note: NoteRecord) {
 export function isNoteIndexing(note: NoteRecord) {
   const finalStatuses = ["ready", "published", "failed", "completed", "succeeded"];
   const indexingStatuses = ["pending_parse", "parsing"];
-  const indexingJobStatuses = ["queued", "running"];
   const isTextNote = ["text", "markdown"].includes(note.source_type);
+
+  if (isNoteJobActive(note)) {
+    return true;
+  }
 
   if (hasUsableNoteContent(note) || finalStatuses.includes(note.status)) {
     return false;
   }
 
   return indexingStatuses.includes(note.status)
-    || (note.job_status ? indexingJobStatuses.includes(note.job_status) : false)
     || (!note.is_published && !isTextNote);
+}
+
+export function isNoteJobActive(note: NoteRecord) {
+  return note.job_status === "queued" || note.job_status === "running";
+}
+
+export function noteJobBadge(note: NoteRecord): { label: string; tone: "blue" | "danger" } | null {
+  if (isNoteJobActive(note)) return { label: "Running", tone: "blue" };
+  if (note.job_status === "failed") return { label: "Failed", tone: "danger" };
+  return null;
 }
 
 export function countBy<T>(items: T[], getter: (item: T) => string) {

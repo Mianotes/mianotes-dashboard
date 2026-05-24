@@ -3,7 +3,7 @@ import type { MDXEditorMethods } from "@mdxeditor/editor";
 import { apiFetch } from "../../api/client";
 import type { NoteRecord, UserRecord } from "../../api/types";
 import { appUrlForPath, noteRoutePath } from "../../utils/internalRoutes";
-import { isNoteIndexing, noteBodyMarkdown } from "../../utils/notes";
+import { isNoteJobActive, isNoteIndexing, noteBodyMarkdown, noteJobBadge } from "../../utils/notes";
 import { AskMiaPanel } from "./AskMiaPanel";
 import { NoteAuthorMeta } from "./NoteAuthorMeta";
 import { NoteContent } from "./NoteContent";
@@ -62,7 +62,9 @@ export function NotePanel({
 
   const authorName = note.user?.name ?? "Unknown";
   const canChangeNote = currentUser.is_admin || note.user_id === currentUser.id || note.user?.id === currentUser.id;
+  const canEditNote = canChangeNote && !isNoteJobActive(note);
   const cannotChangeNoteMessage = `Only ${authorName} or an admin can change this note.`;
+  const cannotEditNoteMessage = isNoteJobActive(note) ? "Mia is still processing this note." : cannotChangeNoteMessage;
   const noteDate = new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", year: "numeric" }).format(new Date(note.created_at));
   const hasLoadedNoteText = typeof note.text === "string";
   const noteMarkdownBody = noteBodyMarkdown(note.text ?? "");
@@ -201,6 +203,10 @@ export function NotePanel({
   }
 
   function startEditing() {
+    if (!canEditNote) {
+      setNoteError(cannotEditNoteMessage);
+      return;
+    }
     setIsEditing(true);
     onEditModeChange(true);
   }
@@ -221,6 +227,8 @@ export function NotePanel({
         isDeleting={isDeleting}
         canChangeNote={canChangeNote}
         cannotChangeNoteMessage={cannotChangeNoteMessage}
+        canEditNote={canEditNote}
+        cannotEditNoteMessage={cannotEditNoteMessage}
         onClose={onClose}
         onSave={saveMarkdown}
         onCancel={cancelEditing}
@@ -236,10 +244,11 @@ export function NotePanel({
       )}
       <NoteTitle
         title={note.title}
+        jobBadge={noteJobBadge(note)}
         titleDraft={titleDraft}
         isEditing={isEditing}
         isEditingTitle={isEditingTitle}
-        canChangeNote={canChangeNote}
+        canChangeNote={canEditNote}
         onTitleDraftChange={setTitleDraft}
         onStartTitleEdit={startTitleEdit}
         onSaveTitle={saveTitle}
@@ -253,8 +262,8 @@ export function NotePanel({
         draftText={draftText}
         noteMarkdownBody={noteMarkdownBody}
         hasLoadedNoteText={hasLoadedNoteText}
-        canChangeNote={canChangeNote}
-        cannotChangeNoteMessage={cannotChangeNoteMessage}
+        canChangeNote={canEditNote}
+        cannotChangeNoteMessage={cannotEditNoteMessage}
         editorRef={markdownEditorRef}
         autoFocusEditor={shouldFocusEditor}
         onDraftTextChange={setDraftText}
@@ -272,8 +281,8 @@ export function NotePanel({
         isIndexingNote={isIndexingNote}
         isMiaDisabled={isMiaDisabled}
         isApplyingMia={isApplyingMia}
-        canChangeNote={canChangeNote}
-        cannotChangeNoteMessage={cannotChangeNoteMessage}
+        canChangeNote={canEditNote}
+        cannotChangeNoteMessage={cannotEditNoteMessage}
         miaLoadingMessage={miaLoadingMessage}
         onCommentBodyChange={setCommentBody}
         onClearEmptyPromptError={() => setMiaError(null)}
@@ -285,8 +294,8 @@ export function NotePanel({
       <div className="note-section-divider" />
       <NoteTagsManager
         note={note}
-        canChangeNote={canChangeNote}
-        cannotChangeNoteMessage={cannotChangeNoteMessage}
+        canChangeNote={canEditNote}
+        cannotChangeNoteMessage={cannotEditNoteMessage}
         onRefresh={onRefresh}
       />
     </section>

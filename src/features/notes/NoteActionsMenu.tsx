@@ -9,6 +9,8 @@ type NoteActionsMenuProps = {
   note: NoteRecord;
   canChangeNote: boolean;
   cannotChangeNoteMessage: string;
+  canEditNote: boolean;
+  cannotEditNoteMessage: string;
   isDeleting?: boolean;
   onEdit: () => void;
   onMove: () => void;
@@ -20,6 +22,8 @@ export function NoteActionsMenu({
   note,
   canChangeNote,
   cannotChangeNoteMessage,
+  canEditNote,
+  cannotEditNoteMessage,
   isDeleting = false,
   onEdit,
   onMove,
@@ -120,8 +124,8 @@ export function NoteActionsMenu({
           <button
             type="button"
             role="menuitem"
-            disabled={!canChangeNote}
-            title={!canChangeNote ? cannotChangeNoteMessage : undefined}
+            disabled={!canEditNote}
+            title={!canEditNote ? cannotEditNoteMessage : undefined}
             onClick={() => void runAndClose(onEdit)}
           >
             <Edit3 size={15} />
