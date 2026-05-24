@@ -6,6 +6,7 @@ import type {
   FolderRecord,
   PublishDraftNoteRecord,
   PublishDraftRecord,
+  PublishNavigationGroupRecord,
   PublishResultRecord,
   PublishThemeRecord,
   TagRecord,
@@ -13,6 +14,7 @@ import type {
 } from "../../api/types";
 import { ScreenToolbar } from "../../components/layout/ScreenToolbar";
 import { JsonBlock } from "./JsonBlock";
+import { PublishNavigationTable } from "./PublishNavigationTable";
 import { PublishControls } from "./PublishControls";
 import { PublishStep } from "./PublishStep";
 import { UpdatedNotesTable } from "./UpdatedNotesTable";
@@ -31,7 +33,6 @@ function parseJsonBlock<T>(label: string, value: string): T {
 
 type PublishJsonErrors = {
   siteConfig?: string;
-  navigation?: string;
 };
 
 export function PublishScreen({
@@ -58,7 +59,7 @@ export function PublishScreen({
   const [folderId, setFolderId] = useState<string | "all">(selectedFolderId);
   const [tagId, setTagId] = useState<string | "all">("all");
   const [siteConfig, setSiteConfig] = useState("{}");
-  const [navigation, setNavigation] = useState("[]");
+  const [navigationGroups, setNavigationGroups] = useState<PublishNavigationGroupRecord[]>([]);
   const [updatedNotes, setUpdatedNotes] = useState<PublishDraftNoteRecord[]>([]);
   const [hasDraft, setHasDraft] = useState(false);
   const [isLoadingThemes, setIsLoadingThemes] = useState(true);
@@ -70,7 +71,6 @@ export function PublishScreen({
   const noticeRef = useRef<HTMLDivElement | null>(null);
   const statusRef = useRef<HTMLDivElement | null>(null);
   const siteConfigRef = useRef<HTMLDivElement | null>(null);
-  const navigationRef = useRef<HTMLDivElement | null>(null);
 
   function scrollToElement(element: HTMLElement | null) {
     if (!element) return;
@@ -128,7 +128,6 @@ export function PublishScreen({
 
   function validatePublishPayload() {
     let nextSiteConfig: Record<string, unknown> | null = null;
-    let nextNavigation: Array<Record<string, unknown>> | null = null;
     const nextErrors: PublishJsonErrors = {};
 
     try {
@@ -144,25 +143,13 @@ export function PublishScreen({
         : "Site configuration must be valid JSON.";
     }
 
-    try {
-      const parsedNavigation = parseJsonBlock<unknown>("Navigation", navigation);
-      if (!Array.isArray(parsedNavigation)) {
-        nextErrors.navigation = "Navigation must be a JSON array.";
-      } else {
-        nextNavigation = parsedNavigation as Array<Record<string, unknown>>;
-      }
-    } catch (caughtError) {
-      nextErrors.navigation = caughtError instanceof Error
-        ? caughtError.message
-        : "Navigation must be valid JSON.";
-    }
-
     setJsonErrors(nextErrors);
-    if (nextErrors.siteConfig || nextErrors.navigation || !nextSiteConfig || !nextNavigation) {
-      scrollToElement(nextErrors.navigation ? navigationRef.current : siteConfigRef.current);
+    if (nextErrors.siteConfig || !nextSiteConfig) {
+      scrollToElement(siteConfigRef.current);
       return null;
     }
 
+    const nextNavigation = navigationGroups.filter((group) => group.items.length > 0);
     return {
       folder_id: folderId === "all" ? null : folderId,
       tag_id: tagId === "all" ? null : tagId,
@@ -188,7 +175,7 @@ export function PublishScreen({
       }
       const draft = await apiFetch<PublishDraftRecord>(`/api/publish/draft?${params.toString()}`);
       setSiteConfig(prettyJson(draft.site_configuration));
-      setNavigation(prettyJson(draft.navigation));
+      setNavigationGroups(draft.navigation);
       setUpdatedNotes(draft.updated_notes);
       setHasDraft(true);
     } catch (caughtError) {
@@ -328,18 +315,10 @@ export function PublishScreen({
                       }}
                     />
                   </div>
-                  <div ref={navigationRef}>
-                    <JsonBlock
-                      title="Navigation"
-                      description="These are the navigation items the site will display on the left hand sidebar."
-                      error={jsonErrors.navigation}
-                      value={navigation}
-                      onChange={(value) => {
-                        setNavigation(value);
-                        setJsonErrors((current) => ({ ...current, navigation: undefined }));
-                      }}
-                    />
-                  </div>
+                  <PublishNavigationTable
+                    groups={navigationGroups}
+                    onChange={setNavigationGroups}
+                  />
                   <UpdatedNotesTable notes={updatedNotes} />
                 </div>
                 <footer className="publish-actions">

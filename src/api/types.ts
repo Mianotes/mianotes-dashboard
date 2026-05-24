@@ -117,12 +117,22 @@ export type PublishDraftNoteRecord = {
   path: string;
 };
 
+export type PublishNavigationItemRecord = {
+  title: string;
+  path: string;
+};
+
+export type PublishNavigationGroupRecord = {
+  title: string;
+  items: PublishNavigationItemRecord[];
+};
+
 export type PublishDraftRecord = {
   theme: string;
   folder_id?: string | null;
   tag_id?: string | null;
   site_configuration: Record<string, unknown>;
-  navigation: Array<Record<string, unknown>>;
+  navigation: PublishNavigationGroupRecord[];
   updated_notes: PublishDraftNoteRecord[];
   generated_at: string;
 };
