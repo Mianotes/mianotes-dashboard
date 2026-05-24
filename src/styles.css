@@ -3707,7 +3707,7 @@ textarea:focus {
 
 .settings-text-action {
   justify-self: end;
-  min-height: 36px;
+  min-height: 42px;
   padding: 0 16px;
   border: 1px solid #dedfe5;
   border-radius: 8px;
