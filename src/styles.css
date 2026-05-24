@@ -4354,7 +4354,7 @@ textarea:focus {
 
 .jobs-grid {
   display: grid;
-  max-height: 360px;
+  max-height: 280px;
   overflow-y: auto;
 }
 
