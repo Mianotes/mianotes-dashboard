@@ -31,6 +31,9 @@ export function AllProfilesView({
         const isOnlyAdmin = user.is_admin && adminCount <= 1;
         return (
           <article className="profile-card-shell" key={user.id}>
+            <span className={`profile-role-badge ${user.is_admin ? "admin" : ""}`}>
+              {user.is_admin ? "Admin" : "Member"}
+            </span>
             {canShowMenu && (
               <div className="profile-card-menu">
                 <button

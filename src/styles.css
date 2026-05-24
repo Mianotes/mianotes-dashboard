@@ -2203,11 +2203,14 @@ button {
 }
 
 .profile-role-badge {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  z-index: 2;
   display: inline-flex;
   align-items: center;
   min-height: 24px;
-  margin-bottom: 8px;
-  padding: 3px 10px;
+  padding: 3px 11px;
   border: 1px solid #e2e3e8;
   border-radius: 999px;
   color: #6d6f7a;
@@ -2386,13 +2389,13 @@ button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 32px;
-  height: 32px;
+  width: 28px;
+  height: 28px;
   padding: 0;
-  border: 1px solid #d7d8df;
-  border-radius: 999px;
+  border: 1px solid transparent;
+  border-radius: 6px;
   color: #62646f;
-  background: #ffffff;
+  background: transparent;
   cursor: pointer;
   transition: border-color 0.12s ease, color 0.12s ease, background-color 0.12s ease;
 }
@@ -2401,6 +2404,7 @@ button {
 .profile-card-menu-button[aria-expanded="true"] {
   border-color: #aeb0ba;
   color: #202128;
+  background: #ffffff;
 }
 
 .profile-card-menu-button:active {
@@ -2434,7 +2438,7 @@ button {
   color: #363842;
   background: transparent;
   font-size: 13px;
-  font-weight: 650;
+  font-weight: 400;
   text-align: left;
 }
 
