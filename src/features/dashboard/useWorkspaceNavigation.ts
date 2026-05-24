@@ -72,6 +72,10 @@ export function useWorkspaceNavigation({
     openWorkspaceView("publish");
   }, [openWorkspaceView]);
 
+  const openJobs = useCallback(() => {
+    openWorkspaceView("jobs");
+  }, [openWorkspaceView]);
+
   const openProfileTag = useCallback(
     (userId: string, tagSlug: string) => {
       clearSearch();
@@ -104,6 +108,7 @@ export function useWorkspaceNavigation({
     openProfile,
     openSettings,
     openPublish,
+    openJobs,
     openProfileTag
   };
 }

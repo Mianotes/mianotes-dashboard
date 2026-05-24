@@ -7,6 +7,7 @@ export type InternalRoute =
   | { kind: "users" }
   | { kind: "user"; userId: string }
   | { kind: "publish" }
+  | { kind: "jobs" }
   | { kind: "settings" };
 
 type RouteState = {
@@ -41,6 +42,9 @@ export function readInternalRoute(pathname = window.location.pathname): Internal
   if (section === "publish" && !id) {
     return { kind: "publish" };
   }
+  if (section === "jobs" && !id) {
+    return { kind: "jobs" };
+  }
   if (section === "settings" && !id) {
     return { kind: "settings" };
   }
@@ -71,7 +75,7 @@ export function applyRouteToDashboardState(
       currentPage: 1
     };
   }
-  if (["users", "user", "publish", "settings"].includes(route.kind)) {
+  if (["users", "user", "publish", "jobs", "settings"].includes(route.kind)) {
     return {
       ...state,
       openedNoteId: null,
@@ -85,6 +89,7 @@ export function applyRouteToDashboardState(
 export function workspaceViewForRoute(route: InternalRoute): WorkspaceView {
   if (route.kind === "users" || route.kind === "user") return "profile";
   if (route.kind === "publish") return "publish";
+  if (route.kind === "jobs") return "jobs";
   if (route.kind === "settings") return "settings";
   return "notes";
 }
@@ -123,6 +128,7 @@ export function routePathForState(state: RouteState, folders: FolderRecord[]) {
       : `/user/${encodeRouteSegment(state.profileUserId)}/profile`;
   }
   if (state.workspaceView === "publish") return "/publish";
+  if (state.workspaceView === "jobs") return "/jobs";
   if (state.workspaceView === "settings") return "/settings";
   if (state.selectedFolderId !== "all") {
     const folder = folders.find((item) => item.id === state.selectedFolderId);

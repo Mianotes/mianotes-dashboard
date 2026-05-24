@@ -5,6 +5,7 @@ import logoUrl from "../../assets/logo_small.png";
 import { Sidebar } from "../../components/layout/Sidebar";
 import { Toolbar } from "../../components/layout/Toolbar";
 import { MoveNoteDialog } from "../notes/MoveNoteDialog";
+import { JobsScreen } from "../jobs/JobsScreen";
 import { ProfileScreen } from "../profile/ProfileScreen";
 import { PublishScreen } from "../publish/PublishScreen";
 import { SettingsScreen } from "../settings/SettingsScreen";
@@ -123,6 +124,7 @@ export function DashboardShell({
           }}
           onUpdateFolder={(folder, update) => void actions.updateFolder(folder, update)}
           onDeleteFolder={(folder) => void actions.deleteFolder(folder)}
+          onJobs={navigation.openJobs}
           onPublish={navigation.openPublish}
         />
 
@@ -191,6 +193,14 @@ export function DashboardShell({
               tags={tags}
               currentUser={currentUser}
               selectedFolderId={navigation.selectedFolderId}
+              onBack={navigation.goBack}
+              onSignOut={() => void signOut()}
+              onOpenProfile={navigation.openProfile}
+              onOpenSettings={navigation.openSettings}
+            />
+          ) : navigation.workspaceView === "jobs" ? (
+            <JobsScreen
+              currentUser={currentUser}
               onBack={navigation.goBack}
               onSignOut={() => void signOut()}
               onOpenProfile={navigation.openProfile}

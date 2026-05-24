@@ -1,4 +1,4 @@
-import { Edit3, MoreVertical, Plus, Trash2, Upload } from "lucide-react";
+import { Activity, Edit3, MoreVertical, Plus, Trash2, Upload } from "lucide-react";
 import type { RefCallback } from "react";
 import type { FolderRecord, StorageCapacityRecord, UserRecord, WorkspaceView } from "../../api/types";
 import { DashboardIcon } from "../icons/DashboardIcon";
@@ -26,6 +26,7 @@ type SidebarProps = {
   onRenameFolder: (folder: FolderRecord) => void;
   onUpdateFolder: (folder: FolderRecord, update: Partial<Pick<FolderRecord, "name" | "is_pinned">>) => void;
   onDeleteFolder: (folder: FolderRecord) => void;
+  onJobs: () => void;
   onPublish: () => void;
 };
 
@@ -47,6 +48,7 @@ export function Sidebar({
   onRenameFolder,
   onUpdateFolder,
   onDeleteFolder,
+  onJobs,
   onPublish
 }: SidebarProps) {
   const canManageFolder = (folder: FolderRecord) => currentUser.is_admin || folder.user_id === currentUser.id;
@@ -65,6 +67,13 @@ export function Sidebar({
         >
           <DashboardIcon size={18} />
           <span>Dashboard</span>
+        </button>
+        <button
+          className={`nav-item ${workspaceView === "jobs" ? "active" : ""}`}
+          onClick={onJobs}
+        >
+          <Activity size={18} />
+          <span>Jobs</span>
         </button>
       </nav>
 

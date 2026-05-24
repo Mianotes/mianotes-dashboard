@@ -141,6 +141,32 @@ export type PublishResultRecord = {
   created_at: string;
 };
 
+export type JobStatus = "queued" | "running" | "succeeded" | "failed" | "cancelled";
+
+export type JobLogEntryRecord = {
+  timestamp: string;
+  status: string;
+  command: string;
+  response?: string | null;
+};
+
+export type JobRecord = {
+  id: string;
+  user: UserRecord;
+  note_id?: string | null;
+  note_title?: string | null;
+  job_type: string;
+  status: JobStatus;
+  input: Record<string, unknown>;
+  result: Record<string, unknown>;
+  log: JobLogEntryRecord[];
+  error?: string | null;
+  created_at: string;
+  updated_at: string;
+  started_at?: string | null;
+  finished_at?: string | null;
+};
+
 export type EmailCheckResponse = {
   user_id: string | null;
   is_first_user?: boolean;
@@ -157,7 +183,7 @@ export type DashboardUiState = {
   currentPage: number;
 };
 
-export type WorkspaceView = "notes" | "profile" | "publish" | "settings";
+export type WorkspaceView = "notes" | "profile" | "publish" | "jobs" | "settings";
 
 export type NavigationSnapshot = DashboardUiState & {
   workspaceView: WorkspaceView;

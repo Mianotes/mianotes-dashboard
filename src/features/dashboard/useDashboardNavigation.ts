@@ -221,6 +221,7 @@ export function useDashboardNavigation({
   const {
     openProfile,
     openSettings,
+    openJobs: openJobsView,
     openPublish: openPublishView,
     openProfileTag
   } = useWorkspaceNavigation({
@@ -243,6 +244,10 @@ export function useDashboardNavigation({
     setPublishResetKey((current) => current + 1);
     openPublishView();
   }, [openPublishView]);
+
+  const openJobs = useCallback(() => {
+    openJobsView();
+  }, [openJobsView]);
 
   useNavigationHistory({
     openedNoteId,
@@ -306,6 +311,7 @@ export function useDashboardNavigation({
     openProfile,
     openSettings,
     openPublish,
+    openJobs,
     handleDatabaseSwitched,
     openProfileTag
   };
