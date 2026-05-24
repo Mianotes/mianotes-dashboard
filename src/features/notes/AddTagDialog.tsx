@@ -1,7 +1,7 @@
 import { Loader2, Plus, X } from "lucide-react";
 import { useState } from "react";
 import type { FormEvent } from "react";
-import { Modal } from "../../components/ui/Modal";
+import { Modal, ModalActions } from "../../components/ui/Modal";
 
 type AddTagDialogProps = {
   existingTags: string[];
@@ -60,15 +60,14 @@ export function AddTagDialog({ existingTags, onClose, onAdd }: AddTagDialogProps
             </div>
           )}
         </div>
-        <div className="folder-modal-actions">
-          <button className="primary-button create-folder-button" disabled={isSaving || !canAddTag}>
-            {isSaving ? <Loader2 className="spin" size={17} /> : <Plus size={17} />}
-            Add tag
-          </button>
-          <button className="text-button" type="button" onClick={onClose}>
-            Cancel
-          </button>
-        </div>
+        <ModalActions
+          onCancel={onClose}
+          primaryClassName="create-folder-button"
+          primaryDisabled={isSaving || !canAddTag}
+          primaryIcon={isSaving ? <Loader2 className="spin" size={17} /> : <Plus size={17} />}
+          primaryLabel="Add tag"
+          primaryType="submit"
+        />
     </Modal>
   );
 }

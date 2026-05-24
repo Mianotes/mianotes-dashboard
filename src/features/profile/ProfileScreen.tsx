@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from "react";
 import { apiFetch, versionedMediaPath } from "../../api/client";
 import type { FolderRecord, NoteRecord, ProfileDraft, UserRecord } from "../../api/types";
 import { randomAvatarTone } from "../../components/ui/UserAvatar";
-import { Modal } from "../../components/ui/Modal";
+import { Modal, ModalActions } from "../../components/ui/Modal";
 import { AllProfilesView } from "./AllProfilesView";
 import { NewUserProfileView } from "./NewUserProfileView";
 import { ProfileToolbar } from "./ProfileToolbar";
@@ -296,25 +296,14 @@ export function ProfileScreen({
               <span>Admins can manage users, settings, API keys, and databases.</span>
             </div>
           </div>
-          <div className="folder-modal-actions">
-            <button
-              className="secondary-action-button"
-              type="button"
-              disabled={isChangingAdmin}
-              onClick={() => setPendingAdminChange(null)}
-            >
-              Cancel
-            </button>
-            <button
-              className="primary-button"
-              type="button"
-              disabled={isChangingAdmin}
-              onClick={() => void updateAdminRole()}
-            >
-              {isChangingAdmin ? <Loader2 className="spin" size={15} /> : null}
-              {pendingAdminChange.isAdmin ? "Make admin" : "Remove admin"}
-            </button>
-          </div>
+          <ModalActions
+            cancelDisabled={isChangingAdmin}
+            onCancel={() => setPendingAdminChange(null)}
+            onPrimary={() => void updateAdminRole()}
+            primaryDisabled={isChangingAdmin}
+            primaryIcon={isChangingAdmin ? <Loader2 className="spin" size={15} /> : null}
+            primaryLabel={pendingAdminChange.isAdmin ? "Make admin" : "Remove admin"}
+          />
         </Modal>
       )}
     </>

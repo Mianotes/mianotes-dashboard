@@ -3,7 +3,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { apiFetch } from "../../api/client";
 import type { FolderRecord } from "../../api/types";
-import { Modal } from "../../components/ui/Modal";
+import { Modal, ModalActions } from "../../components/ui/Modal";
 
 export function AddFolderDialog({
   onClose,
@@ -67,13 +67,14 @@ export function AddFolderDialog({
             </span>
           </label>
         </div>
-        <div className="folder-modal-actions">
-          <button className="primary-button create-folder-button" disabled={isSaving || !canCreateFolder}>
-            {isSaving ? <Loader2 className="spin" size={17} /> : <Plus size={17} />}
-            Create folder
-          </button>
-          <button className="text-button" type="button" onClick={onClose}>Cancel</button>
-        </div>
+        <ModalActions
+          onCancel={onClose}
+          primaryClassName="create-folder-button"
+          primaryDisabled={isSaving || !canCreateFolder}
+          primaryIcon={isSaving ? <Loader2 className="spin" size={17} /> : <Plus size={17} />}
+          primaryLabel="Create folder"
+          primaryType="submit"
+        />
     </Modal>
   );
 }
@@ -132,13 +133,14 @@ export function RenameFolderDialog({
             </div>
           )}
         </div>
-        <div className="folder-modal-actions">
-          <button className="primary-button create-folder-button" disabled={isSaving || !canRename}>
-            {isSaving ? <Loader2 className="spin" size={17} /> : <Edit3 size={17} />}
-            Save changes
-          </button>
-          <button className="text-button" type="button" onClick={onClose}>Cancel</button>
-        </div>
+        <ModalActions
+          onCancel={onClose}
+          primaryClassName="create-folder-button"
+          primaryDisabled={isSaving || !canRename}
+          primaryIcon={isSaving ? <Loader2 className="spin" size={17} /> : <Edit3 size={17} />}
+          primaryLabel="Save changes"
+          primaryType="submit"
+        />
     </Modal>
   );
 }

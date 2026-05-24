@@ -3,7 +3,7 @@ import { useMemo, useState } from "react";
 import type { FormEvent } from "react";
 import type { FolderRecord, NoteRecord } from "../../api/types";
 import { MoveNoteIcon } from "../../components/icons/MoveNoteIcon";
-import { Modal } from "../../components/ui/Modal";
+import { Modal, ModalActions } from "../../components/ui/Modal";
 
 type MoveNoteResult = { ok: true } | { ok: false; error: string };
 
@@ -83,13 +83,14 @@ export function MoveNoteDialog({
           </div>
         )}
       </div>
-      <div className="folder-modal-actions">
-        <button className="primary-button move-note-button" disabled={isMoving || !canMove}>
-          {isMoving ? <Loader2 className="spin" size={17} /> : <MoveNoteIcon size={17} />}
-          Move note
-        </button>
-        <button className="text-button" type="button" onClick={onClose}>Cancel</button>
-      </div>
+      <ModalActions
+        onCancel={onClose}
+        primaryClassName="move-note-button"
+        primaryDisabled={isMoving || !canMove}
+        primaryIcon={isMoving ? <Loader2 className="spin" size={17} /> : <MoveNoteIcon size={17} />}
+        primaryLabel="Move note"
+        primaryType="submit"
+      />
     </Modal>
   );
 }

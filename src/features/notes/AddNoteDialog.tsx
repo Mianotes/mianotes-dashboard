@@ -3,7 +3,7 @@ import { useState } from "react";
 import type { FormEvent } from "react";
 import { apiFetch } from "../../api/client";
 import type { FolderRecord, NoteRecord } from "../../api/types";
-import { Modal } from "../../components/ui/Modal";
+import { Modal, ModalActions } from "../../components/ui/Modal";
 
 export function AddNoteDialog({
   folders,
@@ -139,13 +139,14 @@ export function AddNoteDialog({
             </div>
           )}
         </div>
-        <div className="folder-modal-actions">
-          <button className="primary-button create-note-button" disabled={isSaving || !canCreate}>
-            {isSaving ? <Loader2 className="spin" size={17} /> : <Plus size={17} />}
-            Create note
-          </button>
-          <button className="text-button" type="button" onClick={onClose}>Cancel</button>
-        </div>
+        <ModalActions
+          onCancel={onClose}
+          primaryClassName="create-note-button"
+          primaryDisabled={isSaving || !canCreate}
+          primaryIcon={isSaving ? <Loader2 className="spin" size={17} /> : <Plus size={17} />}
+          primaryLabel="Create note"
+          primaryType="submit"
+        />
     </Modal>
   );
 }

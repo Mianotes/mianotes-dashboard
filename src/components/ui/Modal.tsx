@@ -50,3 +50,56 @@ export function Modal({
     </div>
   );
 }
+
+type ModalActionsProps = {
+  cancelDisabled?: boolean;
+  cancelLabel?: ReactNode;
+  className?: string;
+  onCancel: () => void;
+  onPrimary?: () => void;
+  primaryClassName?: string;
+  primaryDisabled?: boolean;
+  primaryIcon?: ReactNode;
+  primaryLabel?: ReactNode;
+  primaryType?: "button" | "submit";
+};
+
+export function ModalActions({
+  cancelDisabled = false,
+  cancelLabel = "Cancel",
+  className,
+  onCancel,
+  onPrimary,
+  primaryClassName,
+  primaryDisabled = false,
+  primaryIcon,
+  primaryLabel,
+  primaryType = "button"
+}: ModalActionsProps) {
+  const actionsClassName = ["folder-modal-actions", className].filter(Boolean).join(" ");
+  const primaryButtonClassName = ["primary-button", primaryClassName].filter(Boolean).join(" ");
+
+  return (
+    <div className={actionsClassName}>
+      {primaryLabel ? (
+        <button
+          className={primaryButtonClassName}
+          type={primaryType}
+          disabled={primaryDisabled}
+          onClick={onPrimary}
+        >
+          {primaryIcon}
+          {primaryLabel}
+        </button>
+      ) : null}
+      <button
+        className="text-button"
+        type="button"
+        disabled={cancelDisabled}
+        onClick={onCancel}
+      >
+        {cancelLabel}
+      </button>
+    </div>
+  );
+}

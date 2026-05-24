@@ -2919,7 +2919,7 @@ textarea:focus {
 }
 
 .profile-admin-modal .primary-button,
-.profile-admin-modal .secondary-action-button {
+.profile-admin-modal .text-button {
   min-height: 42px;
 }
 

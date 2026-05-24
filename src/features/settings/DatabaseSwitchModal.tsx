@@ -7,7 +7,7 @@ import type {
   StorageSettingsRecord,
   StorageSwitchResponse
 } from "../../api/types";
-import { Modal } from "../../components/ui/Modal";
+import { Modal, ModalActions } from "../../components/ui/Modal";
 
 type DatabaseSwitchModalProps = {
   storageSettings: StorageSettingsRecord;
@@ -187,22 +187,17 @@ export function DatabaseSwitchModal({
             </DatabaseLocationGroup>
           )}
         </div>
-        <div className="folder-modal-actions database-modal-actions">
-          <button className="secondary-action-button" type="button" onClick={onClose}>
-            Cancel
-          </button>
-          {showSwitchAction && (
-            <button
-              className="primary-button database-switch-button"
-              type="button"
-              disabled={!canSwitchDatabase || isSubmitting}
-              onClick={() => void switchSelectedDatabase()}
-            >
-              {isSubmitting ? <Loader2 className="spin" size={16} /> : <Database size={16} />}
-              Switch database
-            </button>
-          )}
-        </div>
+        <ModalActions
+          className="database-modal-actions"
+          onCancel={onClose}
+          onPrimary={showSwitchAction ? () => void switchSelectedDatabase() : undefined}
+          primaryClassName="database-switch-button"
+          primaryDisabled={!canSwitchDatabase || isSubmitting}
+          primaryIcon={showSwitchAction ? (
+            isSubmitting ? <Loader2 className="spin" size={16} /> : <Database size={16} />
+          ) : undefined}
+          primaryLabel={showSwitchAction ? "Switch database" : undefined}
+        />
     </Modal>
   );
 }
