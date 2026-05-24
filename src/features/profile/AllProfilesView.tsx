@@ -29,8 +29,9 @@ export function AllProfilesView({
         const canEditUser = currentUser.is_admin || currentUser.id === user.id;
         const canShowMenu = canEditUser || currentUser.is_admin;
         const isOnlyAdmin = user.is_admin && adminCount <= 1;
+        const isMenuOpen = openMenuUserId === user.id;
         return (
-          <article className="profile-card-shell" key={user.id}>
+          <article className={`profile-card-shell ${isMenuOpen ? "menu-open" : ""}`} key={user.id}>
             <span className={`profile-role-badge ${user.is_admin ? "admin" : ""}`}>
               {user.is_admin ? "Admin" : "Member"}
             </span>
@@ -40,7 +41,7 @@ export function AllProfilesView({
                   className="profile-card-menu-button"
                   type="button"
                   aria-label={`Open actions for ${user.name}`}
-                  aria-expanded={openMenuUserId === user.id}
+                  aria-expanded={isMenuOpen}
                   onClick={(event) => {
                     event.stopPropagation();
                     setOpenMenuUserId((current) => current === user.id ? null : user.id);
@@ -48,7 +49,7 @@ export function AllProfilesView({
                 >
                   <MoreVertical size={17} />
                 </button>
-                {openMenuUserId === user.id && (
+                {isMenuOpen && (
                   <div className="profile-card-menu-popover" role="menu">
                     {canEditUser && (
                       <button

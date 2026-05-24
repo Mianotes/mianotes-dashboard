@@ -2206,7 +2206,7 @@ button {
   position: absolute;
   top: 16px;
   left: 16px;
-  z-index: 2;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
   min-height: 24px;
@@ -2367,7 +2367,12 @@ button {
 
 .profile-card-shell {
   position: relative;
+  z-index: 0;
   min-width: 0;
+}
+
+.profile-card-shell.menu-open {
+  z-index: 2;
 }
 
 .profile-card-button {
@@ -2382,7 +2387,7 @@ button {
   position: absolute;
   top: 14px;
   right: 14px;
-  z-index: 2;
+  z-index: 1;
 }
 
 .profile-card-menu-button {
@@ -2417,7 +2422,7 @@ button {
   position: absolute;
   top: 38px;
   right: 0;
-  z-index: 5;
+  z-index: 2;
   display: grid;
   min-width: 154px;
   padding: 6px;
