@@ -1,5 +1,5 @@
 import { Loader2, Upload, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { apiFetch, mediaPath } from "../../api/client";
 import type {
@@ -34,6 +34,10 @@ function parseJsonBlock<T>(label: string, value: string): T {
 type PublishJsonErrors = {
   siteConfig?: string;
 };
+
+function navigationPathSet(groups: PublishNavigationGroupRecord[]) {
+  return new Set(groups.flatMap((group) => group.items.map((item) => item.path)));
+}
 
 export function PublishScreen({
   folders,
@@ -71,6 +75,10 @@ export function PublishScreen({
   const noticeRef = useRef<HTMLDivElement | null>(null);
   const statusRef = useRef<HTMLDivElement | null>(null);
   const siteConfigRef = useRef<HTMLDivElement | null>(null);
+  const visibleUpdatedNotes = useMemo(() => {
+    const paths = navigationPathSet(navigationGroups);
+    return updatedNotes.filter((note) => paths.has(note.path));
+  }, [navigationGroups, updatedNotes]);
 
   function scrollToElement(element: HTMLElement | null) {
     if (!element) return;
@@ -156,7 +164,7 @@ export function PublishScreen({
       theme,
       site_configuration: nextSiteConfig,
       navigation: nextNavigation,
-      updated_notes: updatedNotes
+      updated_notes: visibleUpdatedNotes
     };
   }
 
@@ -319,7 +327,7 @@ export function PublishScreen({
                     groups={navigationGroups}
                     onChange={setNavigationGroups}
                   />
-                  <UpdatedNotesTable notes={updatedNotes} />
+                  <UpdatedNotesTable notes={visibleUpdatedNotes} />
                 </div>
                 <footer className="publish-actions">
                   <button className="primary-action" type="submit" disabled={isPublishing}>
