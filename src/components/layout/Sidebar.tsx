@@ -137,6 +137,7 @@ export function Sidebar({
           const dropClass = dropTarget?.folderId === folder.id
             ? ` drop-${dropTarget.position}`
             : "";
+          const draggingClass = draggedFolderId === folder.id ? " dragging" : "";
           const folderDisabledTitle = canManageThisFolder
             ? undefined
             : folderPermissionMessage("change");
@@ -144,7 +145,7 @@ export function Sidebar({
           return (
             <div
               key={folder.id}
-              className={`nav-item folder-nav-item ${selectedFolderId === folder.id ? "active" : ""}${dropClass}`}
+              className={`nav-item folder-nav-item ${selectedFolderId === folder.id ? "active" : ""}${dropClass}${draggingClass}`}
               role="button"
               tabIndex={0}
               draggable={canDragThisFolder}

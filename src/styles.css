@@ -160,6 +160,10 @@ button {
   cursor: pointer;
 }
 
+.folder-nav-item.dragging {
+  opacity: 0.42;
+}
+
 .folder-nav-item.drop-before::before,
 .folder-nav-item.drop-after::after {
   content: "";
@@ -168,7 +172,7 @@ button {
   left: 24px;
   height: 2px;
   border-radius: 999px;
-  background: #eee;
+  background: #9a9ca6;
 }
 
 .folder-nav-item.drop-before::before {
