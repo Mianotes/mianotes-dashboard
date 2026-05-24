@@ -101,8 +101,12 @@ export function AuthScreen({ onSignedIn }: { onSignedIn: () => void }) {
               />
             )}
             {step === "join" && isFirstUser && (
-              <div className="auth-choice-group" role="radiogroup" aria-labelledby="workspace-access-label">
-                <span id="workspace-access-label">
+              <div
+                className="auth-choice-group"
+                role="radiogroup"
+                aria-label="Choose who can create accounts for this workspace"
+              >
+                <span className="workspace-access-label">
                   You can let other people create accounts for this workspace, or keep access limited to the admin account.
                 </span>
                 <label>

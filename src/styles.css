@@ -2503,13 +2503,13 @@ button {
   border-radius: 8px;
 }
 
-.auth-choice-group > span,
 .auth-file-field span {
   color: #202128;
   font-weight: 700;
 }
 
-.auth-choice-group > span {
+.workspace-access-label {
+  color: #202128;
   padding-bottom: 10px;
 }
 
