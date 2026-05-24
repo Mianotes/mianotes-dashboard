@@ -172,6 +172,17 @@ export type EmailCheckResponse = {
   user_id: string | null;
   is_first_user?: boolean;
   master_password_owner_name?: string | null;
+  admin_key_required?: boolean;
+};
+
+export type SessionResponse = {
+  user: UserRecord;
+  admin_key?: string | null;
+};
+
+export type AdminKeyResponse = {
+  admin_key: string;
+  filename: string;
 };
 
 export type DashboardUiState = {

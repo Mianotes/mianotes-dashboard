@@ -1,18 +1,30 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { apiFetch } from "../../api/client";
-import type { EmailCheckResponse } from "../../api/types";
+import type { EmailCheckResponse, SessionResponse } from "../../api/types";
 import logoUrl from "../../assets/logo_small.png";
+
+function downloadAdminKey(adminKey: string) {
+  const blobUrl = URL.createObjectURL(new Blob([`${adminKey}\n`], { type: "text/plain" }));
+  const link = document.createElement("a");
+  link.href = blobUrl;
+  link.download = "mianotes-admin-key.txt";
+  link.click();
+  window.setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+}
 
 export function AuthScreen({ onSignedIn }: { onSignedIn: () => void }) {
   const [step, setStep] = useState<"email" | "join" | "login">("email");
   const [email, setEmail] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
   const [isFirstUser, setIsFirstUser] = useState(false);
+  const [adminKeyRequired, setAdminKeyRequired] = useState(false);
   const [masterPasswordOwnerName, setMasterPasswordOwnerName] = useState<string | null>(null);
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
+  const [sharedInstance, setSharedInstance] = useState(false);
+  const [adminKey, setAdminKey] = useState("");
   const [error, setError] = useState<string | null>(null);
 
   async function checkEmail(event: FormEvent) {
@@ -25,6 +37,7 @@ export function AuthScreen({ onSignedIn }: { onSignedIn: () => void }) {
       });
       setUserId(result.user_id);
       setIsFirstUser(Boolean(result.is_first_user));
+      setAdminKeyRequired(Boolean(result.admin_key_required));
       setMasterPasswordOwnerName(result.master_password_owner_name ?? null);
       setStep(result.user_id ? "login" : "join");
     } catch (err) {
@@ -37,20 +50,28 @@ export function AuthScreen({ onSignedIn }: { onSignedIn: () => void }) {
     setError(null);
     try {
       if (step === "login") {
-        await apiFetch("/api/auth/login", {
+        await apiFetch<SessionResponse>("/api/auth/login", {
           method: "POST",
-          body: JSON.stringify({ user_id: userId, password })
+          body: JSON.stringify({
+            user_id: userId,
+            password,
+            admin_key: adminKeyRequired ? adminKey.trim() : undefined
+          })
         });
       } else {
-        await apiFetch("/api/auth/join", {
+        const session = await apiFetch<SessionResponse>("/api/auth/join", {
           method: "POST",
           body: JSON.stringify({
             email,
             name,
             password,
-            password_confirmation: isFirstUser ? passwordConfirmation : undefined
+            password_confirmation: isFirstUser ? passwordConfirmation : undefined,
+            shared_instance: isFirstUser ? sharedInstance : false
           })
         });
+        if (session.admin_key) {
+          downloadAdminKey(session.admin_key);
+        }
       }
       onSignedIn();
     } catch (err) {
@@ -64,8 +85,14 @@ export function AuthScreen({ onSignedIn }: { onSignedIn: () => void }) {
   const authCopy = step === "email"
     ? "Enter your email address."
     : isFirstUser
-      ? "This is a new Mianotes instance. The password you choose will be used as the master password by all users who sign in to this instance."
+      ? "This is a new Mianotes instance. Choose the master password, then decide whether admin access needs an extra recovery key."
       : masterPasswordCopy;
+  const canSubmitAuth = step !== "login" || !adminKeyRequired || adminKey.trim().length > 0;
+
+  async function readAdminKeyFile(file: File | null) {
+    if (!file) return;
+    setAdminKey((await file.text()).trim());
+  }
 
   return (
     <main className="screen auth-screen">
@@ -87,15 +114,55 @@ export function AuthScreen({ onSignedIn }: { onSignedIn: () => void }) {
             )}
             <input type="password" required value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Password" />
             {step === "join" && isFirstUser && (
-              <input
-                type="password"
-                required
-                value={passwordConfirmation}
-                onChange={(event) => setPasswordConfirmation(event.target.value)}
-                placeholder="Confirm password"
-              />
+              <>
+                <input
+                  type="password"
+                  required
+                  value={passwordConfirmation}
+                  onChange={(event) => setPasswordConfirmation(event.target.value)}
+                  placeholder="Confirm password"
+                />
+                <fieldset className="auth-choice-group">
+                  <legend>Will other people use this Mianotes instance?</legend>
+                  <label>
+                    <input
+                      type="radio"
+                      checked={!sharedInstance}
+                      onChange={() => setSharedInstance(false)}
+                    />
+                    No, just me
+                  </label>
+                  <label>
+                    <input
+                      type="radio"
+                      checked={sharedInstance}
+                      onChange={() => setSharedInstance(true)}
+                    />
+                    Yes, I’ll share it
+                  </label>
+                </fieldset>
+                {sharedInstance && (
+                  <p className="auth-help">
+                    This admin key is the recovery key for admin access. Save it in a password
+                    manager or secure folder. Anyone with this file can unlock admin access.
+                  </p>
+                )}
+              </>
             )}
-            <button className="primary-button">{step === "join" ? "Create account" : "Sign in"}</button>
+            {step === "login" && adminKeyRequired && (
+              <label className="auth-file-field">
+                <span>Admin key</span>
+                <input
+                  required
+                  type="file"
+                  accept=".txt,text/plain"
+                  onChange={(event) => void readAdminKeyFile(event.target.files?.[0] ?? null)}
+                />
+              </label>
+            )}
+            <button className="primary-button" disabled={!canSubmitAuth}>
+              {step === "join" ? "Create account" : "Sign in"}
+            </button>
             <button className="text-button" type="button" onClick={() => setStep("email")}>Use another email</button>
           </form>
         )}

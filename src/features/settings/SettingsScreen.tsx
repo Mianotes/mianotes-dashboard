@@ -1,7 +1,8 @@
-import { Copy, Database, Folder, History, Loader2, X } from "lucide-react";
+import { Copy, Database, Folder, History, KeyRound, Loader2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { apiBase, apiFetch } from "../../api/client";
 import type {
+  AdminKeyResponse,
   FolderRecord,
   ServiceApiKeyRecord,
   StorageCapacityRecord,
@@ -49,6 +50,15 @@ function apiEnvironmentUrl() {
   return window.location.origin;
 }
 
+function downloadAdminKey(adminKey: string) {
+  const blobUrl = URL.createObjectURL(new Blob([`${adminKey}\n`], { type: "text/plain" }));
+  const link = document.createElement("a");
+  link.href = blobUrl;
+  link.download = "mianotes-admin-key.txt";
+  link.click();
+  window.setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
+}
+
 export function SettingsScreen({
   currentUser,
   storageCapacity,
@@ -78,6 +88,7 @@ export function SettingsScreen({
   const [settingsMessage, setSettingsMessage] = useState<string | null>(null);
   const [apiToken, setApiToken] = useState("");
   const [isCreatingApiToken, setIsCreatingApiToken] = useState(false);
+  const [isRegeneratingAdminKey, setIsRegeneratingAdminKey] = useState(false);
 
   useEffect(() => {
     void loadArchivedFolders();
@@ -143,6 +154,29 @@ export function SettingsScreen({
       setSettingsError(error instanceof Error ? error.message : "Could not create an API key.");
     } finally {
       setIsCreatingApiToken(false);
+    }
+  }
+
+  async function regenerateAdminKey() {
+    const confirmed = window.confirm(
+      "Regenerate the admin key? The previous admin key will stop working."
+    );
+    if (!confirmed) return;
+
+    setIsRegeneratingAdminKey(true);
+    setSettingsError(null);
+    setSettingsMessage(null);
+    try {
+      const result = await apiFetch<AdminKeyResponse>("/api/settings/admin-key", {
+        method: "POST",
+        body: JSON.stringify({})
+      });
+      downloadAdminKey(result.admin_key);
+      setSettingsMessage("Admin key regenerated. Save the downloaded file somewhere safe.");
+    } catch (error) {
+      setSettingsError(error instanceof Error ? error.message : "Could not regenerate admin key.");
+    } finally {
+      setIsRegeneratingAdminKey(false);
     }
   }
 
@@ -276,6 +310,26 @@ export function SettingsScreen({
                   </p>
                 </div>
               ) : null}
+            </section>
+          )}
+          {currentUser.is_admin && (
+            <section className="settings-card" aria-labelledby="settings-admin-key-title">
+              <div className="settings-card-intro">
+                <h2 id="settings-admin-key-title">Admin key</h2>
+                <p>
+                  Regenerate the recovery key for admin access. Save it in a password manager or secure folder. Anyone
+                  with this file can unlock admin access.
+                </p>
+              </div>
+              <button
+                className="secondary-action-button"
+                type="button"
+                disabled={isRegeneratingAdminKey}
+                onClick={() => void regenerateAdminKey()}
+              >
+                {isRegeneratingAdminKey ? <Loader2 className="spin" size={16} /> : <KeyRound size={16} />}
+                Regenerate admin key
+              </button>
             </section>
           )}
           <section className="settings-card settings-restore-card" aria-labelledby="settings-restore-title">

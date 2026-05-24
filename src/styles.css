@@ -2490,6 +2490,46 @@ button {
   gap: 12px;
 }
 
+.auth-choice-group,
+.auth-file-field {
+  display: grid;
+  gap: 10px;
+}
+
+.auth-choice-group {
+  margin: 2px 0 0;
+  padding: 14px;
+  border: 1px solid #dedfe5;
+  border-radius: 8px;
+}
+
+.auth-choice-group legend,
+.auth-file-field span {
+  color: #202128;
+  font-weight: 700;
+}
+
+.auth-choice-group label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #4c4e59;
+}
+
+.auth-choice-group input {
+  width: auto;
+}
+
+.auth-panel .auth-help {
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid #dedfe5;
+  border-radius: 8px;
+  background: #f8f8fa;
+  color: #4c4e59;
+  font-size: 14px;
+}
+
 input,
 select,
 textarea {
