@@ -18,6 +18,20 @@ type NoteActionsMenuProps = {
   onDelete: () => void | Promise<void>;
 };
 
+function originalSourceUrl(note: NoteRecord): string | null {
+  if (note.source_type !== "link") return null;
+
+  const value = note.source_files?.[0]?.original_filename?.trim();
+  if (!value) return null;
+
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:" ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
 export function NoteActionsMenu({
   note,
   canChangeNote,
@@ -72,11 +86,26 @@ export function NoteActionsMenu({
 
   async function openSourceFile() {
     const sourceFile = note.source_files?.[0];
-    if (!sourceFile?.url || isOpeningSource) {
+    if ((!sourceFile?.url && !originalSourceUrl(note)) || isOpeningSource) {
       return;
     }
 
     setIsOpeningSource(true);
+    const sourceUrl = originalSourceUrl(note);
+    if (sourceUrl) {
+      const viewer = window.open(sourceUrl, "_blank", "noopener,noreferrer");
+      if (viewer) {
+        viewer.opener = null;
+      }
+      setIsOpeningSource(false);
+      setIsOpen(false);
+      return;
+    }
+    if (!sourceFile?.url) {
+      setIsOpeningSource(false);
+      return;
+    }
+
     const viewer = window.open("about:blank", "_blank");
     if (viewer) {
       viewer.opener = null;
