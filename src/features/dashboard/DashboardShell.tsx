@@ -123,6 +123,7 @@ export function DashboardShell({
             navigation.setRenamingFolder(folder);
           }}
           onUpdateFolder={(folder, update) => void actions.updateFolder(folder, update)}
+          onReorderFolders={(folderIds) => void actions.reorderFolders(folderIds)}
           onDeleteFolder={(folder) => void actions.deleteFolder(folder)}
           onJobs={navigation.openJobs}
           onPublish={navigation.openPublish}

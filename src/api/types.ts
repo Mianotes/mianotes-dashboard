@@ -16,6 +16,7 @@ export type FolderRecord = {
   slug: string;
   path?: string | null;
   is_pinned: boolean;
+  sort_order: number;
   archived_at: string | null;
   archived_by_user_id?: string | null;
 };

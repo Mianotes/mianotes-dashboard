@@ -58,6 +58,20 @@ export function useDashboardActions({
     }
   }, [loadWorkspace, setError, setOpenFolderMenuId]);
 
+  const reorderFolders = useCallback(async (folderIds: string[]) => {
+    setError(null);
+    try {
+      await apiFetch<FolderRecord[]>("/api/folders/order", {
+        method: "PATCH",
+        body: JSON.stringify({ folder_ids: folderIds })
+      });
+      setOpenFolderMenuId(null);
+      await loadWorkspace();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not sort folders.");
+    }
+  }, [loadWorkspace, setError, setOpenFolderMenuId]);
+
   const deleteFolder = useCallback(async (folder: FolderRecord) => {
     const confirmed = window.confirm(
       `Archive "${folder.name}"? Notes and sources will be moved out of the active folders list.`
@@ -138,6 +152,7 @@ export function useDashboardActions({
 
   return {
     updateFolder,
+    reorderFolders,
     deleteFolder,
     refreshNotes,
     openNote,

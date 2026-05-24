@@ -1,5 +1,6 @@
 import { Activity, Edit3, MoreVertical, Plus, Trash2, Upload } from "lucide-react";
-import type { RefCallback } from "react";
+import { useState } from "react";
+import type { DragEvent, RefCallback } from "react";
 import type { FolderRecord, StorageCapacityRecord, UserRecord, WorkspaceView } from "../../api/types";
 import { DashboardIcon } from "../icons/DashboardIcon";
 import { FolderIcon } from "../icons/FolderIcon";
@@ -25,6 +26,7 @@ type SidebarProps = {
   onToggleFolderMenu: (folderId: string) => void;
   onRenameFolder: (folder: FolderRecord) => void;
   onUpdateFolder: (folder: FolderRecord, update: Partial<Pick<FolderRecord, "name" | "is_pinned">>) => void;
+  onReorderFolders: (folderIds: string[]) => void;
   onDeleteFolder: (folder: FolderRecord) => void;
   onJobs: () => void;
   onPublish: () => void;
@@ -47,11 +49,48 @@ export function Sidebar({
   onToggleFolderMenu,
   onRenameFolder,
   onUpdateFolder,
+  onReorderFolders,
   onDeleteFolder,
   onJobs,
   onPublish
 }: SidebarProps) {
+  const [draggedFolderId, setDraggedFolderId] = useState<string | null>(null);
   const canManageFolder = (folder: FolderRecord) => currentUser.is_admin || folder.user_id === currentUser.id;
+
+  const reorderFolder = (event: DragEvent<HTMLDivElement>, targetFolder: FolderRecord) => {
+    event.preventDefault();
+    const draggedId = draggedFolderId ?? event.dataTransfer.getData("text/plain");
+    if (!draggedId || draggedId === targetFolder.id || targetFolder.is_pinned) {
+      setDraggedFolderId(null);
+      return;
+    }
+
+    const draggableFolderIds = folders
+      .filter((folder) => !folder.is_pinned && canManageFolder(folder))
+      .map((folder) => folder.id);
+    if (!draggableFolderIds.includes(draggedId) || !draggableFolderIds.includes(targetFolder.id)) {
+      setDraggedFolderId(null);
+      return;
+    }
+
+    const remainingFolderIds = draggableFolderIds.filter((folderId) => folderId !== draggedId);
+    const targetIndex = remainingFolderIds.indexOf(targetFolder.id);
+    if (targetIndex < 0) {
+      setDraggedFolderId(null);
+      return;
+    }
+
+    const bounds = event.currentTarget.getBoundingClientRect();
+    const dropAfterTarget = event.clientY > bounds.top + bounds.height / 2;
+    const insertIndex = dropAfterTarget ? targetIndex + 1 : targetIndex;
+    const nextFolderIds = [...remainingFolderIds];
+    nextFolderIds.splice(insertIndex, 0, draggedId);
+    setDraggedFolderId(null);
+
+    if (nextFolderIds.join(":") !== draggableFolderIds.join(":")) {
+      onReorderFolders(nextFolderIds);
+    }
+  };
 
   return (
     <aside className={`sidebar ${isOpen ? "is-open" : ""}`}>
@@ -83,6 +122,7 @@ export function Sidebar({
       >
         {folders.map((folder) => {
           const canManageThisFolder = canManageFolder(folder);
+          const canDragThisFolder = canManageThisFolder && !folder.is_pinned;
           const folderDisabledTitle = canManageThisFolder
             ? undefined
             : folderPermissionMessage("change");
@@ -93,6 +133,23 @@ export function Sidebar({
               className={`nav-item folder-nav-item ${selectedFolderId === folder.id ? "active" : ""}`}
               role="button"
               tabIndex={0}
+              draggable={canDragThisFolder}
+              onDragStart={(event) => {
+                if (!canDragThisFolder) {
+                  event.preventDefault();
+                  return;
+                }
+                event.dataTransfer.effectAllowed = "move";
+                event.dataTransfer.setData("text/plain", folder.id);
+                setDraggedFolderId(folder.id);
+              }}
+              onDragOver={(event) => {
+                if (!draggedFolderId || folder.is_pinned || !canDragThisFolder) return;
+                event.preventDefault();
+                event.dataTransfer.dropEffect = "move";
+              }}
+              onDrop={(event) => reorderFolder(event, folder)}
+              onDragEnd={() => setDraggedFolderId(null)}
               onClick={() => onSelectFolder(folder.id)}
               onKeyDown={(event) => {
                 if (event.key !== "Enter" && event.key !== " ") return;
