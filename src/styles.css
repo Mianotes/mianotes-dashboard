@@ -160,6 +160,25 @@ button {
   cursor: pointer;
 }
 
+.folder-nav-item.drop-before::before,
+.folder-nav-item.drop-after::after {
+  content: "";
+  position: absolute;
+  right: 24px;
+  left: 24px;
+  height: 2px;
+  border-radius: 999px;
+  background: #eee;
+}
+
+.folder-nav-item.drop-before::before {
+  top: -1px;
+}
+
+.folder-nav-item.drop-after::after {
+  bottom: -1px;
+}
+
 .nav-item span {
   overflow: hidden;
   text-overflow: ellipsis;
