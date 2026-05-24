@@ -97,12 +97,10 @@ export function NoteRow({
         <div className="note-meta-top">
           <span className="folder-name">{folderName}</span>
           <span className={`badge ${badgeTone(note.source_type)}`}><Icon size={15} />{note.source_type}</span>
+          {jobBadge && <span className={`badge ${jobBadge.tone}`}>{jobBadge.label}</span>}
           {isBusy && !jobBadge && <span className="badge warning"><Loader2 size={14} className="spin" />{note.status.replace("_", " ")}</span>}
         </div>
-        <h2>
-          {note.title}
-          {jobBadge && <span className={`badge ${jobBadge.tone}`}>{jobBadge.label}</span>}
-        </h2>
+        <h2>{note.title}</h2>
         <p>{noteExcerpt(note)}</p>
         <div className="note-meta-bottom">
           <UserAvatar user={note.user} name={owner} />
