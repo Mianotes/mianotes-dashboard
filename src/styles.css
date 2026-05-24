@@ -3776,8 +3776,7 @@ textarea:focus {
   min-height: 250px;
 }
 
-.settings-storage-panel,
-.settings-team-panel {
+.settings-storage-panel {
   display: grid;
   grid-template-columns: 38px 1fr auto;
   align-items: center;
@@ -3788,8 +3787,7 @@ textarea:focus {
   color: var(--slate-7);
 }
 
-.settings-storage-panel svg,
-.settings-team-panel svg {
+.settings-storage-panel svg {
   align-self: start;
   width: 19px;
   height: 19px;
@@ -3797,8 +3795,7 @@ textarea:focus {
   color: #a0a2aa;
 }
 
-.settings-storage-panel strong,
-.settings-team-panel strong {
+.settings-storage-panel strong {
   display: block;
   color: var(--ink);
   font-size: 15px;
@@ -3806,13 +3803,71 @@ textarea:focus {
   font-weight: 700;
 }
 
-.settings-storage-panel small,
-.settings-team-panel small {
+.settings-storage-panel small {
   display: block;
   margin-top: 5px;
   color: #8d8f98;
   font-size: 13px;
   line-height: 1.2;
+}
+
+.settings-team-list {
+  display: grid;
+  gap: 0;
+  padding: 6px 34px 0;
+}
+
+.settings-team-row {
+  display: grid;
+  grid-template-columns: 38px minmax(0, 1fr);
+  align-items: center;
+  min-height: 58px;
+  color: var(--slate-7);
+}
+
+.settings-team-row svg {
+  align-self: start;
+  width: 19px;
+  height: 19px;
+  margin-top: 6px;
+  color: #a0a2aa;
+}
+
+.settings-team-row strong {
+  display: block;
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.settings-team-row small {
+  display: block;
+  margin-top: 5px;
+  overflow: hidden;
+  color: #8d8f98;
+  font-size: 13px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-team-help {
+  margin: 18px 34px 34px;
+  color: #8d8f98;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.settings-team-help button {
+  padding: 0;
+  border: 0;
+  color: #17181d;
+  background: transparent;
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
 }
 
 .settings-text-action {
@@ -5142,11 +5197,22 @@ textarea:focus {
     padding: 26px 22px 18px;
   }
 
-  .settings-storage-panel,
-  .settings-team-panel {
+  .settings-storage-panel {
     grid-template-columns: 34px minmax(0, 1fr);
     margin: 26px 22px 34px;
     padding: 0;
+  }
+
+  .settings-team-list {
+    padding: 6px 22px 0;
+  }
+
+  .settings-team-row {
+    grid-template-columns: 34px minmax(0, 1fr);
+  }
+
+  .settings-team-help {
+    margin: 18px 22px 34px;
   }
 
   .settings-api-panel {

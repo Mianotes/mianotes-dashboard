@@ -50,6 +50,7 @@ function apiEnvironmentUrl() {
 }
 
 export function SettingsScreen({
+  users,
   currentUser,
   storageCapacity,
   onBack,
@@ -59,6 +60,7 @@ export function SettingsScreen({
   onFoldersRestored,
   onDatabaseSwitched
 }: {
+  users: UserRecord[];
   currentUser: UserRecord;
   storageCapacity: StorageCapacityRecord | null;
   onBack: () => void;
@@ -155,6 +157,7 @@ export function SettingsScreen({
 
   const databasePath = storageSettings?.database_path ?? `${storageCapacity?.data_dir ?? "data"}/mia.db`;
   const databaseLabel = databasePath.replace(/\/$/, "").split("/").slice(-2).join("/");
+  const adminUsers = users.filter((user) => user.is_admin);
   const apiEnvironmentSnippet = [
     `export MIANOTES_API_URL="${apiEnvironmentUrl()}"`,
     `export MIANOTES_API_KEY="${apiToken}"`
@@ -219,23 +222,25 @@ export function SettingsScreen({
               <div className="settings-card-intro">
                 <h2 id="settings-team-title">Team access</h2>
                 <p>
-                  Choose which team members can manage this workspace.
+                  These people can manage users, settings, API keys, and databases.
                 </p>
               </div>
-              <div className="settings-team-panel">
-                <Users size={24} />
-                <span>
-                  <strong>Admins and members</strong>
-                  <small>Choose who can manage users, settings, API keys, and databases.</small>
-                </span>
-                <button
-                  className="settings-text-action"
-                  type="button"
-                  onClick={() => onOpenProfile("all")}
-                >
-                  Manage users
-                </button>
+              <div className="settings-team-list" aria-label="Workspace admins">
+                {adminUsers.map((admin) => (
+                  <div className="settings-team-row" key={admin.id}>
+                    <Users size={24} />
+                    <span>
+                      <strong>{admin.name}</strong>
+                      <small>{admin.email}</small>
+                    </span>
+                  </div>
+                ))}
               </div>
+              <p className="settings-team-help">
+                You can make other people admins on the{" "}
+                <button type="button" onClick={() => onOpenProfile("all")}>Users</button>{" "}
+                screen.
+              </p>
             </section>
           )}
           {currentUser.is_admin && (

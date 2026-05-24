@@ -178,6 +178,7 @@ export function DashboardShell({
 
           {navigation.workspaceView === "settings" ? (
             <SettingsScreen
+              users={users}
               currentUser={currentUser}
               storageCapacity={storageCapacity}
               onBack={navigation.goBack}
