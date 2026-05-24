@@ -96,10 +96,24 @@ export function AddNoteDialog({
               </select>
             </label>
           )}
+          {mode === "link" && (
+            <label className="field-label">
+              <span>URL</span>
+              <input
+                autoFocus
+                required
+                type="url"
+                value={url}
+                onChange={(event) => setUrl(event.target.value)}
+                placeholder="https://example.com/article"
+              />
+              <small className="field-help">Mia will save a draft now, then replace it with the page contents once indexing is complete.</small>
+            </label>
+          )}
           <label className="field-label">
             <span>Title</span>
             <input
-              autoFocus
+              autoFocus={mode !== "link"}
               required
               value={title}
               onChange={(event) => setTitle(event.target.value)}
@@ -109,13 +123,6 @@ export function AddNoteDialog({
             <label className="field-label">
               <span>Text (optional)</span>
               <textarea value={text} onChange={(event) => setText(event.target.value)} placeholder="Paste notes, agent output, or rough thoughts" />
-            </label>
-          )}
-          {mode === "link" && (
-            <label className="field-label">
-              <span>URL</span>
-              <input required type="url" value={url} onChange={(event) => setUrl(event.target.value)} placeholder="https://example.com/article" />
-              <small className="field-help">Mia will save a draft now, then replace it with the page contents once indexing is complete.</small>
             </label>
           )}
           {mode === "file" && (
