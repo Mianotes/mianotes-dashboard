@@ -2497,16 +2497,20 @@ button {
 }
 
 .auth-choice-group {
-  margin: 2px 0 0;
+  margin: 2px 0 12px;
   padding: 14px;
   border: 1px solid #dedfe5;
   border-radius: 8px;
 }
 
-.auth-choice-group legend,
+.auth-choice-group > span,
 .auth-file-field span {
   color: #202128;
   font-weight: 700;
+}
+
+.auth-choice-group > span {
+  padding-bottom: 10px;
 }
 
 .auth-choice-group label {

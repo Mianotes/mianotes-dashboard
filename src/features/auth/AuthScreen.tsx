@@ -101,33 +101,35 @@ export function AuthScreen({ onSignedIn }: { onSignedIn: () => void }) {
               />
             )}
             {step === "join" && isFirstUser && (
-              <>
-                <fieldset className="auth-choice-group">
-                  <legend>You can let other people create accounts for this workspace, or keep access limited to the admin account.</legend>
-                  <label>
-                    <input
-                      type="radio"
-                      checked={workspaceAccessMode === "open"}
-                      onChange={() => setWorkspaceAccessMode("open")}
-                    />
-                    <span>
-                      <strong>Allow others to join</strong>
-                      <small>Other people can create accounts and join this workspace.</small>
-                    </span>
-                  </label>
-                  <label>
-                    <input
-                      type="radio"
-                      checked={workspaceAccessMode === "admin_only"}
-                      onChange={() => setWorkspaceAccessMode("admin_only")}
-                    />
-                    <span>
-                      <strong>Admin only</strong>
-                      <small>Only the admin email can access this workspace.</small>
-                    </span>
-                  </label>
-                </fieldset>
-              </>
+              <div className="auth-choice-group" role="radiogroup" aria-labelledby="workspace-access-label">
+                <span id="workspace-access-label">
+                  You can let other people create accounts for this workspace, or keep access limited to the admin account.
+                </span>
+                <label>
+                  <input
+                    type="radio"
+                    name="workspace-access-mode"
+                    checked={workspaceAccessMode === "open"}
+                    onChange={() => setWorkspaceAccessMode("open")}
+                  />
+                  <span>
+                    <strong>Allow others to join</strong>
+                    <small>Other people can create accounts and join this workspace.</small>
+                  </span>
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="workspace-access-mode"
+                    checked={workspaceAccessMode === "admin_only"}
+                    onChange={() => setWorkspaceAccessMode("admin_only")}
+                  />
+                  <span>
+                    <strong>Admin only</strong>
+                    <small>Only the admin email can access this workspace.</small>
+                  </span>
+                </label>
+              </div>
             )}
             <button className="primary-button" disabled={!canSubmitAuth}>
               {step === "join" ? "Create account" : "Sign in"}
