@@ -1,4 +1,4 @@
-import { Folder, GripVertical } from "lucide-react";
+import { Folder, GripVertical, X } from "lucide-react";
 import { useState } from "react";
 import type { DragEvent } from "react";
 import type {
@@ -124,6 +124,11 @@ export function PublishNavigationTable({ groups, onChange }: PublishNavigationTa
     }
   };
 
+  const removeGroup = (groupIndex: number) => {
+    resetDragState();
+    onChange(groups.filter((_, index) => index !== groupIndex));
+  };
+
   return (
     <section className="publish-navigation-table">
       <header>
@@ -140,6 +145,14 @@ export function PublishNavigationTable({ groups, onChange }: PublishNavigationTa
             <div className="publish-navigation-folder">
               <Folder size={18} />
               <span>{group.title}</span>
+              <button
+                aria-label={`Remove ${group.title} from navigation`}
+                className="publish-navigation-remove"
+                onClick={() => removeGroup(groupIndex)}
+                type="button"
+              >
+                <X size={16} />
+              </button>
             </div>
 
             {group.items.length > 0 ? (

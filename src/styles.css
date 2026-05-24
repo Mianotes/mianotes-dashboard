@@ -4294,7 +4294,7 @@ textarea:focus {
 
 .publish-navigation-folder {
   display: grid;
-  grid-template-columns: 20px minmax(0, 1fr);
+  grid-template-columns: 20px minmax(0, 1fr) 28px;
   gap: 12px;
   align-items: center;
   min-height: 52px;
@@ -4307,8 +4307,33 @@ textarea:focus {
   text-transform: uppercase;
 }
 
-.publish-navigation-folder svg {
+.publish-navigation-folder:hover .publish-navigation-remove,
+.publish-navigation-remove:focus-visible {
+  opacity: 1;
+}
+
+.publish-navigation-folder > svg {
   color: #7b7c86;
+}
+
+.publish-navigation-remove {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 0;
+  border-radius: 6px;
+  color: #747581;
+  background: transparent;
+  cursor: pointer;
+  opacity: 0;
+  transition: background 0.15s ease, color 0.15s ease, opacity 0.15s ease;
+}
+
+.publish-navigation-remove:hover,
+.publish-navigation-remove:focus-visible {
+  color: #1f2026;
+  background: #edeef2;
 }
 
 .publish-navigation-row {
