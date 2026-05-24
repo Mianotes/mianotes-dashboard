@@ -1,30 +1,19 @@
 import { useState } from "react";
 import type { FormEvent } from "react";
 import { apiFetch } from "../../api/client";
-import type { EmailCheckResponse, SessionResponse } from "../../api/types";
+import type { EmailCheckResponse } from "../../api/types";
 import logoUrl from "../../assets/logo_small.png";
-
-function downloadAdminKey(adminKey: string) {
-  const blobUrl = URL.createObjectURL(new Blob([`${adminKey}\n`], { type: "text/plain" }));
-  const link = document.createElement("a");
-  link.href = blobUrl;
-  link.download = "mianotes-admin-key.txt";
-  link.click();
-  window.setTimeout(() => URL.revokeObjectURL(blobUrl), 1000);
-}
 
 export function AuthScreen({ onSignedIn }: { onSignedIn: () => void }) {
   const [step, setStep] = useState<"email" | "join" | "login">("email");
   const [email, setEmail] = useState("");
   const [userId, setUserId] = useState<string | null>(null);
   const [isFirstUser, setIsFirstUser] = useState(false);
-  const [adminKeyRequired, setAdminKeyRequired] = useState(false);
-  const [masterPasswordOwnerName, setMasterPasswordOwnerName] = useState<string | null>(null);
+  const [signupDisabled, setSignupDisabled] = useState(false);
   const [name, setName] = useState("");
   const [password, setPassword] = useState("");
   const [passwordConfirmation, setPasswordConfirmation] = useState("");
-  const [sharedInstance, setSharedInstance] = useState(false);
-  const [adminKey, setAdminKey] = useState("");
+  const [workspaceAccessMode, setWorkspaceAccessMode] = useState<"open" | "admin_only">("open");
   const [error, setError] = useState<string | null>(null);
 
   async function checkEmail(event: FormEvent) {
@@ -37,8 +26,7 @@ export function AuthScreen({ onSignedIn }: { onSignedIn: () => void }) {
       });
       setUserId(result.user_id);
       setIsFirstUser(Boolean(result.is_first_user));
-      setAdminKeyRequired(Boolean(result.admin_key_required));
-      setMasterPasswordOwnerName(result.master_password_owner_name ?? null);
+      setSignupDisabled(Boolean(result.signup_disabled));
       setStep(result.user_id ? "login" : "join");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not check email");
@@ -50,28 +38,21 @@ export function AuthScreen({ onSignedIn }: { onSignedIn: () => void }) {
     setError(null);
     try {
       if (step === "login") {
-        await apiFetch<SessionResponse>("/api/auth/login", {
+        await apiFetch("/api/auth/login", {
           method: "POST",
-          body: JSON.stringify({
-            user_id: userId,
-            password,
-            admin_key: adminKeyRequired ? adminKey.trim() : undefined
-          })
+          body: JSON.stringify({ user_id: userId, password })
         });
       } else {
-        const session = await apiFetch<SessionResponse>("/api/auth/join", {
+        await apiFetch("/api/auth/join", {
           method: "POST",
           body: JSON.stringify({
             email,
             name,
             password,
-            password_confirmation: isFirstUser ? passwordConfirmation : undefined,
-            shared_instance: isFirstUser ? sharedInstance : false
+            password_confirmation: passwordConfirmation,
+            workspace_access_mode: isFirstUser ? workspaceAccessMode : undefined
           })
         });
-        if (session.admin_key) {
-          downloadAdminKey(session.admin_key);
-        }
       }
       onSignedIn();
     } catch (err) {
@@ -79,20 +60,12 @@ export function AuthScreen({ onSignedIn }: { onSignedIn: () => void }) {
     }
   }
 
-  const masterPasswordCopy = masterPasswordOwnerName
-    ? `Enter the master password set by ${masterPasswordOwnerName}.`
-    : "Enter the master password set by the instance admin.";
   const authCopy = step === "email"
     ? "Enter your email address."
     : isFirstUser
-      ? "This is a new Mianotes instance. Choose the master password, then decide whether admin access needs an extra recovery key."
-      : masterPasswordCopy;
-  const canSubmitAuth = step !== "login" || !adminKeyRequired || adminKey.trim().length > 0;
-
-  async function readAdminKeyFile(file: File | null) {
-    if (!file) return;
-    setAdminKey((await file.text()).trim());
-  }
+      ? "Create the admin account for this workspace."
+      : "Enter your password for this workspace.";
+  const canSubmitAuth = step === "login" || !signupDisabled;
 
   return (
     <main className="screen auth-screen">
@@ -109,56 +82,52 @@ export function AuthScreen({ onSignedIn }: { onSignedIn: () => void }) {
           </form>
         ) : (
           <form onSubmit={submitAuth} className="form-stack">
+            {step === "join" && signupDisabled && (
+              <div className="notice danger">
+                Only the admin email can access this workspace.
+              </div>
+            )}
             {step === "join" && (
               <input required value={name} onChange={(event) => setName(event.target.value)} placeholder="Your name" />
             )}
             <input type="password" required value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Password" />
+            {step === "join" && (
+              <input
+                type="password"
+                required
+                value={passwordConfirmation}
+                onChange={(event) => setPasswordConfirmation(event.target.value)}
+                placeholder="Confirm password"
+              />
+            )}
             {step === "join" && isFirstUser && (
               <>
-                <input
-                  type="password"
-                  required
-                  value={passwordConfirmation}
-                  onChange={(event) => setPasswordConfirmation(event.target.value)}
-                  placeholder="Confirm password"
-                />
                 <fieldset className="auth-choice-group">
-                  <legend>Will other people use this Mianotes instance?</legend>
+                  <legend>You can let other people create accounts for this workspace, or keep access limited to the admin account.</legend>
                   <label>
                     <input
                       type="radio"
-                      checked={!sharedInstance}
-                      onChange={() => setSharedInstance(false)}
+                      checked={workspaceAccessMode === "open"}
+                      onChange={() => setWorkspaceAccessMode("open")}
                     />
-                    No, just me
+                    <span>
+                      <strong>Allow others to join</strong>
+                      <small>Other people can create accounts and join this workspace.</small>
+                    </span>
                   </label>
                   <label>
                     <input
                       type="radio"
-                      checked={sharedInstance}
-                      onChange={() => setSharedInstance(true)}
+                      checked={workspaceAccessMode === "admin_only"}
+                      onChange={() => setWorkspaceAccessMode("admin_only")}
                     />
-                    Yes, I’ll share it
+                    <span>
+                      <strong>Admin only</strong>
+                      <small>Only the admin email can access this workspace.</small>
+                    </span>
                   </label>
                 </fieldset>
-                {sharedInstance && (
-                  <p className="auth-help">
-                    This admin key is the recovery key for admin access. Save it in a password
-                    manager or secure folder. Anyone with this file can unlock admin access.
-                  </p>
-                )}
               </>
-            )}
-            {step === "login" && adminKeyRequired && (
-              <label className="auth-file-field">
-                <span>Admin key</span>
-                <input
-                  required
-                  type="file"
-                  accept=".txt,text/plain"
-                  onChange={(event) => void readAdminKeyFile(event.target.files?.[0] ?? null)}
-                />
-              </label>
             )}
             <button className="primary-button" disabled={!canSubmitAuth}>
               {step === "join" ? "Create account" : "Sign in"}

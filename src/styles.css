@@ -2511,13 +2511,27 @@ button {
 
 .auth-choice-group label {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 10px;
   color: #4c4e59;
 }
 
+.auth-choice-group label span {
+  display: grid;
+  gap: 3px;
+}
+
+.auth-choice-group label strong {
+  color: #202128;
+}
+
+.auth-choice-group label small {
+  line-height: 1.35;
+}
+
 .auth-choice-group input {
   width: auto;
+  margin-top: 2px;
 }
 
 .auth-panel .auth-help {
