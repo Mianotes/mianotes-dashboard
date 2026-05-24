@@ -4354,6 +4354,8 @@ textarea:focus {
 
 .jobs-grid {
   display: grid;
+  max-height: 360px;
+  overflow-y: auto;
 }
 
 .jobs-grid-row {
@@ -4387,6 +4389,9 @@ textarea:focus {
 }
 
 .jobs-grid-head {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   min-height: 38px;
   color: #747581;
   background: #fcfcfd;
