@@ -2202,6 +2202,27 @@ button {
   line-height: 1.2;
 }
 
+.profile-role-badge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  margin-bottom: 8px;
+  padding: 3px 10px;
+  border: 1px solid #e2e3e8;
+  border-radius: 999px;
+  color: #6d6f7a;
+  background: #f8f8fa;
+  font-size: 11px;
+  font-weight: 750;
+  text-transform: uppercase;
+}
+
+.profile-role-badge.admin {
+  border-color: #d7eadd;
+  color: #17643f;
+  background: #effaf3;
+}
+
 .profile-card p {
   margin: 0 0 8px;
   color: #737580;
@@ -2354,11 +2375,14 @@ button {
   text-align: inherit;
 }
 
-.profile-card-edit-button {
+.profile-card-menu {
   position: absolute;
   top: 14px;
   right: 14px;
   z-index: 2;
+}
+
+.profile-card-menu-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -2373,15 +2397,55 @@ button {
   transition: border-color 0.12s ease, color 0.12s ease, background-color 0.12s ease;
 }
 
-.profile-card-edit-button:hover {
+.profile-card-menu-button:hover,
+.profile-card-menu-button[aria-expanded="true"] {
   border-color: #aeb0ba;
   color: #202128;
 }
 
-.profile-card-edit-button:active {
+.profile-card-menu-button:active {
   border-color: #17181f;
   color: #ffffff;
   background: #17181f;
+}
+
+.profile-card-menu-popover {
+  position: absolute;
+  top: 38px;
+  right: 0;
+  z-index: 5;
+  display: grid;
+  min-width: 154px;
+  padding: 6px;
+  border: 1px solid #dedfe5;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 14px 34px rgba(18, 18, 22, 0.12);
+}
+
+.profile-card-menu-popover button {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 34px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 6px;
+  color: #363842;
+  background: transparent;
+  font-size: 13px;
+  font-weight: 650;
+  text-align: left;
+}
+
+.profile-card-menu-popover button:hover:not(:disabled) {
+  color: #17181d;
+  background: #f7f7f9;
+}
+
+.profile-card-menu-popover button:disabled {
+  cursor: default;
+  opacity: 0.55;
 }
 
 .profile-card-button .profile-card {
@@ -2839,6 +2903,29 @@ textarea:focus {
 .modal-notice.danger {
   color: #8f2931;
   background: #fde2e6;
+}
+
+.profile-admin-modal {
+  width: min(440px, calc(100vw - 32px));
+}
+
+.profile-admin-warning {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 14px;
+  border: 1px solid #dedfe5;
+  border-radius: 8px;
+  color: #4f525d;
+  background: #f8f8fa;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.profile-admin-warning svg {
+  flex: 0 0 auto;
+  margin-top: 1px;
+  color: #17643f;
 }
 
 .segmented {
@@ -3670,7 +3757,8 @@ textarea:focus {
   min-height: 250px;
 }
 
-.settings-storage-panel {
+.settings-storage-panel,
+.settings-team-panel {
   display: grid;
   grid-template-columns: 38px 1fr auto;
   align-items: center;
@@ -3681,7 +3769,8 @@ textarea:focus {
   color: var(--slate-7);
 }
 
-.settings-storage-panel svg {
+.settings-storage-panel svg,
+.settings-team-panel svg {
   align-self: start;
   width: 19px;
   height: 19px;
@@ -3689,7 +3778,8 @@ textarea:focus {
   color: #a0a2aa;
 }
 
-.settings-storage-panel strong {
+.settings-storage-panel strong,
+.settings-team-panel strong {
   display: block;
   color: var(--ink);
   font-size: 15px;
@@ -3697,7 +3787,8 @@ textarea:focus {
   font-weight: 700;
 }
 
-.settings-storage-panel small {
+.settings-storage-panel small,
+.settings-team-panel small {
   display: block;
   margin-top: 5px;
   color: #8d8f98;
@@ -5032,7 +5123,8 @@ textarea:focus {
     padding: 26px 22px 18px;
   }
 
-  .settings-storage-panel {
+  .settings-storage-panel,
+  .settings-team-panel {
     grid-template-columns: 34px minmax(0, 1fr);
     margin: 26px 22px 34px;
     padding: 0;

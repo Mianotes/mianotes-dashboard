@@ -1,8 +1,9 @@
-import { X } from "lucide-react";
+import { Loader2, ShieldCheck, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { apiFetch, versionedMediaPath } from "../../api/client";
 import type { FolderRecord, NoteRecord, ProfileDraft, UserRecord } from "../../api/types";
 import { randomAvatarTone } from "../../components/ui/UserAvatar";
+import { Modal } from "../../components/ui/Modal";
 import { AllProfilesView } from "./AllProfilesView";
 import { NewUserProfileView } from "./NewUserProfileView";
 import { ProfileToolbar } from "./ProfileToolbar";
@@ -46,6 +47,8 @@ export function ProfileScreen({
   const [draft, setDraft] = useState<ProfileDraft>(emptyProfileDraft);
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
+  const [pendingAdminChange, setPendingAdminChange] = useState<{ user: UserRecord; isAdmin: boolean } | null>(null);
+  const [isChangingAdmin, setIsChangingAdmin] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [newUserAvatarTone, setNewUserAvatarTone] = useState(() => randomAvatarTone());
   const editSelectedProfileRef = useRef<string | null>(null);
@@ -176,6 +179,24 @@ export function ProfileScreen({
     }
   }
 
+  async function updateAdminRole() {
+    if (!pendingAdminChange) return;
+    setIsChangingAdmin(true);
+    setProfileError(null);
+    try {
+      const updatedUser = await apiFetch<UserRecord>(`/api/users/${pendingAdminChange.user.id}/admin`, {
+        method: "PATCH",
+        body: JSON.stringify({ is_admin: pendingAdminChange.isAdmin })
+      });
+      onUserUpdated(updatedUser);
+      setPendingAdminChange(null);
+    } catch (err) {
+      setProfileError(err instanceof Error ? err.message : "Could not update admin access");
+    } finally {
+      setIsChangingAdmin(false);
+    }
+  }
+
   return (
     <>
       <ProfileToolbar
@@ -239,9 +260,63 @@ export function ProfileScreen({
             currentUser={currentUser}
             onSelectUser={(userId) => onSelectUser(userId)}
             onEditUser={selectUserForEditing}
+            onRequestAdminChange={(user, isAdmin) => setPendingAdminChange({ user, isAdmin })}
           />
         )}
       </div>
+      {pendingAdminChange && (
+        <Modal
+          className="folder-modal profile-admin-modal"
+          labelledBy="profile-admin-modal-title"
+          onClose={() => setPendingAdminChange(null)}
+        >
+          <div className="folder-modal-header">
+            <div>
+              <h2 id="profile-admin-modal-title">
+                {pendingAdminChange.isAdmin ? "Make admin" : "Remove admin"}
+              </h2>
+              <p>
+                {pendingAdminChange.isAdmin
+                  ? `Give ${pendingAdminChange.user.name} admin access to this workspace?`
+                  : `Remove admin access from ${pendingAdminChange.user.name}?`}
+              </p>
+            </div>
+            <button
+              className="icon-button"
+              type="button"
+              aria-label="Close"
+              onClick={() => setPendingAdminChange(null)}
+            >
+              <X size={18} />
+            </button>
+          </div>
+          <div className="folder-modal-body">
+            <div className="profile-admin-warning">
+              <ShieldCheck size={18} />
+              <span>Admins can manage users, settings, API keys, and databases.</span>
+            </div>
+          </div>
+          <div className="folder-modal-actions">
+            <button
+              className="secondary-action-button"
+              type="button"
+              disabled={isChangingAdmin}
+              onClick={() => setPendingAdminChange(null)}
+            >
+              Cancel
+            </button>
+            <button
+              className="primary-button"
+              type="button"
+              disabled={isChangingAdmin}
+              onClick={() => void updateAdminRole()}
+            >
+              {isChangingAdmin ? <Loader2 className="spin" size={15} /> : null}
+              {pendingAdminChange.isAdmin ? "Make admin" : "Remove admin"}
+            </button>
+          </div>
+        </Modal>
+      )}
     </>
   );
 }

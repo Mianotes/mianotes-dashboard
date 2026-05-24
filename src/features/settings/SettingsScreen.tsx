@@ -1,4 +1,4 @@
-import { Copy, Database, Folder, History, Loader2, X } from "lucide-react";
+import { Copy, Database, Folder, History, Loader2, Users, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { apiBase, apiFetch } from "../../api/client";
 import type {
@@ -214,6 +214,30 @@ export function SettingsScreen({
               </button>
             </div>
           </section>
+          {currentUser.is_admin && (
+            <section className="settings-card settings-team-card" aria-labelledby="settings-team-title">
+              <div className="settings-card-intro">
+                <h2 id="settings-team-title">Team access</h2>
+                <p>
+                  Manage who can administer this workspace without adding extra controls to personal profiles.
+                </p>
+              </div>
+              <div className="settings-team-panel">
+                <Users size={24} />
+                <span>
+                  <strong>Admins and members</strong>
+                  <small>Choose who can manage users, settings, API keys, and databases.</small>
+                </span>
+                <button
+                  className="settings-text-action"
+                  type="button"
+                  onClick={() => onOpenProfile("all")}
+                >
+                  Manage users
+                </button>
+              </div>
+            </section>
+          )}
           {currentUser.is_admin && (
             <section className="settings-card settings-api-card" aria-labelledby="settings-api-title">
               <div className="settings-card-intro">

@@ -44,6 +44,9 @@ export function ProfileSummaryCard({
         )}
       </div>
       <h2>{user.name}</h2>
+      <span className={`profile-role-badge ${user.is_admin ? "admin" : ""}`}>
+        {user.is_admin ? "Admin" : "Member"}
+      </span>
       <p>{userDisplayRole(user)}</p>
       <span>{user.email}</span>
       <div className="profile-stats" aria-label={`${user.name} stats`}>
