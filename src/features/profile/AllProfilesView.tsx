@@ -1,6 +1,7 @@
 import { Edit3, KeyRound, MoreVertical, ShieldCheck, ShieldOff } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { FolderRecord, NoteRecord, UserRecord } from "../../api/types";
+import { useOutsideAndEscape } from "../../hooks/useOutsideAndEscape";
 import { ProfileSummaryCard } from "./ProfileSummaryCard";
 
 export function AllProfilesView({
@@ -23,7 +24,9 @@ export function AllProfilesView({
   onSelectUser: (userId: string) => void;
 }) {
   const [openMenuUserId, setOpenMenuUserId] = useState<string | null>(null);
+  const openMenuRef = useRef<HTMLDivElement | null>(null);
   const adminCount = users.filter((user) => user.is_admin).length;
+  useOutsideAndEscape(Boolean(openMenuUserId), openMenuRef, () => setOpenMenuUserId(null));
 
   return (
     <section className="profiles-grid" aria-label="All user profiles">
@@ -38,7 +41,7 @@ export function AllProfilesView({
               {user.is_admin ? "Admin" : "Member"}
             </span>
             {canShowMenu && (
-              <div className="profile-card-menu">
+              <div className="profile-card-menu" ref={isMenuOpen ? openMenuRef : undefined}>
                 <button
                   className="profile-card-menu-button"
                   type="button"

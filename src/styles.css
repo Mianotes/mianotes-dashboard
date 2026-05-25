@@ -2460,7 +2460,7 @@ button {
   right: 0;
   z-index: 2;
   display: grid;
-  min-width: 154px;
+  min-width: 180px;
   padding: 6px;
   border: 1px solid #dedfe5;
   border-radius: 8px;
