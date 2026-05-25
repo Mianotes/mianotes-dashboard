@@ -1,8 +1,9 @@
-import { Activity, Edit3, MoreVertical, Plus, Trash2, Upload } from "lucide-react";
+import { Edit3, MoreVertical, Plus, Trash2, Upload } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { CSSProperties, DragEvent, RefCallback } from "react";
 import type { FolderRecord, StorageCapacityRecord, UserRecord, WorkspaceView } from "../../api/types";
+import { ConsoleIcon } from "../icons/ConsoleIcon";
 import { DashboardIcon } from "../icons/DashboardIcon";
 import { FolderIcon } from "../icons/FolderIcon";
 import { PinIcon } from "../icons/PinIcon";
@@ -175,8 +176,8 @@ export function Sidebar({
           className={`nav-item ${workspaceView === "jobs" ? "active" : ""}`}
           onClick={onJobs}
         >
-          <Activity size={18} />
-          <span>Jobs</span>
+          <ConsoleIcon size={18} />
+          <span>Console</span>
         </button>
       </nav>
 

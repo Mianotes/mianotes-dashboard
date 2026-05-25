@@ -1,7 +1,8 @@
-import { Loader2, RefreshCw, Terminal, X } from "lucide-react";
+import { Loader2, RefreshCw, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { apiFetch } from "../../api/client";
 import type { JobRecord, JobStatus, UserRecord } from "../../api/types";
+import { ConsoleIcon } from "../../components/icons/ConsoleIcon";
 import { ScreenToolbar } from "../../components/layout/ScreenToolbar";
 import { relativeTime } from "../../utils/format";
 
@@ -82,7 +83,7 @@ export function JobsScreen({
     <section className="jobs-screen">
       <ScreenToolbar
         className="settings-toolbar jobs-toolbar"
-        breadcrumbItems={[{ label: "Jobs", current: true }]}
+        breadcrumbItems={[{ label: "Console", current: true }]}
         currentUser={currentUser}
         onBack={onBack}
         onOpenProfile={() => onOpenProfile(currentUser.id)}
@@ -104,7 +105,7 @@ export function JobsScreen({
         <div className="jobs-document-header">
           <div>
             <span className="publish-kicker">Activity</span>
-            <h1>Jobs</h1>
+            <h1>Console</h1>
           </div>
           <button
             className="secondary-action jobs-refresh"
@@ -121,7 +122,7 @@ export function JobsScreen({
           <header>
             <div>
               <h2>Queue</h2>
-              <p>Recent parsing and indexing jobs.</p>
+              <p>Recent parsing and indexing activity.</p>
             </div>
             <span>{activeJobCount} active</span>
           </header>
@@ -129,7 +130,7 @@ export function JobsScreen({
           {isLoading ? (
             <div className="jobs-empty-state">
               <Loader2 className="spin" size={20} />
-              <span>Loading jobs...</span>
+              <span>Loading activity...</span>
             </div>
           ) : jobs.length > 0 ? (
             <div className="jobs-grid" role="table" aria-label="Jobs">
@@ -157,7 +158,7 @@ export function JobsScreen({
               ))}
             </div>
           ) : (
-            <p className="jobs-empty-state">No jobs have run yet.</p>
+            <p className="jobs-empty-state">No activity has run yet.</p>
           )}
         </section>
 
@@ -171,7 +172,7 @@ export function JobsScreen({
                   : "Select a job to inspect its output."}
               </p>
             </div>
-            <Terminal size={18} />
+            <ConsoleIcon size={18} />
           </header>
 
           <div className="jobs-console">

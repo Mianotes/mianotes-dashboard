@@ -214,6 +214,7 @@ button {
 }
 
 .nav-item .dashboard-icon,
+.nav-item .console-icon,
 .nav-item .folder-icon,
 .nav-item .pin-icon {
   width: 18px;
