@@ -12,14 +12,7 @@ function sameOriginMediaPath(path: string) {
     return path;
   }
   const url = new URL(path);
-  const appHost = window.location.hostname;
-  const serviceHost = url.hostname;
-  const isLocalService = (
-    url.port === "8200"
-    && ["127.0.0.1", "localhost", appHost].includes(serviceHost)
-    && ["127.0.0.1", "localhost", serviceHost].includes(appHost)
-  );
-  if (!isLocalService) {
+  if (url.origin !== window.location.origin) {
     return path;
   }
   return `${url.pathname}${url.search}${url.hash}`;
