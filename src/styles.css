@@ -3,6 +3,12 @@
   --slate-2: #f5f5f7;
   --slate-7: #a0a1aa;
   --slate-8: #858691;
+  --mia-pink: #ff1fb8;
+  --mia-magenta: #c400b8;
+  --mia-violet: #9a35ff;
+  --mia-purple: #5f19ff;
+  --mia-blue: #0058ff;
+  --mia-cyan: #08b8ff;
 
   color: #18181c;
   background: #f7f7f8;
@@ -1031,25 +1037,65 @@ button {
   font-weight: 850;
 }
 
-.avatar-magenta {
-  background: linear-gradient(135deg, #ff2ccf 0%, #b815ff 100%);
+.avatar-brand-core {
+  background: linear-gradient(
+    135deg,
+    #ff1fb8 0%,
+    #9a35ff 28%,
+    #08b8ff 58%,
+    #08b8ff 100%
+  );
 }
 
-.avatar-violet {
-  background: linear-gradient(135deg, #c727f4 0%, #743cf5 100%);
+.avatar-pink-violet {
+  background: linear-gradient(
+    180deg,
+    #ff1fb8 0%,
+    #ff1fb8 56%,
+    #c400d8 78%,
+    #7a00ff 100%
+  );
 }
 
-.avatar-blue {
-  background: linear-gradient(135deg, #6b5cff 0%, #1684ff 100%);
+.avatar-violet-blue {
+  background: linear-gradient(
+    180deg,
+    #d66bff 0%,
+    #9a35ff 52%,
+    #5f19ff 76%,
+    #004dff 100%
+  );
 }
 
-.avatar-sky {
-  background: linear-gradient(135deg, #1684ff 0%, #19c7ff 100%);
+.avatar-neon-sweep {
+  background: linear-gradient(
+    90deg,
+    #ff1fb8 0%,
+    #ff1fb8 48%,
+    #b936ff 70%,
+    #2f6dff 88%,
+    #08b8ff 100%
+  );
 }
 
-.avatar-cyan {
-  color: #073f45;
-  background: linear-gradient(135deg, #19c7ff 0%, #9ee8dd 100%);
+.avatar-soft-brand-glow {
+  background: linear-gradient(
+    135deg,
+    #ff74d1 0%,
+    #ff74d1 50%,
+    #b86cff 76%,
+    #58ccff 100%
+  );
+}
+
+.avatar-deep-tech {
+  background: linear-gradient(
+    135deg,
+    #c400b8 0%,
+    #5f19ff 38%,
+    #0058ff 62%,
+    #0058ff 100%
+  );
 }
 
 .avatar-photo {
