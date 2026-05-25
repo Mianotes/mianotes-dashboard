@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { MutableRefObject } from "react";
 import type { NoteRecord, UserRecord } from "../../api/types";
 import logoUrl from "../../assets/logo_small.png";
@@ -85,6 +85,32 @@ export function DashboardShell({
   const activeMovingNote = movingNote
     ? notes.find((note) => note.id === movingNote.id) ?? movingNote
     : null;
+
+  useEffect(() => {
+    if (!navigation.isSidebarOpen) return;
+
+    const scrollY = window.scrollY;
+    const previousBodyPosition = document.body.style.position;
+    const previousBodyTop = document.body.style.top;
+    const previousBodyWidth = document.body.style.width;
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousHtmlOverflow = document.documentElement.style.overflow;
+
+    document.body.style.position = "fixed";
+    document.body.style.top = `-${scrollY}px`;
+    document.body.style.width = "100%";
+    document.body.style.overflow = "hidden";
+    document.documentElement.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.position = previousBodyPosition;
+      document.body.style.top = previousBodyTop;
+      document.body.style.width = previousBodyWidth;
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousHtmlOverflow;
+      window.scrollTo({ top: scrollY, left: 0, behavior: "auto" });
+    };
+  }, [navigation.isSidebarOpen]);
 
   return (
     <main className="screen">
