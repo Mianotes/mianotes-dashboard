@@ -1064,15 +1064,6 @@ button {
   font-weight: 850;
 }
 
-.avatar-pink-dominant {
-  background: linear-gradient(
-    135deg,
-    #ff1fb8 0%,
-    #ff1fb8 72%,
-    #c400b8 100%
-  );
-}
-
 .avatar-magenta-dominant {
   background: linear-gradient(
     135deg,

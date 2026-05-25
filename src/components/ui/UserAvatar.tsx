@@ -2,7 +2,6 @@ import { mediaPath } from "../../api/client";
 import type { UserRecord } from "../../api/types";
 
 const avatarTones = [
-  "pink-dominant",
   "magenta-dominant",
   "violet-dominant",
   "purple-dominant",
