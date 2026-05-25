@@ -1082,15 +1082,6 @@ button {
   );
 }
 
-.avatar-purple-dominant {
-  background: linear-gradient(
-    135deg,
-    #5f19ff 0%,
-    #5f19ff 76%,
-    #0058ff 100%
-  );
-}
-
 .avatar-blue-dominant {
   background: linear-gradient(
     135deg,
@@ -1106,36 +1097,6 @@ button {
     #08b8ff 0%,
     #08b8ff 76%,
     #0058ff 100%
-  );
-}
-
-.avatar-brand-pink {
-  background: linear-gradient(
-    135deg,
-    #ff1fb8 0%,
-    #ff1fb8 68%,
-    #9a35ff 88%,
-    #08b8ff 100%
-  );
-}
-
-.avatar-brand-purple {
-  background: linear-gradient(
-    135deg,
-    #9a35ff 0%,
-    #9a35ff 70%,
-    #5f19ff 88%,
-    #08b8ff 100%
-  );
-}
-
-.avatar-brand-blue {
-  background: linear-gradient(
-    135deg,
-    #0058ff 0%,
-    #0058ff 72%,
-    #08b8ff 90%,
-    #9a35ff 100%
   );
 }
 

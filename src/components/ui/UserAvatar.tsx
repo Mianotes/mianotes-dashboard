@@ -4,12 +4,8 @@ import type { UserRecord } from "../../api/types";
 const avatarTones = [
   "magenta-dominant",
   "violet-dominant",
-  "purple-dominant",
   "blue-dominant",
-  "cyan-dominant",
-  "brand-pink",
-  "brand-purple",
-  "brand-blue"
+  "cyan-dominant"
 ] as const;
 
 export type AvatarTone = (typeof avatarTones)[number];
