@@ -1073,39 +1073,19 @@ button {
 }
 
 .avatar-magenta-dominant {
-  background: linear-gradient(
-    135deg,
-    #c400b8 0%,
-    #c400b8 76%,
-    #7a00ff 100%
-  );
+  background: #c400b8;
 }
 
 .avatar-violet-dominant {
-  background: linear-gradient(
-    135deg,
-    #9a35ff 0%,
-    #9a35ff 74%,
-    #5f19ff 100%
-  );
+  background: #9a35ff;
 }
 
 .avatar-blue-dominant {
-  background: linear-gradient(
-    135deg,
-    #0058ff 0%,
-    #0058ff 78%,
-    #08b8ff 100%
-  );
+  background: #0058ff;
 }
 
 .avatar-cyan-dominant {
-  background: linear-gradient(
-    135deg,
-    #08b8ff 0%,
-    #08b8ff 76%,
-    #0058ff 100%
-  );
+  background: #08b8ff;
 }
 
 .avatar-photo {
