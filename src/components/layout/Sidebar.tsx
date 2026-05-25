@@ -1,6 +1,7 @@
 import { Activity, Edit3, MoreVertical, Plus, Trash2, Upload } from "lucide-react";
-import { useState } from "react";
-import type { DragEvent, RefCallback } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
+import type { CSSProperties, DragEvent, RefCallback } from "react";
 import type { FolderRecord, StorageCapacityRecord, UserRecord, WorkspaceView } from "../../api/types";
 import { DashboardIcon } from "../icons/DashboardIcon";
 import { FolderIcon } from "../icons/FolderIcon";
@@ -59,7 +60,59 @@ export function Sidebar({
     folderId: string;
     position: "before" | "after";
   } | null>(null);
+  const activeMenuButtonRef = useRef<HTMLButtonElement | null>(null);
+  const activePopoverRef = useRef<HTMLDivElement | null>(null);
+  const [menuPlacement, setMenuPlacement] = useState<{ top: number; left: number } | null>(null);
   const canManageFolder = (folder: FolderRecord) => currentUser.is_admin || folder.user_id === currentUser.id;
+  const activeMenuFolder = openFolderMenuId
+    ? folders.find((folder) => folder.id === openFolderMenuId) ?? null
+    : null;
+  const canManageActiveMenuFolder = activeMenuFolder ? canManageFolder(activeMenuFolder) : false;
+
+  const placeFolderMenu = (button: HTMLButtonElement) => {
+    const buttonRect = button.getBoundingClientRect();
+    const popoverRect = activePopoverRef.current?.getBoundingClientRect();
+    const menuWidth = popoverRect?.width ?? 168;
+    const menuHeight = popoverRect?.height ?? 156;
+    const margin = 12;
+    const gap = 8;
+    const left = Math.min(
+      window.innerWidth - menuWidth - margin,
+      Math.max(margin, buttonRect.right - menuWidth)
+    );
+    const belowTop = buttonRect.bottom + gap;
+    const top = belowTop + menuHeight > window.innerHeight - margin
+      ? Math.max(margin, buttonRect.top - menuHeight - gap)
+      : belowTop;
+
+    setMenuPlacement({ top, left });
+  };
+
+  useLayoutEffect(() => {
+    if (!openFolderMenuId || !activeMenuButtonRef.current) {
+      setMenuPlacement(null);
+      return;
+    }
+
+    placeFolderMenu(activeMenuButtonRef.current);
+  }, [openFolderMenuId]);
+
+  useEffect(() => {
+    if (!openFolderMenuId) return;
+
+    const updatePlacement = () => {
+      if (activeMenuButtonRef.current) {
+        placeFolderMenu(activeMenuButtonRef.current);
+      }
+    };
+
+    window.addEventListener("resize", updatePlacement);
+    window.addEventListener("scroll", updatePlacement, true);
+    return () => {
+      window.removeEventListener("resize", updatePlacement);
+      window.removeEventListener("scroll", updatePlacement, true);
+    };
+  }, [openFolderMenuId]);
 
   const resetDragState = () => {
     setDraggedFolderId(null);
@@ -138,9 +191,6 @@ export function Sidebar({
             ? ` drop-${dropTarget.position}`
             : "";
           const draggingClass = draggedFolderId === folder.id ? " dragging" : "";
-          const folderDisabledTitle = canManageThisFolder
-            ? undefined
-            : folderPermissionMessage("change");
 
           return (
             <div
@@ -197,46 +247,15 @@ export function Sidebar({
                   type="button"
                   aria-label={`Folder actions for ${folder.name}`}
                   aria-expanded={openFolderMenuId === folder.id}
-                  onClick={() => onToggleFolderMenu(folder.id)}
+                  ref={openFolderMenuId === folder.id ? activeMenuButtonRef : undefined}
+                  onClick={(event) => {
+                    activeMenuButtonRef.current = event.currentTarget;
+                    placeFolderMenu(event.currentTarget);
+                    onToggleFolderMenu(folder.id);
+                  }}
                 >
                   <MoreVertical size={17} />
                 </button>
-                {openFolderMenuId === folder.id && (
-                  <div className="folder-actions-popover" role="menu">
-                    <button
-                      type="button"
-                      role="menuitem"
-                      disabled={!canManageThisFolder}
-                      title={folderDisabledTitle}
-                      onClick={() => onUpdateFolder(folder, { is_pinned: !folder.is_pinned })}
-                    >
-                      <PinIcon size={15} />
-                      {folder.is_pinned ? "Unpin" : "Pin to top"}
-                    </button>
-                    <button
-                      type="button"
-                      role="menuitem"
-                      disabled={!canManageThisFolder}
-                      title={canManageThisFolder ? undefined : folderPermissionMessage("rename")}
-                      onClick={() => onRenameFolder(folder)}
-                    >
-                      <Edit3 size={15} />
-                      Rename
-                    </button>
-                    <div className="note-actions-divider" />
-                    <button
-                      className="danger-action"
-                      type="button"
-                      role="menuitem"
-                      disabled={!canManageThisFolder}
-                      title={canManageThisFolder ? undefined : folderPermissionMessage("delete")}
-                      onClick={() => onDeleteFolder(folder)}
-                    >
-                      <Trash2 size={15} />
-                      Delete
-                    </button>
-                  </div>
-                )}
               </div>
             </div>
           );
@@ -262,6 +281,55 @@ export function Sidebar({
           <span>Publish</span>
         </button>
       </div>
+
+      {activeMenuFolder && menuPlacement && typeof document !== "undefined" && createPortal(
+        <div
+          className="folder-actions-popover folder-actions-popover-floating"
+          ref={activePopoverRef}
+          role="menu"
+          style={{
+            "--folder-menu-top": `${menuPlacement.top}px`,
+            "--folder-menu-left": `${menuPlacement.left}px`
+          } as CSSProperties}
+          onClick={(event) => event.stopPropagation()}
+          onKeyDown={(event) => event.stopPropagation()}
+          onPointerDown={(event) => event.stopPropagation()}
+        >
+          <button
+            type="button"
+            role="menuitem"
+            disabled={!canManageActiveMenuFolder}
+            title={canManageActiveMenuFolder ? undefined : folderPermissionMessage("change")}
+            onClick={() => onUpdateFolder(activeMenuFolder, { is_pinned: !activeMenuFolder.is_pinned })}
+          >
+            <PinIcon size={15} />
+            {activeMenuFolder.is_pinned ? "Unpin" : "Pin to top"}
+          </button>
+          <button
+            type="button"
+            role="menuitem"
+            disabled={!canManageActiveMenuFolder}
+            title={canManageActiveMenuFolder ? undefined : folderPermissionMessage("rename")}
+            onClick={() => onRenameFolder(activeMenuFolder)}
+          >
+            <Edit3 size={15} />
+            Rename
+          </button>
+          <div className="note-actions-divider" />
+          <button
+            className="danger-action"
+            type="button"
+            role="menuitem"
+            disabled={!canManageActiveMenuFolder}
+            title={canManageActiveMenuFolder ? undefined : folderPermissionMessage("delete")}
+            onClick={() => onDeleteFolder(activeMenuFolder)}
+          >
+            <Trash2 size={15} />
+            Delete
+          </button>
+        </div>,
+        document.body
+      )}
     </aside>
   );
 }
