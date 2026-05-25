@@ -1,5 +1,6 @@
 import { Loader2, ShieldCheck, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import type { FormEvent } from "react";
 import { apiFetch, versionedMediaPath } from "../../api/client";
 import type { FolderRecord, NoteRecord, ProfileDraft, UserRecord } from "../../api/types";
 import { randomAvatarTone } from "../../components/ui/UserAvatar";
@@ -49,6 +50,10 @@ export function ProfileScreen({
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [pendingAdminChange, setPendingAdminChange] = useState<{ user: UserRecord; isAdmin: boolean } | null>(null);
   const [isChangingAdmin, setIsChangingAdmin] = useState(false);
+  const [pendingPasswordUpdate, setPendingPasswordUpdate] = useState<UserRecord | null>(null);
+  const [passwordDraft, setPasswordDraft] = useState({ password: "", confirmation: "" });
+  const [passwordError, setPasswordError] = useState<string | null>(null);
+  const [isUpdatingPassword, setIsUpdatingPassword] = useState(false);
   const [profileError, setProfileError] = useState<string | null>(null);
   const [newUserAvatarTone, setNewUserAvatarTone] = useState(() => randomAvatarTone());
   const editSelectedProfileRef = useRef<string | null>(null);
@@ -197,6 +202,45 @@ export function ProfileScreen({
     }
   }
 
+  function closePasswordModal() {
+    setPendingPasswordUpdate(null);
+    setPasswordDraft({ password: "", confirmation: "" });
+    setPasswordError(null);
+  }
+
+  async function updateUserPassword(event?: FormEvent<HTMLFormElement>) {
+    event?.preventDefault();
+    if (!pendingPasswordUpdate) return;
+    const password = passwordDraft.password;
+    const confirmation = passwordDraft.confirmation;
+    if (!password || !confirmation) {
+      setPasswordError("Enter and confirm the new password.");
+      return;
+    }
+    if (password !== confirmation) {
+      setPasswordError("Passwords do not match.");
+      return;
+    }
+
+    setIsUpdatingPassword(true);
+    setPasswordError(null);
+    setProfileError(null);
+    try {
+      await apiFetch<UserRecord>(`/api/users/${pendingPasswordUpdate.id}/password`, {
+        method: "PATCH",
+        body: JSON.stringify({
+          password,
+          password_confirmation: confirmation
+        })
+      });
+      closePasswordModal();
+    } catch (err) {
+      setPasswordError(err instanceof Error ? err.message : "Could not update password");
+    } finally {
+      setIsUpdatingPassword(false);
+    }
+  }
+
   return (
     <>
       <ProfileToolbar
@@ -260,6 +304,7 @@ export function ProfileScreen({
             currentUser={currentUser}
             onSelectUser={(userId) => onSelectUser(userId)}
             onEditUser={selectUserForEditing}
+            onRequestPasswordUpdate={(user) => setPendingPasswordUpdate(user)}
             onRequestAdminChange={(user, isAdmin) => setPendingAdminChange({ user, isAdmin })}
           />
         )}
@@ -303,6 +348,70 @@ export function ProfileScreen({
             primaryDisabled={isChangingAdmin}
             primaryIcon={isChangingAdmin ? <Loader2 className="spin" size={15} /> : null}
             primaryLabel={pendingAdminChange.isAdmin ? "Make admin" : "Remove admin"}
+          />
+        </Modal>
+      )}
+      {pendingPasswordUpdate && (
+        <Modal
+          as="form"
+          className="folder-modal profile-password-modal"
+          labelledBy="profile-password-modal-title"
+          onClose={closePasswordModal}
+          onSubmit={(event) => void updateUserPassword(event)}
+        >
+          <div className="folder-modal-header">
+            <div>
+              <h2 id="profile-password-modal-title">Update password</h2>
+              <p>
+                Set a new password for {pendingPasswordUpdate.name}. They will use it the next time they sign in.
+              </p>
+            </div>
+            <button
+              className="icon-button"
+              type="button"
+              aria-label="Close"
+              onClick={closePasswordModal}
+            >
+              <X size={18} />
+            </button>
+          </div>
+          <div className="folder-modal-body">
+            {passwordError && (
+              <div className="modal-notice danger" role="alert">
+                {passwordError}
+              </div>
+            )}
+            <label className="field-label">
+              <span>New password</span>
+              <input
+                autoFocus
+                type="password"
+                value={passwordDraft.password}
+                onChange={(event) => setPasswordDraft((draft) => ({
+                  ...draft,
+                  password: event.target.value
+                }))}
+              />
+            </label>
+            <label className="field-label">
+              <span>Confirm password</span>
+              <input
+                type="password"
+                value={passwordDraft.confirmation}
+                onChange={(event) => setPasswordDraft((draft) => ({
+                  ...draft,
+                  confirmation: event.target.value
+                }))}
+              />
+            </label>
+          </div>
+          <ModalActions
+            cancelDisabled={isUpdatingPassword}
+            onCancel={closePasswordModal}
+            primaryDisabled={isUpdatingPassword}
+            primaryIcon={isUpdatingPassword ? <Loader2 className="spin" size={15} /> : null}
+            primaryLabel="Update"
+            primaryType="submit"
           />
         </Modal>
       )}

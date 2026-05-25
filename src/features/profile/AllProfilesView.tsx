@@ -1,4 +1,4 @@
-import { Edit3, MoreVertical, ShieldCheck, ShieldOff } from "lucide-react";
+import { Edit3, KeyRound, MoreVertical, ShieldCheck, ShieldOff } from "lucide-react";
 import { useState } from "react";
 import type { FolderRecord, NoteRecord, UserRecord } from "../../api/types";
 import { ProfileSummaryCard } from "./ProfileSummaryCard";
@@ -9,6 +9,7 @@ export function AllProfilesView({
   folders,
   currentUser,
   onEditUser,
+  onRequestPasswordUpdate,
   onRequestAdminChange,
   onSelectUser
 }: {
@@ -17,6 +18,7 @@ export function AllProfilesView({
   folders: FolderRecord[];
   currentUser: UserRecord;
   onEditUser: (userId: string) => void;
+  onRequestPasswordUpdate: (user: UserRecord) => void;
   onRequestAdminChange: (user: UserRecord, isAdmin: boolean) => void;
   onSelectUser: (userId: string) => void;
 }) {
@@ -66,20 +68,34 @@ export function AllProfilesView({
                       </button>
                     )}
                     {currentUser.is_admin && (
-                      <button
-                        type="button"
-                        role="menuitem"
-                        disabled={isOnlyAdmin && user.is_admin}
-                        title={isOnlyAdmin && user.is_admin ? "This workspace needs at least one admin." : undefined}
-                        onClick={(event) => {
-                          event.stopPropagation();
-                          setOpenMenuUserId(null);
-                          onRequestAdminChange(user, !user.is_admin);
-                        }}
-                      >
-                        {user.is_admin ? <ShieldOff size={15} /> : <ShieldCheck size={15} />}
-                        {user.is_admin ? "Remove admin" : "Make admin"}
-                      </button>
+                      <>
+                        <button
+                          type="button"
+                          role="menuitem"
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setOpenMenuUserId(null);
+                            onRequestPasswordUpdate(user);
+                          }}
+                        >
+                          <KeyRound size={15} />
+                          Update password
+                        </button>
+                        <button
+                          type="button"
+                          role="menuitem"
+                          disabled={isOnlyAdmin && user.is_admin}
+                          title={isOnlyAdmin && user.is_admin ? "This workspace needs at least one admin." : undefined}
+                          onClick={(event) => {
+                            event.stopPropagation();
+                            setOpenMenuUserId(null);
+                            onRequestAdminChange(user, !user.is_admin);
+                          }}
+                        >
+                          {user.is_admin ? <ShieldOff size={15} /> : <ShieldCheck size={15} />}
+                          {user.is_admin ? "Remove admin" : "Make admin"}
+                        </button>
+                      </>
                     )}
                   </div>
                 )}
