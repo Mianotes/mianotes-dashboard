@@ -76,6 +76,7 @@ button {
 .shell {
   display: grid;
   grid-template-columns: minmax(240px, 270px) minmax(0, 1fr);
+  align-items: start;
   max-width: 1280px;
   margin: 0 auto;
   overflow: visible;
@@ -99,11 +100,24 @@ button {
 }
 
 .sidebar {
+  position: sticky;
+  top: 18px;
   display: flex;
   flex-direction: column;
+  height: calc(100vh - 48px);
+  max-height: calc(100vh - 48px);
+  min-height: 0;
+  overflow: hidden;
   border-right: 1px solid #dedfe5;
   background: #fcfcfd;
   font-size: 13px;
+}
+
+@supports (height: 100dvh) {
+  .sidebar {
+    height: calc(100dvh - 48px);
+    max-height: calc(100dvh - 48px);
+  }
 }
 
 .mobile-sidebar-toggle {
@@ -320,8 +334,21 @@ button {
 }
 
 .sidebar-section {
+  display: flex;
+  flex: 1 1 auto;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
   padding: 26px 0 20px;
   border-top: 1px solid #e3e4e8;
+}
+
+.sidebar-section-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  scrollbar-gutter: stable;
 }
 
 .section-title {
@@ -3319,6 +3346,9 @@ textarea:focus {
     width: 90vw;
     max-width: 360px;
     height: 100vh;
+    max-height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
     border-right: 1px solid #dedfe5;
     border-bottom: 0;
     box-shadow: none;
@@ -3433,6 +3463,9 @@ textarea:focus {
     width: 90vw;
     max-width: 360px;
     height: 100vh;
+    max-height: 100vh;
+    height: 100dvh;
+    max-height: 100dvh;
     border-right: 1px solid #dedfe5;
     border-bottom: 0;
     box-shadow: none;

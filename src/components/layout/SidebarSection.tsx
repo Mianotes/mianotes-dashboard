@@ -13,7 +13,7 @@ export function SidebarSection({ title, action, children }: SidebarSectionProps)
         <span>{title}</span>
         {action}
       </div>
-      <div className="nav-group">{children}</div>
+      <div className="nav-group sidebar-section-body">{children}</div>
     </section>
   );
 }
