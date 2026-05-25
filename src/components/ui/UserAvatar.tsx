@@ -2,12 +2,15 @@ import { mediaPath } from "../../api/client";
 import type { UserRecord } from "../../api/types";
 
 const avatarTones = [
-  "brand-core",
-  "pink-violet",
-  "violet-blue",
-  "neon-sweep",
-  "soft-brand-glow",
-  "deep-tech"
+  "pink-dominant",
+  "magenta-dominant",
+  "violet-dominant",
+  "purple-dominant",
+  "blue-dominant",
+  "cyan-dominant",
+  "brand-pink",
+  "brand-purple",
+  "brand-blue"
 ] as const;
 
 export type AvatarTone = (typeof avatarTones)[number];

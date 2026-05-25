@@ -1064,64 +1064,87 @@ button {
   font-weight: 850;
 }
 
-.avatar-brand-core {
+.avatar-pink-dominant {
   background: linear-gradient(
     135deg,
     #ff1fb8 0%,
-    #9a35ff 28%,
-    #08b8ff 58%,
-    #08b8ff 100%
+    #ff1fb8 72%,
+    #c400b8 100%
   );
 }
 
-.avatar-pink-violet {
+.avatar-magenta-dominant {
   background: linear-gradient(
-    180deg,
-    #ff1fb8 0%,
-    #ff1fb8 56%,
-    #c400d8 78%,
+    135deg,
+    #c400b8 0%,
+    #c400b8 76%,
     #7a00ff 100%
   );
 }
 
-.avatar-violet-blue {
+.avatar-violet-dominant {
   background: linear-gradient(
-    180deg,
-    #d66bff 0%,
-    #9a35ff 52%,
-    #5f19ff 76%,
-    #004dff 100%
+    135deg,
+    #9a35ff 0%,
+    #9a35ff 74%,
+    #5f19ff 100%
   );
 }
 
-.avatar-neon-sweep {
+.avatar-purple-dominant {
   background: linear-gradient(
-    90deg,
-    #ff1fb8 0%,
-    #ff1fb8 48%,
-    #b936ff 70%,
-    #2f6dff 88%,
+    135deg,
+    #5f19ff 0%,
+    #5f19ff 76%,
+    #0058ff 100%
+  );
+}
+
+.avatar-blue-dominant {
+  background: linear-gradient(
+    135deg,
+    #0058ff 0%,
+    #0058ff 78%,
     #08b8ff 100%
   );
 }
 
-.avatar-soft-brand-glow {
+.avatar-cyan-dominant {
   background: linear-gradient(
     135deg,
-    #ff74d1 0%,
-    #ff74d1 50%,
-    #b86cff 76%,
-    #58ccff 100%
+    #08b8ff 0%,
+    #08b8ff 76%,
+    #0058ff 100%
   );
 }
 
-.avatar-deep-tech {
+.avatar-brand-pink {
   background: linear-gradient(
     135deg,
-    #c400b8 0%,
-    #5f19ff 38%,
-    #0058ff 62%,
-    #0058ff 100%
+    #ff1fb8 0%,
+    #ff1fb8 68%,
+    #9a35ff 88%,
+    #08b8ff 100%
+  );
+}
+
+.avatar-brand-purple {
+  background: linear-gradient(
+    135deg,
+    #9a35ff 0%,
+    #9a35ff 70%,
+    #5f19ff 88%,
+    #08b8ff 100%
+  );
+}
+
+.avatar-brand-blue {
+  background: linear-gradient(
+    135deg,
+    #0058ff 0%,
+    #0058ff 72%,
+    #08b8ff 90%,
+    #9a35ff 100%
   );
 }
 
