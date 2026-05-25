@@ -89,26 +89,30 @@ export function DashboardShell({
   useEffect(() => {
     if (!navigation.isSidebarOpen) return;
 
-    const scrollY = window.scrollY;
-    const previousBodyPosition = document.body.style.position;
-    const previousBodyTop = document.body.style.top;
-    const previousBodyWidth = document.body.style.width;
     const previousBodyOverflow = document.body.style.overflow;
     const previousHtmlOverflow = document.documentElement.style.overflow;
 
-    document.body.style.position = "fixed";
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.width = "100%";
     document.body.style.overflow = "hidden";
     document.documentElement.style.overflow = "hidden";
 
+    const preventBackgroundScroll = (event: TouchEvent | WheelEvent) => {
+      if (
+        event.target instanceof Node
+        && document.querySelector(".sidebar.is-open")?.contains(event.target)
+      ) {
+        return;
+      }
+      event.preventDefault();
+    };
+
+    document.addEventListener("touchmove", preventBackgroundScroll, { passive: false });
+    document.addEventListener("wheel", preventBackgroundScroll, { passive: false });
+
     return () => {
-      document.body.style.position = previousBodyPosition;
-      document.body.style.top = previousBodyTop;
-      document.body.style.width = previousBodyWidth;
       document.body.style.overflow = previousBodyOverflow;
       document.documentElement.style.overflow = previousHtmlOverflow;
-      window.scrollTo({ top: scrollY, left: 0, behavior: "auto" });
+      document.removeEventListener("touchmove", preventBackgroundScroll);
+      document.removeEventListener("wheel", preventBackgroundScroll);
     };
   }, [navigation.isSidebarOpen]);
 

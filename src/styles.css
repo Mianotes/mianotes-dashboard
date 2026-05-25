@@ -3322,14 +3322,13 @@ textarea:focus {
   .sidebar {
     position: fixed;
     top: 0;
+    bottom: 0;
     left: 0;
     z-index: 1001;
     width: 90vw;
     max-width: 360px;
-    height: 100vh;
-    max-height: 100vh;
-    height: 100dvh;
-    max-height: 100dvh;
+    height: auto;
+    max-height: none;
     border-right: 1px solid #dedfe5;
     border-bottom: 0;
     box-shadow: none;
@@ -3352,6 +3351,7 @@ textarea:focus {
     cursor: pointer;
     opacity: 0;
     pointer-events: none;
+    touch-action: none;
     transition: opacity 0.28s ease;
   }
 
@@ -3439,14 +3439,13 @@ textarea:focus {
   .sidebar {
     position: fixed;
     top: 0;
+    bottom: 0;
     left: 0;
     z-index: 1001;
     width: 90vw;
     max-width: 360px;
-    height: 100vh;
-    max-height: 100vh;
-    height: 100dvh;
-    max-height: 100dvh;
+    height: auto;
+    max-height: none;
     border-right: 1px solid #dedfe5;
     border-bottom: 0;
     box-shadow: none;
@@ -3469,6 +3468,7 @@ textarea:focus {
     cursor: pointer;
     opacity: 0;
     pointer-events: none;
+    touch-action: none;
     transition: opacity 0.28s ease;
   }
 
