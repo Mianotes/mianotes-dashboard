@@ -294,8 +294,8 @@ export function SettingsScreen({
                 <div className="settings-api-created">
                   <h3>API key created</h3>
                   <p>
-                    Add these lines to <code>mianotes-web-service/.env</code> so Codex, Claude Code, Cursor, and other
-                    agents can connect to Mia automatically.
+                    Mianotes saved this key to the service environment. Copy these lines into Codex, Claude Code,
+                    Cursor, or any other agent that needs to connect to Mia.
                   </p>
                   <div className="settings-api-code-block">
                     <pre aria-label={apiEnvironmentSnippet}>
