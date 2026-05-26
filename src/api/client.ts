@@ -18,11 +18,30 @@ function sameOriginMediaPath(path: string) {
   return `${url.pathname}${url.search}${url.hash}`;
 }
 
+function localMianotesApiMediaPath(path: string) {
+  if (typeof window === "undefined") {
+    return path;
+  }
+  const url = new URL(path);
+  const isLocalApiHost = url.hostname === "127.0.0.1" || url.hostname === "localhost";
+  if (!apiBase && isLocalApiHost && url.port === "8200") {
+    return `${url.pathname}${url.search}${url.hash}`;
+  }
+  return path;
+}
+
 export function mediaPath(path: string) {
   if (/^https?:\/\//.test(path)) {
-    return sameOriginMediaPath(path);
+    return sameOriginMediaPath(localMianotesApiMediaPath(path));
   }
   return apiPath(path);
+}
+
+export function normalizeMarkdownMediaPaths(markdown: string) {
+  return markdown.replace(
+    /https?:\/\/(?:127\.0\.0\.1|localhost):8200\/(?:markdown|data|\.profiles)\/[^\s)"'<]+/g,
+    (match) => mediaPath(match)
+  );
 }
 
 export function versionedMediaPath(path: string, version = Date.now()) {

@@ -50,6 +50,7 @@ import { Prec } from "@codemirror/state";
 import { ruby } from "@codemirror/legacy-modes/mode/ruby";
 import { shell } from "@codemirror/legacy-modes/mode/shell";
 import { tags as highlightTags } from "@lezer/highlight";
+import { normalizeMarkdownMediaPaths } from "./api/client";
 
 const codeBlockLanguages = [
   { name: "Text", alias: ["text", "txt", "plain"] },
@@ -174,10 +175,11 @@ function richMarkdownPlugins(imageUploadHandler?: ImageUploadHandler) {
 }
 
 export default function MarkdownViewer({ id, updatedAt, markdown }: { id: string; updatedAt: string; markdown: string }) {
+  const normalizedMarkdown = normalizeMarkdownMediaPaths(markdown);
   return (
     <MDXEditor
-      key={`${id}-${updatedAt}-${contentKey(markdown)}`}
-      markdown={markdown}
+      key={`${id}-${updatedAt}-${contentKey(normalizedMarkdown)}`}
+      markdown={normalizedMarkdown}
       readOnly
       plugins={richMarkdownPlugins()}
       className="mianotes-rich-viewer"
@@ -248,6 +250,7 @@ export const MarkdownEditor = forwardRef<MDXEditorMethods, MarkdownEditorProps>(
   },
   ref
 ) {
+  const normalizedMarkdown = normalizeMarkdownMediaPaths(markdown);
   const editorRef = useRef<MDXEditorMethods | null>(null);
   const setEditorRef = useCallback((editor: MDXEditorMethods | null) => {
     editorRef.current = editor;
@@ -269,7 +272,7 @@ export const MarkdownEditor = forwardRef<MDXEditorMethods, MarkdownEditorProps>(
     <MDXEditor
       ref={setEditorRef}
       key={`${id}-editing`}
-      markdown={markdown}
+      markdown={normalizedMarkdown}
       onChange={(nextMarkdown) => onChange(nextMarkdown)}
       plugins={richMarkdownEditorPlugins(imageUploadHandler)}
       className="mianotes-rich-editor"

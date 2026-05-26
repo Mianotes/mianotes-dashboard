@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { MDXEditorMethods } from "@mdxeditor/editor";
-import { apiFetch } from "../../api/client";
+import { apiFetch, mediaPath } from "../../api/client";
 import type { NoteRecord, UserRecord } from "../../api/types";
 import { appUrlForPath, noteRoutePath } from "../../utils/internalRoutes";
 import { isNoteJobActive, isNoteIndexing, noteBodyMarkdown, noteJobBadge } from "../../utils/notes";
@@ -127,7 +127,7 @@ export function NotePanel({
       method: "POST",
       body: formData
     });
-    return response.url;
+    return mediaPath(response.url);
   }
 
   async function saveMarkdown() {

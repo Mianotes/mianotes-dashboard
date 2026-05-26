@@ -1626,7 +1626,7 @@ button {
 .mianotes-rich-editor [class*="toolbarRoot"] {
   position: sticky;
   top: 0;
-  z-index: 4;
+  z-index: 1;
   flex-wrap: wrap;
   margin: 0 0 22px;
   padding: 8px 0;
@@ -1651,6 +1651,17 @@ button {
   border-radius: 14px;
   background: #ffffff;
   box-shadow: 0 22px 48px rgba(20, 20, 24, 0.16);
+}
+
+[class*="dialogOverlay"] {
+  z-index: 4000 !important;
+}
+
+[class*="dialogContent"],
+[class*="largeDialogContent"],
+[class*="linkDialogPopoverContent"] {
+  z-index: 4001 !important;
+  pointer-events: auto;
 }
 
 .mianotes-rich-editor [class*="dialogContent"] > h2,
