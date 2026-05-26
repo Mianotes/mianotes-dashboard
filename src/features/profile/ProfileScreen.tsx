@@ -338,7 +338,7 @@ export function ProfileScreen({
           <div className="folder-modal-body">
             <div className="profile-admin-warning">
               <ShieldCheck size={18} />
-              <span>Admins can manage users, settings, API keys, and databases.</span>
+              <span>Admins can manage users, settings, API keys, and workspace folders.</span>
             </div>
           </div>
           <ModalActions

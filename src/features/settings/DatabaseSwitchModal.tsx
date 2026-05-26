@@ -1,4 +1,4 @@
-import { Database, Folder, Loader2, Plus, X } from "lucide-react";
+import { Loader2, Plus, X } from "lucide-react";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { apiFetch } from "../../api/client";
@@ -7,6 +7,7 @@ import type {
   StorageSettingsRecord,
   StorageSwitchResponse
 } from "../../api/types";
+import { FolderIcon } from "../../components/icons/FolderIcon";
 import { Modal, ModalActions } from "../../components/ui/Modal";
 
 type DatabaseSwitchModalProps = {
@@ -23,7 +24,7 @@ export function DatabaseSwitchModal({
   onDatabaseSwitched
 }: DatabaseSwitchModalProps) {
   const [selectedLocationId, setSelectedLocationId] = useState("");
-  const [databaseName, setDatabaseName] = useState("");
+  const [folderName, setFolderName] = useState("");
   const [folderPath, setFolderPath] = useState("");
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -32,38 +33,38 @@ export function DatabaseSwitchModal({
     ?? storageSettings.locations[0];
   const availableLocations = storageSettings.locations.filter((location) => !location.is_active);
   const selectedLocation = availableLocations.find((location) => location.id === selectedLocationId);
-  const trimmedDatabaseName = databaseName.trim();
+  const trimmedFolderName = folderName.trim();
   const trimmedFolderPath = folderPath.trim();
-  const canCreateDatabase = Boolean(trimmedDatabaseName && trimmedFolderPath);
-  const canSwitchDatabase = Boolean(selectedLocation && !selectedLocation.is_active);
+  const canCreateFolder = Boolean(trimmedFolderName && trimmedFolderPath);
+  const canSwitchFolder = Boolean(selectedLocation && !selectedLocation.is_active);
   const showSwitchAction = Boolean(selectedLocation && !isCreateFormOpen);
 
-  async function createDatabaseLocation() {
-    if (!canCreateDatabase || isSubmitting) return;
+  async function createFolderLocation() {
+    if (!canCreateFolder || isSubmitting) return;
     setIsSubmitting(true);
     setError(null);
     try {
       const nextSettings = await apiFetch<StorageSettingsRecord>("/api/settings/storage/locations", {
         method: "POST",
-        body: JSON.stringify({ name: trimmedDatabaseName, folder_path: trimmedFolderPath })
+        body: JSON.stringify({ name: trimmedFolderName, folder_path: trimmedFolderPath })
       });
       onSettingsChanged(nextSettings);
       const createdLocation = [...nextSettings.locations].reverse().find(
-        (location) => location.folder_path === trimmedFolderPath || location.name === trimmedDatabaseName
+        (location) => location.folder_path === trimmedFolderPath || location.name === trimmedFolderName
       ) ?? nextSettings.locations[nextSettings.locations.length - 1];
       setSelectedLocationId(createdLocation?.id ?? "");
-      setDatabaseName("");
+      setFolderName("");
       setFolderPath("");
       setIsCreateFormOpen(false);
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Could not create database.");
+      setError(error instanceof Error ? error.message : "Could not create folder.");
     } finally {
       setIsSubmitting(false);
     }
   }
 
-  async function switchSelectedDatabase() {
-    if (!canSwitchDatabase || isSubmitting || !selectedLocation) return;
+  async function switchSelectedFolder() {
+    if (!canSwitchFolder || isSubmitting || !selectedLocation) return;
     setIsSubmitting(true);
     setError(null);
     try {
@@ -73,7 +74,7 @@ export function DatabaseSwitchModal({
       });
       onDatabaseSwitched();
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Could not switch database.");
+      setError(error instanceof Error ? error.message : "Could not switch folder.");
     } finally {
       setIsSubmitting(false);
     }
@@ -83,10 +84,9 @@ export function DatabaseSwitchModal({
     <Modal className="folder-modal database-modal" labelledBy="database-switch-title" onClose={onClose}>
         <div className="folder-modal-header database-modal-header">
           <div>
-            <h2 id="database-switch-title">Switch database</h2>
+            <h2 id="database-switch-title">Switch folder</h2>
             <p>
-              Each database has its own notes, folders, users, settings, and agent activity. Choose a database or
-              create a new one.
+              Each folder has its own notes, users, settings, and agent activity. Choose a folder or create a new one.
             </p>
           </div>
           <button className="icon-button" type="button" aria-label="Close" onClick={onClose}>
@@ -95,28 +95,28 @@ export function DatabaseSwitchModal({
         </div>
         <div className="folder-modal-body database-modal-body">
           {error && <div className="modal-notice danger">{error}</div>}
-          <DatabaseLocationGroup title="Current database">
+          <DatabaseLocationGroup title="Current folder">
             {activeLocation && (
               <DatabaseLocationButton
                 location={activeLocation}
                 selected={false}
-                badge="Current database"
+                badge="Current folder"
               />
             )}
           </DatabaseLocationGroup>
           {isCreateFormOpen ? (
-            <DatabaseLocationGroup title="Create Database">
-              <div className={`database-create-card ${canCreateDatabase ? "selected" : ""}`}>
+            <DatabaseLocationGroup title="Create folder">
+              <div className={`database-create-card ${canCreateFolder ? "selected" : ""}`}>
                 <div className="database-create-icon">
-                  <Folder size={22} />
+                  <FolderIcon size={22} />
                 </div>
                 <div className="database-create-fields">
                   <label className="database-path-field">
-                    <span>Name</span>
+                    <span>Folder name</span>
                     <input
-                      value={databaseName}
+                      value={folderName}
                       onChange={(event) => {
-                        setDatabaseName(event.target.value);
+                        setFolderName(event.target.value);
                         setSelectedLocationId("");
                       }}
                     />
@@ -132,22 +132,22 @@ export function DatabaseSwitchModal({
                         setSelectedLocationId("");
                       }}
                     />
-                    <small>Mianotes will create mia.db in the selected folder.</small>
+                    <small>Mianotes will keep private data in a hidden .mianotes folder inside this folder.</small>
                   </label>
                   <button
                     className="primary-button database-create-button"
                     type="button"
-                    disabled={!canCreateDatabase || isSubmitting}
-                    onClick={() => void createDatabaseLocation()}
+                    disabled={!canCreateFolder || isSubmitting}
+                    onClick={() => void createFolderLocation()}
                   >
-                    {isSubmitting ? <Loader2 className="spin" size={16} /> : <Database size={16} />}
-                    Create database
+                    {isSubmitting ? <Loader2 className="spin" size={16} /> : <FolderIcon size={16} />}
+                    Create folder
                   </button>
                 </div>
               </div>
             </DatabaseLocationGroup>
           ) : (
-            <DatabaseLocationGroup title="Available databases">
+            <DatabaseLocationGroup title="Available folders">
               {availableLocations.length > 0 ? (
                 <div className="database-location-scroll">
                   {availableLocations.map((location) => (
@@ -157,7 +157,7 @@ export function DatabaseSwitchModal({
                       selected={selectedLocationId === location.id}
                       onSelect={() => {
                         setFolderPath("");
-                        setDatabaseName("");
+                        setFolderName("");
                         setSelectedLocationId(location.id);
                       }}
                     />
@@ -165,9 +165,9 @@ export function DatabaseSwitchModal({
                 </div>
               ) : (
                 <div className="database-empty-state">
-                  <Folder size={38} />
-                  <strong>No other databases were found.</strong>
-                  <span>Create a database to add another workspace.</span>
+                  <FolderIcon size={38} />
+                  <strong>No other folders were found.</strong>
+                  <span>Create a folder to add another workspace.</span>
                 </div>
               )}
               <button
@@ -176,13 +176,13 @@ export function DatabaseSwitchModal({
                 onClick={() => {
                   setError(null);
                   setSelectedLocationId("");
-                  setDatabaseName("");
+                  setFolderName("");
                   setFolderPath("");
                   setIsCreateFormOpen(true);
                 }}
               >
                 <Plus size={14} />
-                Create a database
+                Create a folder
               </button>
             </DatabaseLocationGroup>
           )}
@@ -190,13 +190,13 @@ export function DatabaseSwitchModal({
         <ModalActions
           className="database-modal-actions"
           onCancel={onClose}
-          onPrimary={showSwitchAction ? () => void switchSelectedDatabase() : undefined}
+          onPrimary={showSwitchAction ? () => void switchSelectedFolder() : undefined}
           primaryClassName="database-switch-button"
-          primaryDisabled={!canSwitchDatabase || isSubmitting}
+          primaryDisabled={!canSwitchFolder || isSubmitting}
           primaryIcon={showSwitchAction ? (
-            isSubmitting ? <Loader2 className="spin" size={16} /> : <Database size={16} />
+            isSubmitting ? <Loader2 className="spin" size={16} /> : <FolderIcon size={16} />
           ) : undefined}
-          primaryLabel={showSwitchAction ? "Switch database" : undefined}
+          primaryLabel={showSwitchAction ? "Switch folder" : undefined}
         />
     </Modal>
   );
@@ -235,12 +235,12 @@ function DatabaseLocationButton({
         className={`database-radio ${selected ? "selected" : ""} ${isInteractive ? "" : "database-radio-hidden"}`}
         aria-hidden={!isInteractive}
       />
-      <Database size={26} />
+      <FolderIcon size={26} />
       <span className="database-location-copy">
         <strong>{location.name}</strong>
-        <small>{compactDatabasePath(location.database_path)}</small>
+        <small>{compactFolderPath(location.folder_path)}</small>
         {!location.database_exists ? (
-          <small>mia.db does not exist yet. Mianotes will create it when selected.</small>
+          <small>Mianotes will create private data when selected.</small>
         ) : (
           <small>{databaseStatsText(location)}</small>
         )}
@@ -250,7 +250,7 @@ function DatabaseLocationButton({
   );
 }
 
-function compactDatabasePath(path: string) {
+function compactFolderPath(path: string) {
   const parts = path.split("/");
   return parts.length > 3 ? parts.slice(-3).join("/") : path;
 }

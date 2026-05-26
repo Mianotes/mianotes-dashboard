@@ -1,4 +1,4 @@
-import { Copy, Database, Folder, History, Loader2, Users, X } from "lucide-react";
+import { Copy, Folder, History, Loader2, Users, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { apiBase, apiFetch } from "../../api/client";
 import type {
@@ -9,6 +9,7 @@ import type {
   UserRecord
 } from "../../api/types";
 import { ScreenToolbar } from "../../components/layout/ScreenToolbar";
+import { FolderIcon } from "../../components/icons/FolderIcon";
 import { formatSettingsDate } from "../../utils/format";
 import { DatabaseSwitchModal } from "./DatabaseSwitchModal";
 
@@ -105,7 +106,7 @@ export function SettingsScreen({
       const settings = await apiFetch<StorageSettingsRecord>("/api/settings/storage");
       setStorageSettings(settings);
     } catch (error) {
-      setSettingsError(error instanceof Error ? error.message : "Could not load database settings.");
+      setSettingsError(error instanceof Error ? error.message : "Could not load folder settings.");
     } finally {
       setIsLoadingStorageSettings(false);
     }
@@ -155,8 +156,8 @@ export function SettingsScreen({
     await navigator.clipboard?.writeText(apiEnvironmentSnippet);
   }
 
-  const databasePath = storageSettings?.database_path ?? `${storageCapacity?.data_dir ?? "data"}/mia.db`;
-  const databaseLabel = databasePath.replace(/\/$/, "").split("/").slice(-2).join("/");
+  const currentFolderPath = storageSettings?.data_dir ?? storageCapacity?.data_dir ?? "data";
+  const currentFolderLabel = currentFolderPath.replace(/\/$/, "").split("/").pop() || currentFolderPath;
   const adminUsers = users.filter((user) => user.is_admin);
   const apiEnvironmentSnippet = [
     `export MIANOTES_API_URL="${apiEnvironmentUrl()}"`,
@@ -196,24 +197,24 @@ export function SettingsScreen({
           )}
           <section className="settings-card settings-storage-card" aria-labelledby="settings-storage-title">
             <div className="settings-card-intro">
-              <h2 id="settings-storage-title">Switch database</h2>
+              <h2 id="settings-storage-title">Switch folder</h2>
               <p>
-                Each database has its own notes, folders, users, settings, and agent activity. Choose the database you
-                want this instance to use.
+                Each folder has its own notes, users, settings, and agent activity. Choose the folder you want this
+                instance to use.
               </p>
             </div>
             <div className="settings-storage-panel">
-              <Database size={24} />
+              <FolderIcon size={24} />
               <span>
-                <strong>{isLoadingStorageSettings ? "Loading database..." : databaseLabel}</strong>
-                <small>Current database</small>
+                <strong>{isLoadingStorageSettings ? "Loading folder..." : currentFolderLabel}</strong>
+                <small>Current folder</small>
               </span>
               <button
                 className="settings-text-action"
                 type="button"
                 onClick={() => setIsDatabaseModalOpen(true)}
               >
-              Change database
+              Change folder
               </button>
             </div>
           </section>
@@ -222,7 +223,7 @@ export function SettingsScreen({
               <div className="settings-card-intro">
                 <h2 id="settings-team-title">Team access</h2>
                 <p>
-                  These people can manage users, settings, API keys, and databases.
+                  These people can manage users, settings, API keys, and workspace folders.
                 </p>
               </div>
               <div className="settings-team-list" aria-label="Workspace admins">
@@ -249,7 +250,7 @@ export function SettingsScreen({
                 <h2 id="settings-api-title">Create API Key</h2>
                 <p>
                   Generate a secure API key so your agents, apps, and external tools can connect to Mia. This key works
-                  across all your mia.db files.
+                  across all your Mianotes folders.
                 </p>
               </div>
               <div className="settings-api-panel">
