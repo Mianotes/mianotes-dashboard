@@ -292,31 +292,26 @@ export function SettingsScreen({
               </div>
               {apiToken ? (
                 <div className="settings-api-created">
-                  <h3>Mia is ready</h3>
+                  <h3>API key created</h3>
                   <p>
-                    Mianotes saved the API key automatically. Trusted local agents can now connect to Mia.
+                    You are all set. Mianotes saved this key automatically. Copy the connection details only if another
+                    tool asks for a Mianotes API key.
                   </p>
-                  <details className="settings-api-advanced">
-                    <summary>Manual setup</summary>
-                    <p>
-                      Use these details only when setting up a tool that cannot read the Mianotes service environment.
-                    </p>
-                    <div className="settings-api-code-block">
-                      <pre aria-label={apiEnvironmentSnippet}>
-                        <code>
-                          <span className="shell-variable">MIANOTES_API_URL</span>=
-                          <span className="shell-value">"{apiEnvironmentUrl()}"</span>
-                          {"\n"}
-                          <span className="shell-variable">MIANOTES_API_KEY</span>=
-                          <span className="shell-value">"{apiToken}"</span>
-                        </code>
-                      </pre>
-                      <button type="button" onClick={() => void copyApiEnvironment()}>
-                        <Copy size={16} />
-                        Copy
-                      </button>
-                    </div>
-                  </details>
+                  <div className="settings-api-code-block">
+                    <pre aria-label={apiEnvironmentSnippet}>
+                      <code>
+                        <span className="shell-variable">MIANOTES_API_URL</span>=
+                        <span className="shell-value">"{apiEnvironmentUrl()}"</span>
+                        {"\n"}
+                        <span className="shell-variable">MIANOTES_API_KEY</span>=
+                        <span className="shell-value">"{apiToken}"</span>
+                      </code>
+                    </pre>
+                    <button type="button" onClick={() => void copyApiEnvironment()}>
+                      <Copy size={16} />
+                      Copy
+                    </button>
+                  </div>
                   <p className="settings-api-private-note">
                     Keep this token private. You will not be able to see it again.
                   </p>
