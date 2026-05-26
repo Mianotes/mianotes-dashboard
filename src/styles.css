@@ -354,6 +354,7 @@ button {
 
 .sidebar-section-body {
   flex: 1 1 auto;
+  align-content: start;
   min-height: 0;
   overflow-y: auto;
   overscroll-behavior: contain;
