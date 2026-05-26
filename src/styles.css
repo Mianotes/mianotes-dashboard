@@ -4125,6 +4125,28 @@ textarea:focus {
   line-height: 1.5;
 }
 
+.settings-api-advanced {
+  margin: 0 0 18px;
+}
+
+.settings-api-advanced summary {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  color: #2f333b;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.settings-api-advanced summary::marker {
+  color: #7b7f89;
+}
+
+.settings-api-advanced p {
+  margin: 6px 0 14px;
+}
+
 .settings-api-code-block {
   position: relative;
   overflow: hidden;
