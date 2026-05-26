@@ -181,7 +181,6 @@ export function AddNoteDialog({
               >
                 <input
                   ref={fileInputRef}
-                  required
                   type="file"
                   onChange={(event) => selectFile(event.target.files?.[0] ?? null)}
                 />
