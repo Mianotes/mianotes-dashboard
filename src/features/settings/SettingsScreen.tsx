@@ -170,8 +170,8 @@ export function SettingsScreen({
   const currentFolderDescription = `Current folder: ${compactFolderPath(currentFolderPath)}`;
   const adminUsers = users.filter((user) => user.is_admin);
   const apiEnvironmentSnippet = [
-    `export MIANOTES_API_URL="${apiEnvironmentUrl()}"`,
-    `export MIANOTES_API_KEY="${apiToken}"`
+    `MIANOTES_API_URL="${apiEnvironmentUrl()}"`,
+    `MIANOTES_API_KEY="${apiToken}"`
   ].join("\n");
 
   return (
@@ -293,15 +293,16 @@ export function SettingsScreen({
               {apiToken ? (
                 <div className="settings-api-created">
                   <h3>API key created</h3>
-                  <p>Add these environment variables to your agent, app, or tool to connect to Mia.</p>
+                  <p>
+                    Add these lines to <code>mianotes-web-service/.env</code> so Codex, Claude Code, Cursor, and other
+                    agents can connect to Mia automatically.
+                  </p>
                   <div className="settings-api-code-block">
                     <pre aria-label={apiEnvironmentSnippet}>
                       <code>
-                        <span className="shell-keyword">export</span>{" "}
                         <span className="shell-variable">MIANOTES_API_URL</span>=
                         <span className="shell-value">"{apiEnvironmentUrl()}"</span>
                         {"\n"}
-                        <span className="shell-keyword">export</span>{" "}
                         <span className="shell-variable">MIANOTES_API_KEY</span>=
                         <span className="shell-value">"{apiToken}"</span>
                       </code>
