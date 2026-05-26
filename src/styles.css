@@ -2792,6 +2792,10 @@ textarea:focus {
   line-height: 1.45;
 }
 
+.add-note-modal .folder-modal-header p {
+  font-weight: 500;
+}
+
 .folder-modal-body {
   display: grid;
   gap: 16px;
