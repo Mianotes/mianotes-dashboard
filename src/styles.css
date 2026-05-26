@@ -1634,8 +1634,16 @@ button {
   background: #ffffff;
 }
 
+.mianotes-rich-editor [class*="dialogOverlay"] {
+  z-index: 1000;
+}
+
+.mianotes-rich-editor [class*="linkDialogPopoverContent"] {
+  z-index: 1001;
+}
+
 .mianotes-rich-editor [class*="dialogContent"] {
-  z-index: 30;
+  z-index: 1001;
   width: min(520px, calc(100vw - 32px));
   padding: 0;
   overflow: hidden;
