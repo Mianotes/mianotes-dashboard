@@ -50,6 +50,12 @@ function apiEnvironmentUrl() {
   return window.location.origin;
 }
 
+function compactFolderPath(path: string) {
+  const cleanPath = path.replace(/[\\/]+$/, "");
+  const parts = cleanPath.split(/[\\/]+/).filter(Boolean);
+  return parts.length > 3 ? parts.slice(-3).join("/") : cleanPath || path;
+}
+
 export function SettingsScreen({
   users,
   currentUser,
@@ -157,7 +163,11 @@ export function SettingsScreen({
   }
 
   const currentFolderPath = storageSettings?.data_dir ?? storageCapacity?.data_dir ?? "data";
-  const currentFolderLabel = currentFolderPath.replace(/\/$/, "").split("/").pop() || currentFolderPath;
+  const activeStorageLocation = storageSettings?.locations.find((location) => location.is_active);
+  const currentFolderLabel = activeStorageLocation?.name
+    ?? currentFolderPath.replace(/[\\/]+$/, "").split(/[\\/]+/).pop()
+    ?? currentFolderPath;
+  const currentFolderDescription = `Current folder: ${compactFolderPath(currentFolderPath)}`;
   const adminUsers = users.filter((user) => user.is_admin);
   const apiEnvironmentSnippet = [
     `export MIANOTES_API_URL="${apiEnvironmentUrl()}"`,
@@ -207,7 +217,7 @@ export function SettingsScreen({
               <FolderIcon size={24} />
               <span>
                 <strong>{isLoadingStorageSettings ? "Loading folder..." : currentFolderLabel}</strong>
-                <small>Current folder</small>
+                <small>{isLoadingStorageSettings ? "Current folder" : currentFolderDescription}</small>
               </span>
               <button
                 className="settings-text-action"
