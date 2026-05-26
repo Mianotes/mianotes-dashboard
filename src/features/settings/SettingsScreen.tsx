@@ -294,8 +294,8 @@ export function SettingsScreen({
                 <div className="settings-api-created">
                   <h3>API key created</h3>
                   <p>
-                    Mianotes saved this key to the service environment. Copy these lines into Codex, Claude Code,
-                    Cursor, or any other agent that needs to connect to Mia.
+                    Mianotes saved this key for itself. To use Mia from another tool, create a <code>.env</code> file
+                    in the project folder where that tool runs and paste these lines there.
                   </p>
                   <div className="settings-api-code-block">
                     <pre aria-label={apiEnvironmentSnippet}>
