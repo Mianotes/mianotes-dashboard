@@ -1,6 +1,6 @@
 import { FileText, Link, Loader2, Plus, Upload, X } from "lucide-react";
-import { useState } from "react";
-import type { FormEvent } from "react";
+import { useRef, useState } from "react";
+import type { DragEvent, FormEvent, KeyboardEvent } from "react";
 import { apiFetch } from "../../api/client";
 import type { FolderRecord, NoteRecord } from "../../api/types";
 import { Modal, ModalActions } from "../../components/ui/Modal";
@@ -25,7 +25,9 @@ export function AddNoteDialog({
   const [text, setText] = useState("");
   const [url, setUrl] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [isDraggingFile, setIsDraggingFile] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
   const cleanTitle = title.trim();
   const cleanUrl = url.trim();
   const canCreate =
@@ -35,6 +37,38 @@ export function AddNoteDialog({
       || (mode === "link" && cleanTitle.length > 0 && cleanUrl.length > 0)
       || (mode === "file" && cleanTitle.length > 0 && Boolean(file))
     );
+
+  function selectFile(nextFile: File | null) {
+    setFile(nextFile);
+  }
+
+  function clearFile() {
+    setFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  }
+
+  function openFilePicker() {
+    fileInputRef.current?.click();
+  }
+
+  function handleFileDropzoneKeyDown(event: KeyboardEvent<HTMLDivElement>) {
+    if (event.key !== "Enter" && event.key !== " ") {
+      return;
+    }
+    event.preventDefault();
+    openFilePicker();
+  }
+
+  function dropFile(event: DragEvent<HTMLDivElement>) {
+    event.preventDefault();
+    setIsDraggingFile(false);
+    const droppedFile = event.dataTransfer.files?.[0] ?? null;
+    if (droppedFile) {
+      selectFile(droppedFile);
+    }
+  }
 
   async function submit(event: FormEvent) {
     event.preventDefault();
@@ -128,14 +162,53 @@ export function AddNoteDialog({
           {mode === "file" && (
             <div className="field-label">
               <span>File</span>
-              <label className="file-picker">
-                <input required type="file" onChange={(event) => setFile(event.target.files?.[0] ?? null)} />
-                <span className="file-picker-button">
-                  <Upload size={16} />
-                  Choose file
-                </span>
-                <span className={`file-picker-name${file ? "" : " is-empty"}`}>{file?.name ?? "No file selected"}</span>
-              </label>
+              <div
+                className={`file-dropzone${isDraggingFile ? " is-dragging" : ""}`}
+                role="button"
+                tabIndex={0}
+                onClick={openFilePicker}
+                onDragEnter={(event) => {
+                  event.preventDefault();
+                  setIsDraggingFile(true);
+                }}
+                onDragOver={(event) => {
+                  event.preventDefault();
+                  setIsDraggingFile(true);
+                }}
+                onDragLeave={() => setIsDraggingFile(false)}
+                onDrop={dropFile}
+                onKeyDown={handleFileDropzoneKeyDown}
+              >
+                <input
+                  ref={fileInputRef}
+                  required
+                  type="file"
+                  onChange={(event) => selectFile(event.target.files?.[0] ?? null)}
+                />
+                {!file ? (
+                  <span className="file-dropzone-empty">
+                    <Upload size={20} />
+                    <strong>Drop a file here or browse</strong>
+                    <small>PDF, Word, Excel, CSV, images, and audio files are supported.</small>
+                  </span>
+                ) : (
+                  <span className="file-chip">
+                    <span className="file-chip-name">{file.name}</span>
+                    <button
+                      type="button"
+                      className="file-chip-remove"
+                      aria-label="Remove file"
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        clearFile();
+                      }}
+                    >
+                      <X size={16} />
+                    </button>
+                  </span>
+                )}
+              </div>
             </div>
           )}
         </div>

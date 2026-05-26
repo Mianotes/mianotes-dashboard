@@ -2873,30 +2873,36 @@ textarea:focus {
   line-height: 1.4;
 }
 
-.file-picker {
+.file-dropzone {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
   min-width: 0;
-  min-height: 44px;
+  min-height: 132px;
   max-width: 100%;
   overflow: hidden;
-  padding: 7px;
-  border: 1px solid #dedfe5;
+  padding: 16px;
+  border: 1px dashed #cfd1d8;
   border-radius: 8px;
-  background: #ffffff;
+  background: #fbfbfc;
   cursor: pointer;
+  transition:
+    border-color 140ms ease,
+    background-color 140ms ease;
 }
 
-.file-picker:focus-within {
+.file-dropzone:focus-within {
   border-color: #9b9da8;
 }
 
-.file-picker:hover {
-  border-color: #c7c9d1;
+.file-dropzone:hover,
+.file-dropzone.is-dragging {
+  border-color: #1a1b20;
+  background: #ffffff;
 }
 
-.file-picker input {
+.file-dropzone input {
   position: absolute;
   width: 1px;
   height: 1px;
@@ -2904,40 +2910,72 @@ textarea:focus {
   pointer-events: none;
 }
 
-.file-picker-button {
-  flex: 0 0 auto;
+.file-dropzone-empty {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  flex-direction: column;
   gap: 8px;
-  min-height: 34px;
-  padding: 0 12px;
-  border-radius: 7px;
-  border: 1px solid #dedfe5;
-  color: #4c4e58;
-  background: #f7f7f8;
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
+  color: #686a74;
+  text-align: center;
 }
 
-.file-picker:hover .file-picker-button {
-  border-color: #c7c9d1;
+.file-dropzone-empty svg {
+  color: #7a7c86;
+}
+
+.file-dropzone-empty strong {
   color: #24262d;
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.25;
 }
 
-.file-picker-name {
-  flex: 1 1 auto;
+.file-dropzone-empty small {
+  max-width: 360px;
+  color: #73757f;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.file-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 100%;
+  min-height: 44px;
+  padding: 0 8px 0 14px;
+  border: 1px solid #dedfe5;
+  border-radius: 8px;
+  background: #ffffff;
+}
+
+.file-chip-name {
   min-width: 0;
   overflow: hidden;
-  color: #4e505a;
+  color: #24262d;
   font-size: 14px;
+  font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-.file-picker-name.is-empty {
-  color: #858791;
+.file-chip-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border: 0;
+  border-radius: 6px;
+  color: #6f717a;
+  background: transparent;
+  cursor: pointer;
+}
+
+.file-chip-remove:hover {
+  color: #1a1b20;
+  background: #f1f1f3;
 }
 
 .modal-notice {
