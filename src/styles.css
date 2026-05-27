@@ -5077,6 +5077,22 @@ textarea:focus {
   font-size: 12px;
 }
 
+.jobs-grid-client-logo {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  margin: 0 16px 0 0;
+  color: #16171d;
+}
+
+.jobs-grid-client-logo svg {
+  width: 20px;
+  height: 20px;
+}
+
 .jobs-grid-row:not(.jobs-grid-head):hover,
 .jobs-grid-row.selected {
   background: #f7f7f9;

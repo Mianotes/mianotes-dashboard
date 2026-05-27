@@ -175,6 +175,10 @@ export type JobLogEntryRecord = {
 export type JobRecord = {
   id: string;
   user: UserRecord;
+  client?: {
+    key: string;
+    name: string;
+  } | null;
   note_id?: string | null;
   note_title?: string | null;
   job_type: string;

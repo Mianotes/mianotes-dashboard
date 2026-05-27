@@ -6,9 +6,20 @@ import type { JobRecord, JobStatus, UserRecord } from "../../api/types";
 import { ConsoleIcon } from "../../components/icons/ConsoleIcon";
 import { ScreenToolbar } from "../../components/layout/ScreenToolbar";
 import { UserAvatar } from "../../components/ui/UserAvatar";
+import clientRegistry from "../../data/clients.json";
 import { relativeTime } from "../../utils/format";
 
 const ACTIVE_STATUSES = new Set<JobStatus>(["queued", "running"]);
+function clientKey(name: string) {
+  return name.toLowerCase().replace(/\s+/g, "-");
+}
+
+const CLIENT_LOGOS = new Map(
+  (clientRegistry as Array<{ name: string; logo_svg: string }>).map((client) => [
+    clientKey(client.name),
+    client.logo_svg
+  ])
+);
 
 function jobIdFromUrl() {
   return new URLSearchParams(window.location.search).get("job");
@@ -28,6 +39,11 @@ function formatTimestamp(value: string) {
     minute: "2-digit",
     second: "2-digit"
   }).format(new Date(value));
+}
+
+function clientLogoSvg(job: JobRecord) {
+  if (!job.client) return null;
+  return CLIENT_LOGOS.get(job.client.key) ?? CLIENT_LOGOS.get("mcp") ?? null;
 }
 
 export function JobsScreen({
@@ -183,17 +199,26 @@ export function JobsScreen({
                     {job.status}
                   </span>
                   <span className="jobs-grid-job-cell" role="cell">
-                    <button
-                      className="jobs-grid-user-button"
-                      type="button"
-                      aria-label={`Open ${job.user.name} profile`}
-                      onClick={(event) => {
-                        event.stopPropagation();
-                        onOpenProfile(job.user.id);
-                      }}
-                    >
-                      <UserAvatar user={job.user} className="jobs-grid-user-avatar" />
-                    </button>
+                    {job.client ? (
+                      <span
+                        className="jobs-grid-client-logo"
+                        title={job.client.name}
+                        aria-label={job.client.name}
+                        dangerouslySetInnerHTML={{ __html: clientLogoSvg(job) ?? "" }}
+                      />
+                    ) : (
+                      <button
+                        className="jobs-grid-user-button"
+                        type="button"
+                        aria-label={`Open ${job.user.name} profile`}
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          onOpenProfile(job.user.id);
+                        }}
+                      >
+                        <UserAvatar user={job.user} className="jobs-grid-user-avatar" />
+                      </button>
+                    )}
                     <span>{formatJobType(job.job_type)}</span>
                   </span>
                   <span role="cell">{job.note_title ?? job.note_id ?? "No note"}</span>
