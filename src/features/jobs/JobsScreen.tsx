@@ -1,9 +1,11 @@
 import { Loader2, RefreshCw, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import type { KeyboardEvent } from "react";
 import { apiFetch } from "../../api/client";
 import type { JobRecord, JobStatus, UserRecord } from "../../api/types";
 import { ConsoleIcon } from "../../components/icons/ConsoleIcon";
 import { ScreenToolbar } from "../../components/layout/ScreenToolbar";
+import { UserAvatar } from "../../components/ui/UserAvatar";
 import { relativeTime } from "../../utils/format";
 
 const ACTIVE_STATUSES = new Set<JobStatus>(["queued", "running"]);
@@ -101,6 +103,12 @@ export function JobsScreen({
     }
   }
 
+  function selectJobFromKeyboard(event: KeyboardEvent<HTMLDivElement>, jobId: string) {
+    if (event.key !== "Enter" && event.key !== " ") return;
+    event.preventDefault();
+    selectJob(jobId);
+  }
+
   return (
     <section className="jobs-screen">
       <ScreenToolbar
@@ -163,20 +171,34 @@ export function JobsScreen({
                 <span role="columnheader">Created</span>
               </div>
               {jobs.map((job) => (
-                <button
+                <div
                   className={`jobs-grid-row ${selectedJob?.id === job.id ? "selected" : ""}`}
-                  type="button"
                   role="row"
+                  tabIndex={0}
                   key={job.id}
                   onClick={() => selectJob(job.id)}
+                  onKeyDown={(event) => selectJobFromKeyboard(event, job.id)}
                 >
                   <span className={`jobs-status ${job.status}`} role="cell">
                     {job.status}
                   </span>
-                  <span role="cell">{formatJobType(job.job_type)}</span>
+                  <span className="jobs-grid-job-cell" role="cell">
+                    <button
+                      className="jobs-grid-user-button"
+                      type="button"
+                      aria-label={`Open ${job.user.name} profile`}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        onOpenProfile(job.user.id);
+                      }}
+                    >
+                      <UserAvatar user={job.user} className="jobs-grid-user-avatar" />
+                    </button>
+                    <span>{formatJobType(job.job_type)}</span>
+                  </span>
                   <span role="cell">{job.note_title ?? job.note_id ?? "No note"}</span>
                   <span role="cell">{relativeTime(job.created_at)}</span>
-                </button>
+                </div>
               ))}
             </div>
           ) : (

@@ -834,7 +834,10 @@ test("opens shareable internal URLs for notes, folders, users, console, publish,
 
   await page.goto("/jobs");
   await expect(page.getByRole("heading", { level: 1, name: "Console" })).toBeVisible();
-  await expect(page.getByRole("row", { name: /succeeded Parse Url/ })).toBeVisible();
+  await expect(page.getByRole("row", { name: /succeeded.*Parse Url/ })).toBeVisible();
+  await page.getByRole("button", { name: "Open Admin User profile" }).click();
+  await expect(page).toHaveURL(/\/user\/user-admin\/profile$/);
+  await expect(page.getByRole("heading", { name: "Admin User" })).toBeVisible();
 
   await page.goto("/publish");
   await expect(page.getByRole("heading", { name: "Publish your notes" })).toBeVisible();

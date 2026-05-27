@@ -5017,6 +5017,33 @@ textarea:focus {
   cursor: pointer;
 }
 
+.jobs-grid-job-cell {
+  display: inline-flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.jobs-grid-user-button {
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  margin: 0 16px 0 0;
+  padding: 0;
+  border: 0;
+  color: inherit;
+  background: transparent;
+  cursor: pointer;
+}
+
+.jobs-grid-user-avatar {
+  width: 30px;
+  height: 30px;
+  font-size: 12px;
+}
+
 .jobs-grid-row:not(.jobs-grid-head):hover,
 .jobs-grid-row.selected {
   background: #f7f7f9;
