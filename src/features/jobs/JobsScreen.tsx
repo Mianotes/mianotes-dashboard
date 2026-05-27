@@ -8,6 +8,10 @@ import { relativeTime } from "../../utils/format";
 
 const ACTIVE_STATUSES = new Set<JobStatus>(["queued", "running"]);
 
+function jobIdFromUrl() {
+  return new URLSearchParams(window.location.search).get("job");
+}
+
 function formatJobType(value: string) {
   return value
     .split("_")
@@ -38,7 +42,7 @@ export function JobsScreen({
   onOpenSettings: () => void;
 }) {
   const [jobs, setJobs] = useState<JobRecord[]>([]);
-  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(() => jobIdFromUrl());
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +57,14 @@ export function JobsScreen({
       const items = await apiFetch<JobRecord[]>("/api/jobs");
       setJobs(items);
       setError(null);
-      setSelectedJobId((current) => current ?? items[0]?.id ?? null);
+      setSelectedJobId((current) => {
+        if (current && items.some((item) => item.id === current)) return current;
+        const requestedJobId = jobIdFromUrl();
+        if (requestedJobId && items.some((item) => item.id === requestedJobId)) {
+          return requestedJobId;
+        }
+        return items[0]?.id ?? null;
+      });
     } catch (caughtError) {
       setError(caughtError instanceof Error ? caughtError.message : "Could not load jobs.");
     } finally {
@@ -78,6 +89,17 @@ export function JobsScreen({
     [jobs, selectedJobId]
   );
   const activeJobCount = jobs.filter((job) => ACTIVE_STATUSES.has(job.status)).length;
+
+  function selectJob(jobId: string) {
+    setSelectedJobId(jobId);
+    if (window.location.pathname === "/jobs") {
+      window.history.replaceState(
+        { mianotesView: "dashboard" },
+        "",
+        `/jobs?job=${encodeURIComponent(jobId)}`
+      );
+    }
+  }
 
   return (
     <section className="jobs-screen">
@@ -146,7 +168,7 @@ export function JobsScreen({
                   type="button"
                   role="row"
                   key={job.id}
-                  onClick={() => setSelectedJobId(job.id)}
+                  onClick={() => selectJob(job.id)}
                 >
                   <span className={`jobs-status ${job.status}`} role="cell">
                     {job.status}
