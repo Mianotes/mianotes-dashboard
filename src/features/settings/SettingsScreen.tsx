@@ -270,7 +270,7 @@ export function SettingsScreen({
           {currentUser.is_admin && (
             <section className="settings-card settings-team-card" aria-labelledby="settings-team-title">
               <div className="settings-card-intro">
-                <h2 id="settings-team-title">Team access</h2>
+                <h2 id="settings-team-title">Admin users</h2>
                 <p>
                   These people can manage users, settings, API keys, and workspace folders.
                 </p>
