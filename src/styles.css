@@ -4078,6 +4078,10 @@ textarea:focus {
   border-color: #bfc2cc;
 }
 
+.settings-api-input-shell:focus-within input {
+  background: #ffffff;
+}
+
 .settings-api-field small {
   min-height: 20px;
   color: #8b8d97;

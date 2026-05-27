@@ -296,14 +296,14 @@ export function SettingsScreen({
           {currentUser.is_admin && (
             <section className="settings-card settings-share-card" aria-labelledby="settings-share-title">
               <div className="settings-card-intro">
-                <h2 id="settings-share-title">Workspace address</h2>
+                <h2 id="settings-share-title">Domain</h2>
                 <p>
-                  Set the address people should use when Mianotes creates guest links for shared notes.
+                  Mianotes uses this domain when it creates share links for notes.
                 </p>
               </div>
               <div className="settings-api-panel settings-share-panel">
                 <label className="settings-api-field">
-                  <span className="sr-only">Workspace address</span>
+                  <span className="sr-only">Domain</span>
                   <span className="settings-api-input-shell">
                     <span className="settings-api-icon-shell">
                       <Link size={22} />
@@ -312,11 +312,11 @@ export function SettingsScreen({
                       type="url"
                       value={workspaceUrl}
                       disabled={isLoadingShareSettings}
-                      placeholder="https://notes.example.com"
+                      placeholder="https://notes.yourdomain.com"
                       onChange={(event) => setWorkspaceUrl(event.currentTarget.value)}
                     />
                   </span>
-                  <small>Use the stable address your team opens in the browser.</small>
+                  <small>Use the domain your team and guests will use to view shared notes.</small>
                 </label>
                 <button
                   className="settings-api-action"
