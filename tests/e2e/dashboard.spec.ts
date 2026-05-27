@@ -213,6 +213,17 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
       return;
     }
 
+    if (path.startsWith("/api/users/") && method === "DELETE") {
+      const userId = path.split("/")[3];
+      remember("deleteUser", { user_id: userId });
+      const index = users.findIndex((item) => item.id === userId);
+      if (index >= 0) {
+        users.splice(index, 1);
+      }
+      await route.fulfill({ status: 204 });
+      return;
+    }
+
     if (path === "/api/folders" && method === "GET") {
       await fulfill(route, folders);
       return;
@@ -879,4 +890,22 @@ test("updates a team member password and makes them an admin", async ({ page }) 
   await expect(adminDialog).toBeHidden();
   await expect(page.getByText("Admin").nth(1)).toBeVisible();
   expect(requests.adminChange?.[0]).toMatchObject({ is_admin: true });
+});
+
+test("deletes a team member from the users menu", async ({ page }) => {
+  const requests = await mockMianotesApi(page);
+
+  await page.goto("/");
+  await page.locator(".account-avatar-button").click();
+  await page.getByRole("menuitem", { name: "Users" }).click();
+  await page.getByRole("button", { name: "Open actions for Member User" }).click();
+  await page.getByRole("menuitem", { name: "Delete" }).click();
+
+  const deleteDialog = page.getByRole("dialog", { name: "Delete user" });
+  await expect(deleteDialog).toContainText("Delete Member User from this workspace?");
+  await deleteDialog.getByRole("button", { name: "Delete" }).click();
+
+  await expect(deleteDialog).toBeHidden();
+  await expect(page.getByRole("button", { name: /Member User/ })).toBeHidden();
+  expect(requests.deleteUser?.[0]).toMatchObject({ user_id: "user-member" });
 });

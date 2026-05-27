@@ -70,6 +70,7 @@ export function DashboardShell({
     addOrMergeNote,
     updateUserInWorkspace,
     addUserToWorkspace,
+    removeUserFromWorkspace,
     signOut
   } = workspace;
   const {
@@ -296,6 +297,12 @@ export function DashboardShell({
               onUserCreated={(createdUser) => {
                 addUserToWorkspace(createdUser);
                 navigation.setProfileUserId(createdUser.id);
+              }}
+              onUserDeleted={(userId) => {
+                removeUserFromWorkspace(userId);
+                if (navigation.profileUserId === userId) {
+                  navigation.setProfileUserId("all");
+                }
               }}
               onSelectTag={navigation.openProfileTag}
               onOpenSettings={navigation.openSettings}

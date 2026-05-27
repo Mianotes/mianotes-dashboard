@@ -1,4 +1,4 @@
-import { Edit3, KeyRound, MoreVertical, ShieldCheck, ShieldOff } from "lucide-react";
+import { Edit3, KeyRound, MoreVertical, ShieldCheck, ShieldOff, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
 import type { FolderRecord, NoteRecord, UserRecord } from "../../api/types";
 import { useOutsideAndEscape } from "../../hooks/useOutsideAndEscape";
@@ -12,6 +12,7 @@ export function AllProfilesView({
   onEditUser,
   onRequestPasswordUpdate,
   onRequestAdminChange,
+  onRequestDeleteUser,
   onSelectUser
 }: {
   users: UserRecord[];
@@ -21,6 +22,7 @@ export function AllProfilesView({
   onEditUser: (userId: string) => void;
   onRequestPasswordUpdate: (user: UserRecord) => void;
   onRequestAdminChange: (user: UserRecord, isAdmin: boolean) => void;
+  onRequestDeleteUser: (user: UserRecord) => void;
   onSelectUser: (userId: string) => void;
 }) {
   const [openMenuUserId, setOpenMenuUserId] = useState<string | null>(null);
@@ -33,6 +35,7 @@ export function AllProfilesView({
       {users.map((user) => {
         const canEditUser = currentUser.is_admin || currentUser.id === user.id;
         const canShowMenu = canEditUser || currentUser.is_admin;
+        const canDeleteUser = currentUser.is_admin && currentUser.id !== user.id;
         const isOnlyAdmin = user.is_admin && adminCount <= 1;
         const isMenuOpen = openMenuUserId === user.id;
         return (
@@ -98,6 +101,24 @@ export function AllProfilesView({
                           {user.is_admin ? <ShieldOff size={15} /> : <ShieldCheck size={15} />}
                           {user.is_admin ? "Remove admin" : "Make admin"}
                         </button>
+                        {canDeleteUser && (
+                          <>
+                            <div className="profile-card-menu-divider" role="separator" />
+                            <button
+                              className="danger-action"
+                              type="button"
+                              role="menuitem"
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                setOpenMenuUserId(null);
+                                onRequestDeleteUser(user);
+                              }}
+                            >
+                              <Trash2 size={15} />
+                              Delete
+                            </button>
+                          </>
+                        )}
                       </>
                     )}
                   </div>

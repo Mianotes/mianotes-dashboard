@@ -1,4 +1,4 @@
-import { Loader2, ShieldCheck, X } from "lucide-react";
+import { Loader2, ShieldCheck, Trash2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { apiFetch, versionedMediaPath } from "../../api/client";
@@ -22,6 +22,7 @@ export function ProfileScreen({
   onSignOut,
   onUserUpdated,
   onUserCreated,
+  onUserDeleted,
   onSelectTag,
   onOpenSettings
 }: {
@@ -35,6 +36,7 @@ export function ProfileScreen({
   onSignOut: () => void;
   onUserUpdated: (user: UserRecord) => void;
   onUserCreated: (user: UserRecord) => void;
+  onUserDeleted: (userId: string) => void;
   onSelectTag: (userId: string, tagSlug: string) => void;
   onOpenSettings: () => void;
 }) {
@@ -50,6 +52,8 @@ export function ProfileScreen({
   const [isUploadingPhoto, setIsUploadingPhoto] = useState(false);
   const [pendingAdminChange, setPendingAdminChange] = useState<{ user: UserRecord; isAdmin: boolean } | null>(null);
   const [isChangingAdmin, setIsChangingAdmin] = useState(false);
+  const [pendingDeleteUser, setPendingDeleteUser] = useState<UserRecord | null>(null);
+  const [isDeletingUser, setIsDeletingUser] = useState(false);
   const [pendingPasswordUpdate, setPendingPasswordUpdate] = useState<UserRecord | null>(null);
   const [passwordDraft, setPasswordDraft] = useState({ password: "", confirmation: "" });
   const [passwordError, setPasswordError] = useState<string | null>(null);
@@ -202,6 +206,23 @@ export function ProfileScreen({
     }
   }
 
+  async function deleteUser() {
+    if (!pendingDeleteUser) return;
+    setIsDeletingUser(true);
+    setProfileError(null);
+    try {
+      await apiFetch<void>(`/api/users/${pendingDeleteUser.id}`, {
+        method: "DELETE"
+      });
+      onUserDeleted(pendingDeleteUser.id);
+      setPendingDeleteUser(null);
+    } catch (err) {
+      setProfileError(err instanceof Error ? err.message : "Could not delete user");
+    } finally {
+      setIsDeletingUser(false);
+    }
+  }
+
   function closePasswordModal() {
     setPendingPasswordUpdate(null);
     setPasswordDraft({ password: "", confirmation: "" });
@@ -306,6 +327,7 @@ export function ProfileScreen({
             onEditUser={selectUserForEditing}
             onRequestPasswordUpdate={(user) => setPendingPasswordUpdate(user)}
             onRequestAdminChange={(user, isAdmin) => setPendingAdminChange({ user, isAdmin })}
+            onRequestDeleteUser={(user) => setPendingDeleteUser(user)}
           />
         )}
       </div>
@@ -348,6 +370,43 @@ export function ProfileScreen({
             primaryDisabled={isChangingAdmin}
             primaryIcon={isChangingAdmin ? <Loader2 className="spin" size={15} /> : null}
             primaryLabel={pendingAdminChange.isAdmin ? "Make admin" : "Remove admin"}
+          />
+        </Modal>
+      )}
+      {pendingDeleteUser && (
+        <Modal
+          className="folder-modal profile-delete-modal"
+          labelledBy="profile-delete-modal-title"
+          onClose={() => setPendingDeleteUser(null)}
+        >
+          <div className="folder-modal-header">
+            <div>
+              <h2 id="profile-delete-modal-title">Delete user</h2>
+              <p>Delete {pendingDeleteUser.name} from this workspace?</p>
+            </div>
+            <button
+              className="icon-button"
+              type="button"
+              aria-label="Close"
+              onClick={() => setPendingDeleteUser(null)}
+            >
+              <X size={18} />
+            </button>
+          </div>
+          <div className="folder-modal-body">
+            <div className="profile-admin-warning danger">
+              <Trash2 size={18} />
+              <span>This removes their account and notes from this workspace.</span>
+            </div>
+          </div>
+          <ModalActions
+            cancelDisabled={isDeletingUser}
+            onCancel={() => setPendingDeleteUser(null)}
+            onPrimary={() => void deleteUser()}
+            primaryClassName="danger-button"
+            primaryDisabled={isDeletingUser}
+            primaryIcon={isDeletingUser ? <Loader2 className="spin" size={15} /> : null}
+            primaryLabel="Delete"
           />
         </Modal>
       )}

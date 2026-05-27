@@ -149,6 +149,21 @@ export function useWorkspaceData() {
     setUsers((items) => [createdUser, ...items]);
   }, []);
 
+  const removeUserFromWorkspace = useCallback((userId: string) => {
+    const deletedFolderIds = new Set(
+      folders.filter((folder) => folder.user_id === userId).map((folder) => folder.id)
+    );
+    setUsers((items) => items.filter((user) => user.id !== userId));
+    setFolders((items) => items.filter((folder) => folder.user_id !== userId));
+    setNotes((items) =>
+      items.filter((note) =>
+        note.user_id !== userId
+        && note.user?.id !== userId
+        && (!note.folder_id || !deletedFolderIds.has(note.folder_id))
+      )
+    );
+  }, [folders]);
+
   const resetWorkspaceData = useCallback(() => {
     setCurrentUser(null);
     setUsers([]);
@@ -181,6 +196,7 @@ export function useWorkspaceData() {
     toggleNoteStar,
     updateUserInWorkspace,
     addUserToWorkspace,
+    removeUserFromWorkspace,
     resetWorkspaceData,
     signOut
   };

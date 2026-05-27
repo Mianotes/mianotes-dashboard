@@ -2509,6 +2509,21 @@ button {
   background: #f7f7f9;
 }
 
+.profile-card-menu-popover .danger-action {
+  color: #d42b32;
+}
+
+.profile-card-menu-popover .danger-action:hover:not(:disabled) {
+  color: #b71f28;
+  background: #fff0f1;
+}
+
+.profile-card-menu-divider {
+  height: 1px;
+  margin: 6px -6px;
+  background: #e4e5e9;
+}
+
 .profile-card-menu-popover button:disabled {
   cursor: default;
   opacity: 0.55;
@@ -3017,21 +3032,33 @@ textarea:focus {
   width: min(440px, calc(100vw - 32px));
 }
 
+.profile-delete-modal,
 .profile-password-modal {
   width: min(440px, calc(100vw - 32px));
 }
 
 .profile-admin-modal .primary-button,
 .profile-admin-modal .text-button,
+.profile-delete-modal .primary-button,
+.profile-delete-modal .text-button,
 .profile-password-modal .primary-button,
 .profile-password-modal .text-button {
   min-height: 42px;
 }
 
 .profile-admin-modal .primary-button,
+.profile-delete-modal .primary-button,
 .profile-password-modal .primary-button {
   padding-right: 24px;
   padding-left: 24px;
+}
+
+.profile-delete-modal .danger-button {
+  background: #d42b32;
+}
+
+.profile-delete-modal .danger-button:not(:disabled):hover {
+  background: #b71f28;
 }
 
 .profile-password-modal .field-label input {
@@ -3055,6 +3082,12 @@ textarea:focus {
   background: #f8f8fa;
   font-size: 14px;
   line-height: 1.45;
+}
+
+.profile-admin-warning.danger {
+  border-color: #f1c6cc;
+  color: #8a1f2a;
+  background: #fff1f3;
 }
 
 .profile-admin-warning svg {
