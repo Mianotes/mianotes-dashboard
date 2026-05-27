@@ -667,10 +667,15 @@ test("creates and copies a guest share link when a workspace address is configur
   await page.locator(".note-row-actions").first().getByRole("button", { name: "More note actions" }).click();
   await page.getByRole("menuitem", { name: "Share" }).click();
 
-  await expect(page.getByRole("status")).toContainText("Guest link copied.");
+  const shareNotice = page.getByRole("status").filter({ hasText: "Share link copied to clipboard" });
+  await expect(shareNotice).toBeVisible();
+  await expect(shareNotice).toHaveClass(/success/);
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(
     "https://notes.example.test/shared/share-token"
   );
+  await page.locator(".account-avatar-button").click();
+  await page.getByRole("menuitem", { name: "Settings" }).click();
+  await expect(shareNotice).toBeHidden();
   expect(requests.shareNote?.[0]).toMatchObject({ note_id: "note-demo" });
 });
 

@@ -5,6 +5,7 @@ import { NotePanel } from "../notes/NotePanel";
 
 type NotesWorkspaceProps = {
   error: string | null;
+  successMessage: string | null;
   openedNote: NoteRecord | null;
   selectedFolder: FolderRecord | null;
   currentUser: UserRecord;
@@ -16,6 +17,7 @@ type NotesWorkspaceProps = {
   visibleStart: number;
   visibleEnd: number;
   onDismissError: () => void;
+  onDismissSuccess: () => void;
   onBack: () => void;
   onRefreshOpenedNote: () => Promise<void>;
   onNoteEditModeChange: (isEditing: boolean) => void;
@@ -32,6 +34,7 @@ type NotesWorkspaceProps = {
 
 export function NotesWorkspace({
   error,
+  successMessage,
   openedNote,
   selectedFolder,
   currentUser,
@@ -43,6 +46,7 @@ export function NotesWorkspace({
   visibleStart,
   visibleEnd,
   onDismissError,
+  onDismissSuccess,
   onBack,
   onRefreshOpenedNote,
   onNoteEditModeChange,
@@ -62,6 +66,14 @@ export function NotesWorkspace({
         <div className="dashboard-notice" role="status">
           <span>{error}</span>
           <button type="button" aria-label="Dismiss message" onClick={onDismissError}>
+            <X size={14} />
+          </button>
+        </div>
+      )}
+      {successMessage && (
+        <div className="dashboard-notice success" role="status">
+          <span>{successMessage}</span>
+          <button type="button" aria-label="Dismiss message" onClick={onDismissSuccess}>
             <X size={14} />
           </button>
         </div>

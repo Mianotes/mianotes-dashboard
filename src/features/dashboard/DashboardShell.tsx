@@ -48,6 +48,7 @@ export function DashboardShell({
 }: DashboardShellProps) {
   const [movingNote, setMovingNote] = useState<NoteRecord | null>(null);
   const [shareBlockedNote, setShareBlockedNote] = useState<NoteRecord | null>(null);
+  const [shareSuccessMessage, setShareSuccessMessage] = useState<string | null>(null);
   const setAccountMenuRef = (node: HTMLDivElement | null) => {
     refs.accountMenuRef.current = node;
   };
@@ -95,6 +96,7 @@ export function DashboardShell({
 
   async function shareNote(note: NoteRecord) {
     setError(null);
+    setShareSuccessMessage(null);
     try {
       const shareSettings = await apiFetch<ShareSettingsRecord>("/api/settings/share");
       const shareBase = stableShareBase(shareSettings.workspace_url, window.location.origin);
@@ -107,11 +109,16 @@ export function DashboardShell({
         body: JSON.stringify({})
       });
       await navigator.clipboard?.writeText(guestShareUrl(shareBase, share.share_url));
-      setError("Guest link copied.");
+      setShareSuccessMessage("Share link copied to clipboard");
     } catch (error) {
+      setShareSuccessMessage(null);
       setError(error instanceof Error ? error.message : "Could not share this note.");
     }
   }
+
+  useEffect(() => {
+    setShareSuccessMessage(null);
+  }, [navigation.workspaceView]);
 
   useEffect(() => {
     if (!navigation.isSidebarOpen) return;
@@ -286,6 +293,7 @@ export function DashboardShell({
           ) : (
             <NotesWorkspace
               error={error}
+              successMessage={shareSuccessMessage}
               openedNote={openedNote}
               selectedFolder={selectedFolder}
               currentUser={currentUser}
@@ -297,6 +305,7 @@ export function DashboardShell({
               visibleStart={visibleStart}
               visibleEnd={visibleEnd}
               onDismissError={() => setError(null)}
+              onDismissSuccess={() => setShareSuccessMessage(null)}
               onBack={navigation.goBack}
               onRefreshOpenedNote={async () => {
                 if (!openedNote) return;
