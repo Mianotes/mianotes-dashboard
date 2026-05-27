@@ -396,7 +396,10 @@ export function ProfileScreen({
           <div className="folder-modal-body">
             <div className="profile-admin-warning danger">
               <Trash2 size={18} />
-              <span>This removes their account and notes from this workspace.</span>
+              <span>
+                This removes their account, folders, notes, and source file records from this
+                workspace. Files on disk are left untouched.
+              </span>
             </div>
           </div>
           <ModalActions

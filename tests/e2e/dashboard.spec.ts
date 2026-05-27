@@ -907,6 +907,7 @@ test("deletes a team member from the users menu", async ({ page }) => {
 
   const deleteDialog = page.getByRole("dialog", { name: "Delete user" });
   await expect(deleteDialog).toContainText("Delete Member User from this workspace?");
+  await expect(deleteDialog).toContainText("Files on disk are left untouched.");
   await deleteDialog.getByRole("button", { name: "Delete" }).click();
 
   await expect(deleteDialog).toBeHidden();
