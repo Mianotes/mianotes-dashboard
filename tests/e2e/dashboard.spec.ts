@@ -266,9 +266,22 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
       return;
     }
 
+    if (path === "/api/notes/shared/share-token/avatar" && method === "GET") {
+      await route.fulfill({
+        status: 200,
+        contentType: "image/svg+xml",
+        body: '<svg xmlns="http://www.w3.org/2000/svg" width="1" height="1" />'
+      });
+      return;
+    }
+
     if (path.startsWith("/api/notes/shared/") && method === "GET") {
       await fulfill(route, {
         ...notes[0],
+        user: {
+          ...notes[0].user,
+          photo_url: "/.profiles/user-admin/avatar-seed.jpg"
+        },
         shared_at: now,
         share_url: "/api/notes/shared/share-token"
       });
@@ -717,6 +730,10 @@ test("opens guest shared notes without signing in", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Getting started" })).toBeVisible();
   await expect(page.getByText("Welcome to Mianotes.").first()).toBeVisible();
   await expect(page.locator(".shared-note-screen > header")).toHaveCount(0);
+  await expect(page.locator(".shared-note-author img.avatar-photo")).toHaveAttribute(
+    "src",
+    /\/api\/notes\/shared\/share-token\/avatar$/
+  );
   await expect(page.locator(".shared-note-footer img")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeHidden();
 });

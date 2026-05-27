@@ -16,6 +16,12 @@ export function SharedNoteScreen({ token }: SharedNoteScreenProps) {
   const [note, setNote] = useState<NoteRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const sharedAuthor = note?.user
+    ? {
+        ...note.user,
+        photo_url: note.user.photo_url ? `/api/notes/shared/${encodeURIComponent(token)}/avatar` : null
+      }
+    : null;
 
   useEffect(() => {
     let cancelled = false;
@@ -58,7 +64,7 @@ export function SharedNoteScreen({ token }: SharedNoteScreenProps) {
             <p className="shared-note-folder">{note.folder?.name ?? "Shared note"}</p>
             <h1>{note.title}</h1>
             <div className="shared-note-author">
-              <UserAvatar user={note.user} name={note.user?.name ?? "Mianotes"} />
+              <UserAvatar user={sharedAuthor} name={note.user?.name ?? "Mianotes"} />
               <span>{note.user?.name ?? "Mianotes"}</span>
             </div>
             <div className="markdown-preview shared-note-preview">
