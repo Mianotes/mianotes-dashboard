@@ -35,7 +35,8 @@ export function AllProfilesView({
       {users.map((user) => {
         const canEditUser = currentUser.is_admin || currentUser.id === user.id;
         const canShowMenu = canEditUser || currentUser.is_admin;
-        const canDeleteUser = currentUser.is_admin && currentUser.id !== user.id;
+        const canShowDeleteUser = currentUser.is_admin;
+        const canDeleteUser = currentUser.id !== user.id;
         const isOnlyAdmin = user.is_admin && adminCount <= 1;
         const isMenuOpen = openMenuUserId === user.id;
         return (
@@ -101,15 +102,18 @@ export function AllProfilesView({
                           {user.is_admin ? <ShieldOff size={15} /> : <ShieldCheck size={15} />}
                           {user.is_admin ? "Remove admin" : "Make admin"}
                         </button>
-                        {canDeleteUser && (
+                        {canShowDeleteUser && (
                           <>
                             <div className="profile-card-menu-divider" role="separator" />
                             <button
                               className="danger-action"
                               type="button"
                               role="menuitem"
+                              disabled={!canDeleteUser}
+                              title={!canDeleteUser ? "Admins cannot delete their own account." : undefined}
                               onClick={(event) => {
                                 event.stopPropagation();
+                                if (!canDeleteUser) return;
                                 setOpenMenuUserId(null);
                                 onRequestDeleteUser(user);
                               }}

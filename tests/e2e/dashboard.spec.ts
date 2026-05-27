@@ -898,6 +898,10 @@ test("deletes a team member from the users menu", async ({ page }) => {
   await page.goto("/");
   await page.locator(".account-avatar-button").click();
   await page.getByRole("menuitem", { name: "Users" }).click();
+  await page.getByRole("button", { name: "Open actions for Admin User" }).click();
+  await expect(page.getByRole("menuitem", { name: "Delete" })).toBeDisabled();
+  await page.keyboard.press("Escape");
+
   await page.getByRole("button", { name: "Open actions for Member User" }).click();
   await page.getByRole("menuitem", { name: "Delete" }).click();
 
