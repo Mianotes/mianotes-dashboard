@@ -1,13 +1,16 @@
 import { useEffect, useState } from "react";
 import type { MutableRefObject } from "react";
-import type { NoteRecord, UserRecord } from "../../api/types";
+import { apiFetch } from "../../api/client";
+import type { NoteRecord, NoteShareRecord, ShareSettingsRecord, UserRecord } from "../../api/types";
 import logoUrl from "../../assets/logo_small.png";
 import { Sidebar } from "../../components/layout/Sidebar";
 import { Toolbar } from "../../components/layout/Toolbar";
+import { guestShareUrl, stableShareBase } from "../../utils/share";
 import { MoveNoteDialog } from "../notes/MoveNoteDialog";
 import { JobsScreen } from "../jobs/JobsScreen";
 import { ProfileScreen } from "../profile/ProfileScreen";
 import { PublishScreen } from "../publish/PublishScreen";
+import { ShareNoteDialog } from "../notes/ShareNoteDialog";
 import { SettingsScreen } from "../settings/SettingsScreen";
 import { DashboardDialogs } from "./DashboardDialogs";
 import { NotesWorkspace } from "./NotesWorkspace";
@@ -44,6 +47,7 @@ export function DashboardShell({
   setError
 }: DashboardShellProps) {
   const [movingNote, setMovingNote] = useState<NoteRecord | null>(null);
+  const [shareBlockedNote, setShareBlockedNote] = useState<NoteRecord | null>(null);
   const setAccountMenuRef = (node: HTMLDivElement | null) => {
     refs.accountMenuRef.current = node;
   };
@@ -85,6 +89,29 @@ export function DashboardShell({
   const activeMovingNote = movingNote
     ? notes.find((note) => note.id === movingNote.id) ?? movingNote
     : null;
+  const activeShareBlockedNote = shareBlockedNote
+    ? notes.find((note) => note.id === shareBlockedNote.id) ?? shareBlockedNote
+    : null;
+
+  async function shareNote(note: NoteRecord) {
+    setError(null);
+    try {
+      const shareSettings = await apiFetch<ShareSettingsRecord>("/api/settings/share");
+      const shareBase = stableShareBase(shareSettings.workspace_url, window.location.origin);
+      if (!shareBase) {
+        setShareBlockedNote(note);
+        return;
+      }
+      const share = await apiFetch<NoteShareRecord>(`/api/notes/${note.id}/share`, {
+        method: "POST",
+        body: JSON.stringify({})
+      });
+      await navigator.clipboard?.writeText(guestShareUrl(shareBase, share.share_url));
+      setError("Guest link copied.");
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Could not share this note.");
+    }
+  }
 
   useEffect(() => {
     if (!navigation.isSidebarOpen) return;
@@ -286,6 +313,7 @@ export function DashboardShell({
               onAdd={navigation.openAddNote}
               onOpenNote={(note, edit) => void actions.openNote(note, edit)}
               onMoveNote={setMovingNote}
+              onShareNote={(note) => void shareNote(note)}
               onToggleStar={(note) => void actions.toggleNoteStar(note)}
               onNotesDeleted={actions.refreshNotes}
               onError={setError}
@@ -348,6 +376,17 @@ export function DashboardShell({
           folders={folders}
           onClose={() => setMovingNote(null)}
           onMove={actions.moveNote}
+        />
+      )}
+      {activeShareBlockedNote && (
+        <ShareNoteDialog
+          note={activeShareBlockedNote}
+          currentUser={currentUser}
+          onClose={() => setShareBlockedNote(null)}
+          onOpenSettings={() => {
+            setShareBlockedNote(null);
+            navigation.openSettings();
+          }}
         />
       )}
     </main>

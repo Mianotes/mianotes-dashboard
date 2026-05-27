@@ -1,9 +1,10 @@
-import { Copy, Folder, History, Loader2, Users, X } from "lucide-react";
+import { Copy, Folder, History, Link, Loader2, Users, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { apiBase, apiFetch } from "../../api/client";
 import type {
   FolderRecord,
   ServiceApiKeyRecord,
+  ShareSettingsRecord,
   StorageCapacityRecord,
   StorageSettingsRecord,
   UserRecord
@@ -88,10 +89,14 @@ export function SettingsScreen({
   const [apiToken, setApiToken] = useState("");
   const [apiTokenUrl, setApiTokenUrl] = useState("");
   const [isCreatingApiToken, setIsCreatingApiToken] = useState(false);
+  const [workspaceUrl, setWorkspaceUrl] = useState("");
+  const [isLoadingShareSettings, setIsLoadingShareSettings] = useState(true);
+  const [isSavingShareSettings, setIsSavingShareSettings] = useState(false);
 
   useEffect(() => {
     void loadArchivedFolders();
     void loadStorageSettings();
+    void loadShareSettings();
   }, []);
 
   async function loadArchivedFolders() {
@@ -116,6 +121,36 @@ export function SettingsScreen({
       setSettingsError(error instanceof Error ? error.message : "Could not load folder settings.");
     } finally {
       setIsLoadingStorageSettings(false);
+    }
+  }
+
+  async function loadShareSettings() {
+    setIsLoadingShareSettings(true);
+    try {
+      const settings = await apiFetch<ShareSettingsRecord>("/api/settings/share");
+      setWorkspaceUrl(settings.workspace_url ?? "");
+    } catch (error) {
+      setSettingsError(error instanceof Error ? error.message : "Could not load sharing settings.");
+    } finally {
+      setIsLoadingShareSettings(false);
+    }
+  }
+
+  async function saveShareSettings() {
+    setIsSavingShareSettings(true);
+    setSettingsError(null);
+    setSettingsMessage(null);
+    try {
+      const settings = await apiFetch<ShareSettingsRecord>("/api/settings/share", {
+        method: "PATCH",
+        body: JSON.stringify({ workspace_url: workspaceUrl })
+      });
+      setWorkspaceUrl(settings.workspace_url ?? "");
+      setSettingsMessage("Workspace address saved.");
+    } catch (error) {
+      setSettingsError(error instanceof Error ? error.message : "Could not save the workspace address.");
+    } finally {
+      setIsSavingShareSettings(false);
     }
   }
 
@@ -256,6 +291,43 @@ export function SettingsScreen({
                 <button type="button" onClick={() => onOpenProfile("all")}>Users</button>{" "}
                 screen.
               </p>
+            </section>
+          )}
+          {currentUser.is_admin && (
+            <section className="settings-card settings-share-card" aria-labelledby="settings-share-title">
+              <div className="settings-card-intro">
+                <h2 id="settings-share-title">Workspace address</h2>
+                <p>
+                  Set the address people should use when Mianotes creates guest links for shared notes.
+                </p>
+              </div>
+              <div className="settings-api-panel settings-share-panel">
+                <label className="settings-api-field">
+                  <span className="sr-only">Workspace address</span>
+                  <span className="settings-api-input-shell">
+                    <span className="settings-api-icon-shell">
+                      <Link size={22} />
+                    </span>
+                    <input
+                      type="url"
+                      value={workspaceUrl}
+                      disabled={isLoadingShareSettings}
+                      placeholder="https://notes.example.com"
+                      onChange={(event) => setWorkspaceUrl(event.currentTarget.value)}
+                    />
+                  </span>
+                  <small>Use the stable address your team opens in the browser.</small>
+                </label>
+                <button
+                  className="settings-api-action"
+                  type="button"
+                  disabled={isSavingShareSettings || isLoadingShareSettings}
+                  onClick={() => void saveShareSettings()}
+                >
+                  {isSavingShareSettings ? <Loader2 className="spin" size={18} /> : null}
+                  Save address
+                </button>
+              </div>
             </section>
           )}
           {currentUser.is_admin && (

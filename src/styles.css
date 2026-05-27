@@ -4273,6 +4273,83 @@ textarea:focus {
   margin: 0 0 18px;
 }
 
+.share-note-copy p {
+  margin: 0;
+  color: #555763;
+  line-height: 1.5;
+}
+
+.share-note-primary {
+  min-width: 142px;
+  padding: 0 18px;
+}
+
+.share-note-secondary {
+  min-height: 44px;
+  padding: 0 18px;
+}
+
+.shared-note-screen {
+  min-height: 100vh;
+  background: #ffffff;
+}
+
+.shared-note-header {
+  display: flex;
+  align-items: center;
+  min-height: 74px;
+  padding: 0 32px;
+  border-bottom: 1px solid #e5e6eb;
+}
+
+.shared-note-header img {
+  width: 132px;
+}
+
+.shared-note-document {
+  max-width: 880px;
+  margin: 0 auto;
+  padding: 56px 28px 80px;
+}
+
+.shared-note-folder {
+  margin: 0 0 10px;
+  color: #777985;
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.shared-note-document h1 {
+  margin: 0;
+  color: #17181d;
+  font-size: 42px;
+  line-height: 1.14;
+}
+
+.shared-note-author {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin: 20px 0 34px;
+  color: #5b5d68;
+  font-weight: 700;
+}
+
+.shared-note-preview {
+  border-top: 1px solid #ececf1;
+  padding-top: 28px;
+}
+
+.shared-note-state {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 320px;
+  color: #686a75;
+}
+
 .publish-screen {
   min-height: 100%;
   background: #ffffff;

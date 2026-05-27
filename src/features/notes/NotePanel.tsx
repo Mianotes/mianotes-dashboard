@@ -2,7 +2,6 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import type { MDXEditorMethods } from "@mdxeditor/editor";
 import { apiFetch, mediaPath } from "../../api/client";
 import type { NoteRecord, UserRecord } from "../../api/types";
-import { appUrlForPath, noteRoutePath } from "../../utils/internalRoutes";
 import { isNoteJobActive, isNoteIndexing, noteBodyMarkdown, noteJobBadge } from "../../utils/notes";
 import { AskMiaPanel } from "./AskMiaPanel";
 import { NoteAuthorMeta } from "./NoteAuthorMeta";
@@ -22,6 +21,7 @@ export function NotePanel({
   onRefresh,
   onEditModeChange,
   onMove,
+  onShare,
   onDeleted
 }: {
   note: NoteRecord;
@@ -32,6 +32,7 @@ export function NotePanel({
   onRefresh: () => Promise<void>;
   onEditModeChange: (isEditing: boolean) => void;
   onMove: (note: NoteRecord) => void;
+  onShare: (note: NoteRecord) => void;
   onDeleted: () => Promise<void>;
 }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -179,10 +180,6 @@ export function NotePanel({
     return () => window.removeEventListener("keydown", saveFromKeyboard);
   }, [canChangeNote, draftText, isEditing, isSaving, note.id]);
 
-  async function copyShareLink() {
-    await navigator.clipboard?.writeText(appUrlForPath(noteRoutePath(note.id)));
-  }
-
   async function deleteNote() {
     if (!canChangeNote) {
       setNoteError(cannotChangeNoteMessage);
@@ -234,7 +231,7 @@ export function NotePanel({
         onCancel={cancelEditing}
         onEdit={startEditing}
         onMove={() => onMove(note)}
-        onShare={copyShareLink}
+        onShare={() => onShare(note)}
         onDelete={deleteNote}
       />
       {noteError && (

@@ -55,6 +55,8 @@ export type NoteRecord = {
   comments_url?: string;
   source_files?: SourceFileRecord[];
   tags?: TagRecord[];
+  shared_at?: string | null;
+  share_url?: string | null;
   job_id?: string | null;
   job_status?: string | null;
 };
@@ -104,6 +106,14 @@ export type StorageSwitchResponse = {
 export type ServiceApiKeyRecord = {
   token: string;
   api_url: string;
+};
+
+export type ShareSettingsRecord = {
+  workspace_url: string | null;
+};
+
+export type NoteShareRecord = {
+  share_url: string;
 };
 
 export type PublishThemeRecord = {

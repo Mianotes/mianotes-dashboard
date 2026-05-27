@@ -75,10 +75,12 @@ function note(overrides: Record<string, unknown> = {}) {
 
 type MockAppOptions = {
   authenticated?: boolean;
+  workspaceUrl?: string | null;
 };
 
 async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
   let authenticated = options.authenticated ?? true;
+  let workspaceUrl = options.workspaceUrl ?? null;
   const requests: Record<string, unknown[]> = {};
   const notes = [note()];
   const users = [adminUser, memberUser];
@@ -264,8 +266,12 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
       return;
     }
 
-    if (path.startsWith("/api/notes/") && method === "GET") {
-      await fulfill(route, notes.find((item) => path.endsWith(String(item.id))) ?? notes[0]);
+    if (path.startsWith("/api/notes/shared/") && method === "GET") {
+      await fulfill(route, {
+        ...notes[0],
+        shared_at: now,
+        share_url: "/api/notes/shared/share-token"
+      });
       return;
     }
 
@@ -377,6 +383,26 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
       return;
     }
 
+    if (path.startsWith("/api/notes/") && path.endsWith("/share") && method === "POST") {
+      const noteId = path.split("/")[3];
+      remember("shareNote", { note_id: noteId });
+      const index = notes.findIndex((item) => item.id === noteId);
+      if (index >= 0) {
+        notes[index] = {
+          ...notes[index],
+          shared_at: now,
+          share_url: "http://127.0.0.1:8200/api/notes/shared/share-token"
+        };
+      }
+      await fulfill(route, { share_url: "http://127.0.0.1:8200/api/notes/shared/share-token" });
+      return;
+    }
+
+    if (path.startsWith("/api/notes/") && method === "GET") {
+      await fulfill(route, notes.find((item) => path.endsWith(String(item.id))) ?? notes[0]);
+      return;
+    }
+
     if (path.startsWith("/api/notes/") && method === "PATCH") {
       const payload = await readJson(route);
       remember("noteUpdate", payload);
@@ -445,6 +471,19 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
 
     if (path === "/api/settings/storage" && method === "GET") {
       await fulfill(route, storageSettings);
+      return;
+    }
+
+    if (path === "/api/settings/share" && method === "GET") {
+      await fulfill(route, { workspace_url: workspaceUrl });
+      return;
+    }
+
+    if (path === "/api/settings/share" && method === "PATCH") {
+      const payload = await readJson(route);
+      remember("shareSettings", payload);
+      workspaceUrl = String(payload.workspace_url || "").replace(/\/$/, "") || null;
+      await fulfill(route, { workspace_url: workspaceUrl });
       return;
     }
 
@@ -620,6 +659,45 @@ test("stars a note and persists the change", async ({ page }) => {
   expect(requests.star?.[0]).toMatchObject({ is_starred: true });
 });
 
+test("creates and copies a guest share link when a workspace address is configured", async ({ page, context }) => {
+  const requests = await mockMianotesApi(page, { workspaceUrl: "https://notes.example.test" });
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+
+  await page.goto("/");
+  await page.locator(".note-row-actions").first().getByRole("button", { name: "More note actions" }).click();
+  await page.getByRole("menuitem", { name: "Share" }).click();
+
+  await expect(page.getByRole("status")).toContainText("Guest link copied.");
+  await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(
+    "https://notes.example.test/shared/share-token"
+  );
+  expect(requests.shareNote?.[0]).toMatchObject({ note_id: "note-demo" });
+});
+
+test("blocks local share links until a workspace address is configured", async ({ page }) => {
+  await mockMianotesApi(page);
+
+  await page.goto("/");
+  await page.locator(".note-row-actions").first().getByRole("button", { name: "More note actions" }).click();
+  await page.getByRole("menuitem", { name: "Share" }).click();
+
+  const dialog = page.getByRole("dialog", { name: "Set a workspace address to share this note" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toContainText("Local and private network addresses can stop working");
+  await expect(dialog.getByRole("button", { name: "Go to settings" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Download PDF" })).toBeVisible();
+});
+
+test("opens guest shared notes without signing in", async ({ page }) => {
+  await mockMianotesApi(page, { authenticated: false });
+
+  await page.goto("/shared/share-token");
+
+  await expect(page.getByRole("heading", { name: "Getting started" })).toBeVisible();
+  await expect(page.getByText("Welcome to Mianotes.").first()).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sign in" })).toBeHidden();
+});
+
 test("validates publish JSON before publishing and hides the form after success", async ({ page }) => {
   const requests = await mockMianotesApi(page);
 
@@ -656,6 +734,20 @@ test("creates an API key from settings and shows the generated environment varia
   await expect(page.getByText("MIANOTES_API_KEY")).toBeVisible();
   await expect(page.locator('input[value="mia_test_key"]')).toBeVisible();
   expect(requests.apiKey).toHaveLength(1);
+});
+
+test("saves a workspace address from settings", async ({ page }) => {
+  const requests = await mockMianotesApi(page);
+
+  await page.goto("/");
+  await page.locator(".account-avatar-button").click();
+  await page.getByRole("menuitem", { name: "Settings" }).click();
+  await page.getByPlaceholder("https://notes.example.com").fill("https://notes.example.test/");
+  await page.getByRole("button", { name: "Save address" }).click();
+
+  await expect(page.getByRole("status")).toContainText("Workspace address saved.");
+  await expect(page.getByPlaceholder("https://notes.example.com")).toHaveValue("https://notes.example.test");
+  expect(requests.shareSettings?.[0]).toMatchObject({ workspace_url: "https://notes.example.test/" });
 });
 
 test("creates and switches workspace folders from settings", async ({ page }) => {

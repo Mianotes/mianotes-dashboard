@@ -8,8 +8,23 @@ import { useDashboardLifecycle } from "./features/dashboard/useDashboardLifecycl
 import { useDashboardNavigation } from "./features/dashboard/useDashboardNavigation";
 import { useDashboardNotes } from "./features/dashboard/useDashboardNotes";
 import { useWorkspaceData } from "./features/dashboard/useWorkspaceData";
+import { SharedNoteScreen } from "./features/shared/SharedNoteScreen";
+
+function sharedNoteTokenFromPath() {
+  if (typeof window === "undefined") return null;
+  const match = window.location.pathname.match(/^\/shared\/([^/]+)\/?$/);
+  return match ? decodeURIComponent(match[1]) : null;
+}
 
 export function App() {
+  const sharedNoteToken = sharedNoteTokenFromPath();
+  if (sharedNoteToken) {
+    return <SharedNoteScreen token={sharedNoteToken} />;
+  }
+  return <AuthenticatedApp />;
+}
+
+function AuthenticatedApp() {
   const workspace = useWorkspaceData();
   const {
     currentUser,

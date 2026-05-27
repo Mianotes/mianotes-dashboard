@@ -4,7 +4,6 @@ import { apiFetch } from "../../api/client";
 import type { NoteRecord, UserRecord } from "../../api/types";
 import { UserAvatar } from "../../components/ui/UserAvatar";
 import { relativeTime } from "../../utils/format";
-import { appUrlForPath, noteRoutePath } from "../../utils/internalRoutes";
 import { badgeTone, isNoteJobActive, isNoteIndexing, noteExcerpt, noteJobBadge, sourceIcon } from "../../utils/notes";
 import { NoteActionsMenu } from "./NoteActionsMenu";
 
@@ -15,6 +14,7 @@ type NoteRowProps = {
   onToggleStar: () => void;
   onEdit: () => void;
   onMove: () => void;
+  onShare: () => void;
   onDeleted: () => Promise<void>;
   onError: (message: string | null) => void;
 };
@@ -26,6 +26,7 @@ export function NoteRow({
   onToggleStar,
   onEdit,
   onMove,
+  onShare,
   onDeleted,
   onError
 }: NoteRowProps) {
@@ -44,10 +45,6 @@ export function NoteRow({
     if (event.key !== "Enter" && event.key !== " ") return;
     event.preventDefault();
     onClick();
-  }
-
-  async function copyShareLink() {
-    await navigator.clipboard?.writeText(appUrlForPath(noteRoutePath(note.id)));
   }
 
   async function deleteNote() {
@@ -121,7 +118,7 @@ export function NoteRow({
           cannotEditNoteMessage={cannotEditNoteMessage}
           onEdit={onEdit}
           onMove={onMove}
-          onShare={copyShareLink}
+          onShare={onShare}
           onDelete={deleteNote}
         />
       </div>
