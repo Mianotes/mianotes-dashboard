@@ -716,6 +716,8 @@ test("opens guest shared notes without signing in", async ({ page }) => {
 
   await expect(page.getByRole("heading", { name: "Getting started" })).toBeVisible();
   await expect(page.getByText("Welcome to Mianotes.").first()).toBeVisible();
+  await expect(page.locator(".shared-note-screen > header")).toHaveCount(0);
+  await expect(page.locator(".shared-note-footer img")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeHidden();
 });
 

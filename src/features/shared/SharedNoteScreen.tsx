@@ -44,9 +44,6 @@ export function SharedNoteScreen({ token }: SharedNoteScreenProps) {
 
   return (
     <main className="shared-note-screen">
-      <header className="shared-note-header">
-        <img src={logoUrl} alt="Mianotes" />
-      </header>
       <article className="shared-note-document">
         {isLoading ? (
           <div className="shared-note-state">
@@ -76,6 +73,9 @@ export function SharedNoteScreen({ token }: SharedNoteScreenProps) {
           </>
         ) : null}
       </article>
+      <footer className="shared-note-footer">
+        <img src={logoUrl} alt="Mianotes" />
+      </footer>
     </main>
   );
 }
