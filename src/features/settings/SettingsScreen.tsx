@@ -86,6 +86,7 @@ export function SettingsScreen({
   const [settingsError, setSettingsError] = useState<string | null>(null);
   const [settingsMessage, setSettingsMessage] = useState<string | null>(null);
   const [apiToken, setApiToken] = useState("");
+  const [apiTokenUrl, setApiTokenUrl] = useState("");
   const [isCreatingApiToken, setIsCreatingApiToken] = useState(false);
 
   useEffect(() => {
@@ -142,12 +143,14 @@ export function SettingsScreen({
     setSettingsError(null);
     setSettingsMessage(null);
     setApiToken("");
+    setApiTokenUrl("");
     try {
       const createdToken = await apiFetch<ServiceApiKeyRecord>("/api/settings/api-key", {
         method: "POST",
         body: JSON.stringify({})
       });
       setApiToken(createdToken.token);
+      setApiTokenUrl(createdToken.api_url);
     } catch (error) {
       setSettingsError(error instanceof Error ? error.message : "Could not create an API key.");
     } finally {
@@ -169,8 +172,9 @@ export function SettingsScreen({
     ?? currentFolderPath;
   const currentFolderDescription = `Current folder: ${compactFolderPath(currentFolderPath)}`;
   const adminUsers = users.filter((user) => user.is_admin);
+  const apiEnvironmentUrlValue = apiTokenUrl || apiEnvironmentUrl();
   const apiEnvironmentSnippet = [
-    `MIANOTES_API_URL="${apiEnvironmentUrl()}"`,
+    `MIANOTES_API_URL="${apiEnvironmentUrlValue}"`,
     `MIANOTES_API_KEY="${apiToken}"`
   ].join("\n");
 
@@ -301,7 +305,7 @@ export function SettingsScreen({
                     <pre aria-label={apiEnvironmentSnippet}>
                       <code>
                         <span className="shell-variable">MIANOTES_API_URL</span>=
-                        <span className="shell-value">"{apiEnvironmentUrl()}"</span>
+                        <span className="shell-value">"{apiEnvironmentUrlValue}"</span>
                         {"\n"}
                         <span className="shell-variable">MIANOTES_API_KEY</span>=
                         <span className="shell-value">"{apiToken}"</span>

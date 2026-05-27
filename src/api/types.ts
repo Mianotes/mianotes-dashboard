@@ -103,6 +103,7 @@ export type StorageSwitchResponse = {
 
 export type ServiceApiKeyRecord = {
   token: string;
+  api_url: string;
 };
 
 export type PublishThemeRecord = {
