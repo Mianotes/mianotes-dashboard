@@ -118,7 +118,17 @@ export function DashboardShell({
 
   useEffect(() => {
     setShareSuccessMessage(null);
-  }, [navigation.workspaceView]);
+  }, [navigation.workspaceView, openedNote?.id]);
+
+  useEffect(() => {
+    if (!shareSuccessMessage) return undefined;
+
+    const timeoutId = window.setTimeout(() => {
+      setShareSuccessMessage(null);
+    }, 4000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [shareSuccessMessage]);
 
   useEffect(() => {
     if (!navigation.isSidebarOpen) return;

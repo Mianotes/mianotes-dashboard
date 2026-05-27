@@ -5201,6 +5201,21 @@ textarea:focus {
   background: #eaf8ef;
 }
 
+.dashboard-notice.success button:hover {
+  background: rgba(29, 107, 53, 0.08);
+}
+
+.share-copy-notice {
+  position: fixed;
+  top: 20px;
+  right: 24px;
+  z-index: 80;
+  width: auto;
+  max-width: min(420px, calc(100vw - 32px));
+  margin: 0;
+  box-shadow: 0 16px 42px rgba(24, 25, 31, 0.14);
+}
+
 @media (max-width: 780px) {
   .publish-toolbar {
     flex-wrap: nowrap;

@@ -679,6 +679,21 @@ test("creates and copies a guest share link when a workspace address is configur
   expect(requests.shareNote?.[0]).toMatchObject({ note_id: "note-demo" });
 });
 
+test("clears the copied share link notice when returning from a note", async ({ page, context }) => {
+  await mockMianotesApi(page, { workspaceUrl: "https://notes.example.test" });
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+
+  await page.goto("/");
+  await page.locator(".note-row").first().click();
+  await page.getByLabel("More note actions").click();
+  await page.getByRole("menuitem", { name: "Share" }).click();
+
+  const shareNotice = page.getByRole("status").filter({ hasText: "Share link copied to clipboard" });
+  await expect(shareNotice).toBeVisible();
+  await page.getByLabel("Back to notes").click();
+  await expect(shareNotice).toBeHidden();
+});
+
 test("blocks local share links until a workspace address is configured", async ({ page }) => {
   await mockMianotesApi(page);
 
