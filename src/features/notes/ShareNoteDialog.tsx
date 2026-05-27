@@ -56,9 +56,9 @@ export function ShareNoteDialog({
     <Modal className="folder-modal share-note-modal" labelledBy="share-note-title" onClose={onClose}>
       <header className="folder-modal-header">
         <div>
-          <h2 id="share-note-title">Set a workspace address to share this note</h2>
+          <h2 id="share-note-title">Share this note</h2>
           <p>
-            Local and private network addresses can stop working when someone opens the link from Slack.
+            This note is using a local Mianotes address, so the link may not work for other people.
           </p>
         </div>
         <button className="icon-button" type="button" aria-label="Close" onClick={onClose}>
@@ -66,17 +66,9 @@ export function ShareNoteDialog({
         </button>
       </header>
       <div className="folder-modal-body share-note-copy">
-        {currentUser.is_admin ? (
-          <p>
-            Add a workspace address so Mianotes can create reliable guest links. Until then, you can share this note as
-            a PDF.
-          </p>
-        ) : (
-          <p>
-            Ask an admin to set a workspace address before sharing guest links. Until then, you can share this note as a
-            PDF.
-          </p>
-        )}
+        <p>
+          Add a public workspace address to create reliable links. Or download the note as a PDF and share it yourself.
+        </p>
       </div>
       <div className="folder-modal-actions share-note-actions">
         {currentUser.is_admin ? (

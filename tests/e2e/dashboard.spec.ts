@@ -681,9 +681,10 @@ test("blocks local share links until a workspace address is configured", async (
   await page.locator(".note-row-actions").first().getByRole("button", { name: "More note actions" }).click();
   await page.getByRole("menuitem", { name: "Share" }).click();
 
-  const dialog = page.getByRole("dialog", { name: "Set a workspace address to share this note" });
+  const dialog = page.getByRole("dialog", { name: "Share this note" });
   await expect(dialog).toBeVisible();
-  await expect(dialog).toContainText("Local and private network addresses can stop working");
+  await expect(dialog).toContainText("This note is using a local Mianotes address");
+  await expect(dialog).toContainText("Add a public workspace address to create reliable links");
   await expect(dialog.getByRole("button", { name: "Go to settings" })).toBeVisible();
   await expect(dialog.getByRole("button", { name: "Download PDF" })).toBeVisible();
 });
