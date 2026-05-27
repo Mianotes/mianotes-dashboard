@@ -382,7 +382,7 @@ export function ProfileScreen({
           <div className="folder-modal-header">
             <div>
               <h2 id="profile-delete-modal-title">Delete user</h2>
-              <p>Delete {pendingDeleteUser.name} from this workspace?</p>
+              <p>Delete "{pendingDeleteUser.name}" from this workspace?</p>
             </div>
             <button
               className="icon-button"
@@ -397,8 +397,8 @@ export function ProfileScreen({
             <div className="profile-admin-warning danger">
               <Trash2 size={18} />
               <span>
-                This removes their account, folders, notes, and source file records from this
-                workspace. Files on disk are left untouched.
+                This will remove their account, folders, notes, and source file records from this
+                workspace. Files on disk will not be deleted.
               </span>
             </div>
           </div>
