@@ -14,6 +14,10 @@ vite.config.d.ts
 # Logs
 npm-debug.log*
 
+# Test output
+playwright-report/
+test-results/
+
 # OS and local tooling
 .DS_Store
 .gstack/
