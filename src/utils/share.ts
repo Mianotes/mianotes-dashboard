@@ -20,6 +20,20 @@ export function shareTokenFromApiUrl(shareUrl: string) {
   return parts[parts.length - 1] ?? "";
 }
 
-export function guestShareUrl(baseUrl: string, shareUrl: string) {
-  return `${baseUrl.replace(/\/$/, "")}/shared/${encodeURIComponent(shareTokenFromApiUrl(shareUrl))}`;
+export function noteShareSlug(title: string, maxLength = 35) {
+  const slug = title
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  return slug.slice(0, maxLength).replace(/-+$/g, "") || "note";
+}
+
+export function guestShareUrl(baseUrl: string, shareUrl: string, title?: string) {
+  const token = encodeURIComponent(shareTokenFromApiUrl(shareUrl));
+  const slug = title ? noteShareSlug(title) : null;
+  const path = slug ? `/shared/${encodeURIComponent(slug)}/${token}` : `/shared/${token}`;
+  return `${baseUrl.replace(/\/$/, "")}${path}`;
 }

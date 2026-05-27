@@ -671,7 +671,7 @@ test("creates and copies a guest share link when a workspace address is configur
   await expect(shareNotice).toBeVisible();
   await expect(shareNotice).toHaveClass(/success/);
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(
-    "https://notes.example.test/shared/share-token"
+    "https://notes.example.test/shared/getting-started/share-token"
   );
   await page.locator(".account-avatar-button").click();
   await page.getByRole("menuitem", { name: "Settings" }).click();
@@ -712,7 +712,7 @@ test("blocks local share links until a workspace address is configured", async (
 test("opens guest shared notes without signing in", async ({ page }) => {
   await mockMianotesApi(page, { authenticated: false });
 
-  await page.goto("/shared/share-token");
+  await page.goto("/shared/getting-started/share-token");
 
   await expect(page.getByRole("heading", { name: "Getting started" })).toBeVisible();
   await expect(page.getByText("Welcome to Mianotes.").first()).toBeVisible();

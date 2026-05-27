@@ -12,8 +12,9 @@ import { SharedNoteScreen } from "./features/shared/SharedNoteScreen";
 
 function sharedNoteTokenFromPath() {
   if (typeof window === "undefined") return null;
-  const match = window.location.pathname.match(/^\/shared\/([^/]+)\/?$/);
-  return match ? decodeURIComponent(match[1]) : null;
+  const parts = window.location.pathname.split("/").filter(Boolean);
+  if (parts[0] !== "shared" || parts.length < 2) return null;
+  return decodeURIComponent(parts[parts.length - 1]);
 }
 
 export function App() {

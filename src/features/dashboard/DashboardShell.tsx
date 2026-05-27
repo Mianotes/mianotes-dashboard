@@ -108,7 +108,7 @@ export function DashboardShell({
         method: "POST",
         body: JSON.stringify({})
       });
-      await navigator.clipboard?.writeText(guestShareUrl(shareBase, share.share_url));
+      await navigator.clipboard?.writeText(guestShareUrl(shareBase, share.share_url, note.title));
       setShareSuccessMessage("Share link copied to clipboard");
     } catch (error) {
       setShareSuccessMessage(null);
