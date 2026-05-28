@@ -64,6 +64,7 @@ export function ProfileToolbar({
       onOpenSettings={onOpenSettings}
       onSignOut={onSignOut}
       onSwitchWorkspace={onSwitchWorkspace}
+      showWorkspaceBreadcrumb={false}
     >
         {isAddingUser ? (
           <>

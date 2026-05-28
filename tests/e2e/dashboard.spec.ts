@@ -923,6 +923,7 @@ test("creates and switches workspaces from settings without ending the session",
   await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeHidden();
   await expect(page.locator(".breadcrumb")).toContainText("Field notes");
+  await expect(page.locator(".breadcrumb-workspace-switcher")).toHaveCount(1);
   expect(requests.storageLocation?.[0]).toMatchObject({
     name: "Field notes",
     folder_path: "/tmp/test-user/Field notes"
@@ -947,22 +948,32 @@ test("opens shareable internal URLs for notes, folders, users, console, publish,
 
   await page.goto("/users");
   await expect(page.getByRole("region", { name: "All user profiles" })).toBeVisible();
+  await expect(page.locator(".breadcrumb")).toHaveText("UsersAll users");
+  await expect(page.locator(".breadcrumb-workspace-switcher")).toHaveCount(0);
 
   await page.goto("/user/user-member/profile");
   await expect(page.getByRole("heading", { name: "Member User" })).toBeVisible();
+  await expect(page.locator(".breadcrumb")).toHaveText("UsersMember User");
+  await expect(page.locator(".breadcrumb-workspace-switcher")).toHaveCount(0);
 
   await page.goto("/jobs");
   await expect(page.getByRole("heading", { level: 1, name: "Console" })).toBeVisible();
+  await expect(page.locator(".breadcrumb")).toHaveText("Console");
+  await expect(page.locator(".breadcrumb-workspace-switcher")).toHaveCount(0);
   await expect(page.getByRole("row", { name: /succeeded.*Parse Url/ })).toBeVisible();
   await page.getByRole("button", { name: "Open Admin User profile" }).click();
   await expect(page).toHaveURL(/\/user\/user-admin\/profile$/);
   await expect(page.getByRole("heading", { name: "Admin User" })).toBeVisible();
+  await expect(page.locator(".breadcrumb")).toHaveText("UsersAdmin User");
 
   await page.goto("/publish");
   await expect(page.getByRole("heading", { name: "Publish your notes" })).toBeVisible();
+  await expect(page.locator(".breadcrumb-workspace-switcher")).toHaveCount(1);
 
   await page.goto("/settings");
   await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
+  await expect(page.locator(".breadcrumb")).toHaveText("Settings");
+  await expect(page.locator(".breadcrumb-workspace-switcher")).toHaveCount(0);
 });
 
 test("updates a team member password and makes them an admin", async ({ page }) => {

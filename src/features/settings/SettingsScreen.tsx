@@ -245,6 +245,7 @@ export function SettingsScreen({
         onOpenSettings={onOpenSettings}
         onSignOut={onSignOut}
         onSwitchWorkspace={onSwitchWorkspace}
+        showWorkspaceBreadcrumb={false}
       />
       <section className="settings-surface">
         <div className="settings-content">

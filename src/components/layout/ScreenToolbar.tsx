@@ -23,6 +23,7 @@ type ScreenToolbarProps = {
   className?: string;
   onOpenSettings?: () => void;
   onSwitchWorkspace: (locationId: string) => Promise<void>;
+  showWorkspaceBreadcrumb?: boolean;
 };
 
 export function ScreenToolbar({
@@ -38,7 +39,8 @@ export function ScreenToolbar({
   children,
   className,
   onOpenSettings,
-  onSwitchWorkspace
+  onSwitchWorkspace,
+  showWorkspaceBreadcrumb = true
 }: ScreenToolbarProps) {
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const accountMenuRef = useRef<HTMLDivElement | null>(null);
@@ -60,17 +62,21 @@ export function ScreenToolbar({
         </button>
         <Breadcrumb
           items={[
-            {
-              label: workspaceName,
-              leading: (
-                <WorkspaceSwitcher
-                  className="breadcrumb-workspace-switcher"
-                  storageSettings={storageSettings}
-                  icon={<DashboardIcon size={18} />}
-                  onSwitchWorkspace={onSwitchWorkspace}
-                />
-              )
-            },
+            ...(showWorkspaceBreadcrumb
+              ? [
+                  {
+                    label: workspaceName,
+                    leading: (
+                      <WorkspaceSwitcher
+                        className="breadcrumb-workspace-switcher"
+                        storageSettings={storageSettings}
+                        icon={<DashboardIcon size={18} />}
+                        onSwitchWorkspace={onSwitchWorkspace}
+                      />
+                    )
+                  }
+                ]
+              : []),
             ...breadcrumbItems
           ]}
         />

@@ -145,6 +145,7 @@ export function JobsScreen({
         onOpenSettings={onOpenSettings}
         onSignOut={onSignOut}
         onSwitchWorkspace={onSwitchWorkspace}
+        showWorkspaceBreadcrumb={false}
       />
 
       <div className="jobs-document">
