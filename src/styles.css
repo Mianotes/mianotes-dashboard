@@ -3124,6 +3124,7 @@ textarea:focus {
   max-width: 360px;
   color: #73757f;
   font-size: 13px;
+  font-weight: 400;
   line-height: 1.4;
 }
 

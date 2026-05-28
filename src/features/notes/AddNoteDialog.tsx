@@ -141,7 +141,6 @@ export function AddNoteDialog({
                 onChange={(event) => setUrl(event.target.value)}
                 placeholder="https://example.com/article"
               />
-              <small className="field-help">Mia will save a draft now, then replace it with the page contents once indexing is complete.</small>
             </label>
           )}
           <label className="field-label">
@@ -152,6 +151,11 @@ export function AddNoteDialog({
               value={title}
               onChange={(event) => setTitle(event.target.value)}
             />
+            {mode === "link" && (
+              <small className="field-help">
+                Mia will save a draft now, then replace it with the page contents once indexing is complete.
+              </small>
+            )}
           </label>
           {mode === "text" && (
             <label className="field-label">
