@@ -12,7 +12,6 @@ import { useEffect, useRef } from "react";
 import type { RefCallback } from "react";
 import type { FolderRecord, StorageSettingsRecord, TagRecord, UserRecord } from "../../api/types";
 import { DashboardIcon } from "../icons/DashboardIcon";
-import { FolderIcon } from "../icons/FolderIcon";
 import { AccountMenu } from "./AccountMenu";
 import { Breadcrumb } from "./Breadcrumb";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
@@ -84,19 +83,12 @@ export function Toolbar({
   const searchShortcutLabel = /Mac|iPhone|iPad|iPod/.test(navigator.platform) ? "⌘K" : "Ctrl K";
   const rootBreadcrumbItems = selectedFolder
     ? [
-        { label: "Folder", icon: <FolderIcon size={18} /> },
         {
           label: selectedFolder.name,
           current: breadcrumbItems.length === 0 && !selectedTag
         }
       ]
-    : [
-        {
-          label: "Dashboard",
-          icon: <DashboardIcon size={18} />,
-          current: breadcrumbItems.length === 0 && !selectedTag
-        }
-      ];
+    : [];
 
   useEffect(() => {
     function focusSearch(event: KeyboardEvent) {
@@ -121,13 +113,20 @@ export function Toolbar({
       >
         <Menu size={20} />
       </button>
-      <WorkspaceSwitcher
-        storageSettings={storageSettings}
-        onSwitchWorkspace={onSwitchWorkspace}
-      />
       <Breadcrumb
         items={[
-          { label: workspaceName },
+          {
+            label: workspaceName,
+            current: rootBreadcrumbItems.length === 0 && breadcrumbItems.length === 0 && !selectedTag,
+            leading: (
+              <WorkspaceSwitcher
+                className="breadcrumb-workspace-switcher"
+                storageSettings={storageSettings}
+                icon={<DashboardIcon size={18} />}
+                onSwitchWorkspace={onSwitchWorkspace}
+              />
+            )
+          },
           ...rootBreadcrumbItems,
           ...breadcrumbItems.map((item, index) => ({
             label: item,

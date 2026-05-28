@@ -6,6 +6,7 @@ import { useOutsideAndEscape } from "../../hooks/useOutsideAndEscape";
 import { AccountMenu } from "./AccountMenu";
 import { Breadcrumb } from "./Breadcrumb";
 import type { BreadcrumbItem } from "./Breadcrumb";
+import { DashboardIcon } from "../icons/DashboardIcon";
 import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 
 type ScreenToolbarProps = {
@@ -57,11 +58,22 @@ export function ScreenToolbar({
         <button className="back-square-button" type="button" onClick={onBack} aria-label={backLabel}>
           <ChevronLeft size={16} />
         </button>
-        <WorkspaceSwitcher
-          storageSettings={storageSettings}
-          onSwitchWorkspace={onSwitchWorkspace}
+        <Breadcrumb
+          items={[
+            {
+              label: workspaceName,
+              leading: (
+                <WorkspaceSwitcher
+                  className="breadcrumb-workspace-switcher"
+                  storageSettings={storageSettings}
+                  icon={<DashboardIcon size={18} />}
+                  onSwitchWorkspace={onSwitchWorkspace}
+                />
+              )
+            },
+            ...breadcrumbItems
+          ]}
         />
-        <Breadcrumb items={[{ label: workspaceName }, ...breadcrumbItems]} />
       </div>
       <div className="toolbar-actions">
         {children}

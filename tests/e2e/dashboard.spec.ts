@@ -615,7 +615,7 @@ test("admin signup captures the workspace access choice", async ({ page }) => {
   await page.getByPlaceholder("Confirm password").fill("secret-password");
   await page.getByRole("button", { name: "Create account" }).click();
 
-  await expect(page.locator("header").getByText("Dashboard", { exact: true })).toBeVisible();
+  await expect(page.locator("header").getByText("Mianotes", { exact: true })).toBeVisible();
   expect(requests.join?.[0]).toMatchObject({ workspace_access_mode: "admin_only" });
 });
 
@@ -911,6 +911,9 @@ test("opens shareable internal URLs for notes, folders, users, console, publish,
 
   await page.goto("/folder/archive");
   await expect(page.getByRole("button", { name: /Archive/ })).toHaveClass(/active/);
+  await expect(page.locator(".breadcrumb")).toContainText("Mianotes");
+  await expect(page.locator(".breadcrumb")).toContainText("Archive");
+  await expect(page.locator(".breadcrumb").getByText("Folder", { exact: true })).toHaveCount(0);
 
   await page.goto("/users");
   await expect(page.getByRole("region", { name: "All user profiles" })).toBeVisible();

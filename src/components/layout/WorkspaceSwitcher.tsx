@@ -1,5 +1,6 @@
 import { Loader2 } from "lucide-react";
 import { useRef, useState } from "react";
+import type { ReactNode } from "react";
 import type { StorageSettingsRecord } from "../../api/types";
 import { useOutsideAndEscape } from "../../hooks/useOutsideAndEscape";
 import { FolderIcon } from "../icons/FolderIcon";
@@ -7,11 +8,15 @@ import { FolderIcon } from "../icons/FolderIcon";
 type WorkspaceSwitcherProps = {
   storageSettings: StorageSettingsRecord | null;
   onSwitchWorkspace: (locationId: string) => Promise<void>;
+  icon?: ReactNode;
+  className?: string;
 };
 
 export function WorkspaceSwitcher({
   storageSettings,
-  onSwitchWorkspace
+  onSwitchWorkspace,
+  icon,
+  className
 }: WorkspaceSwitcherProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [switchingLocationId, setSwitchingLocationId] = useState<string | null>(null);
@@ -35,7 +40,7 @@ export function WorkspaceSwitcher({
   }
 
   return (
-    <div className="workspace-switcher" ref={menuRef}>
+    <div className={["workspace-switcher", className].filter(Boolean).join(" ")} ref={menuRef}>
       <button
         className="workspace-switcher-button"
         type="button"
@@ -45,7 +50,7 @@ export function WorkspaceSwitcher({
         disabled={!storageSettings || locations.length === 0}
         onClick={() => setIsOpen((value) => !value)}
       >
-        <FolderIcon size={18} />
+        {icon ?? <FolderIcon size={18} />}
       </button>
       {isOpen && (
         <div className="workspace-switcher-popover" role="menu">
