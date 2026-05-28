@@ -23,6 +23,7 @@ export function useDashboardLifecycle({
     folders,
     tags,
     notes,
+    activeWorkspace,
     isWorkspaceLoaded,
     bootstrap,
     refreshNotes: refreshWorkspaceNotes,
@@ -189,7 +190,8 @@ export function useDashboardLifecycle({
         profileUserId,
         noteIdToEditOnOpen
       },
-      folders
+      folders,
+      activeWorkspace?.id ?? null
     );
     if (window.location.pathname !== nextPath) {
       window.history.replaceState({ mianotesView: "dashboard" }, "", nextPath);
@@ -197,6 +199,7 @@ export function useDashboardLifecycle({
   }, [
     clampedPage,
     currentUser,
+    activeWorkspace?.id,
     folders,
     isWorkspaceLoaded,
     noteIdToEditOnOpen,

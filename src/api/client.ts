@@ -1,4 +1,13 @@
 export const apiBase = import.meta.env.VITE_API_BASE_URL ?? "";
+let apiWorkspaceId: string | null = null;
+
+type ApiFetchOptions = RequestInit & {
+  workspaceId?: string | null;
+};
+
+export function setApiWorkspaceId(workspaceId: string | null) {
+  apiWorkspaceId = workspaceId;
+}
 
 export function apiPath(path: string) {
   return `${apiBase}${path}`;
@@ -49,13 +58,18 @@ export function versionedMediaPath(path: string, version = Date.now()) {
   return `${path}${separator}v=${version}`;
 }
 
-export async function apiFetch<T>(path: string, options: RequestInit = {}): Promise<T> {
+export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise<T> {
+  const { workspaceId, ...requestOptions } = options;
   const headers = new Headers(options.headers);
+  const requestWorkspaceId = workspaceId ?? apiWorkspaceId;
+  if (requestWorkspaceId && path.startsWith("/api/") && !headers.has("X-Mianotes-Workspace")) {
+    headers.set("X-Mianotes-Workspace", requestWorkspaceId);
+  }
   if (!(options.body instanceof FormData) && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
   const response = await fetch(apiPath(path), {
-    ...options,
+    ...requestOptions,
     headers,
     credentials: "include"
   });

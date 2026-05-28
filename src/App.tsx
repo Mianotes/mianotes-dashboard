@@ -1,5 +1,5 @@
 import { Loader2 } from "lucide-react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { AuthScreen } from "./features/auth/AuthScreen";
 import { DashboardShell } from "./features/dashboard/DashboardShell";
 import { useDashboardActions } from "./features/dashboard/useDashboardActions";
@@ -9,6 +9,7 @@ import { useDashboardNavigation } from "./features/dashboard/useDashboardNavigat
 import { useDashboardNotes } from "./features/dashboard/useDashboardNotes";
 import { useWorkspaceData } from "./features/dashboard/useWorkspaceData";
 import { SharedNoteScreen } from "./features/shared/SharedNoteScreen";
+import { readInternalRoute } from "./utils/internalRoutes";
 
 function sharedNoteTokenFromPath() {
   if (typeof window === "undefined") return null;
@@ -26,7 +27,8 @@ export function App() {
 }
 
 function AuthenticatedApp() {
-  const workspace = useWorkspaceData();
+  const initialRoute = useMemo(() => readInternalRoute(), []);
+  const workspace = useWorkspaceData(initialRoute.workspaceId);
   const {
     currentUser,
     users,
@@ -39,6 +41,7 @@ function AuthenticatedApp() {
   } = workspace;
   const navigation = useDashboardNavigation({
     currentUserId: currentUser?.id ?? null,
+    initialRoute,
     resetWorkspaceData
   });
   const {

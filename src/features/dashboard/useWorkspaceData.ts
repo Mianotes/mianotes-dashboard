@@ -1,11 +1,10 @@
 import { useCallback, useState } from "react";
-import { apiFetch } from "../../api/client";
+import { apiFetch, setApiWorkspaceId } from "../../api/client";
 import type {
   FolderRecord,
   NoteRecord,
   StorageCapacityRecord,
   StorageSettingsRecord,
-  StorageSwitchResponse,
   TagRecord,
   UserRecord
 } from "../../api/types";
@@ -15,7 +14,8 @@ type RefreshNotesOptions = {
   onMissingOpenedNote?: (availableNoteIds: Set<string>) => void;
 };
 
-export function useWorkspaceData() {
+export function useWorkspaceData(initialWorkspaceId: string | null = null) {
+  const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(initialWorkspaceId);
   const [currentUser, setCurrentUser] = useState<UserRecord | null>(null);
   const [users, setUsers] = useState<UserRecord[]>([]);
   const [folders, setFolders] = useState<FolderRecord[]>([]);
@@ -28,7 +28,16 @@ export function useWorkspaceData() {
   const [isLoading, setIsLoading] = useState(true);
   const [isWorkspaceLoaded, setIsWorkspaceLoaded] = useState(false);
 
-  const loadWorkspace = useCallback(async () => {
+  const activateWorkspaceSession = useCallback(async (workspaceId: string) => {
+    await apiFetch<unknown>("/api/settings/storage/active", {
+      method: "PATCH",
+      workspaceId,
+      body: JSON.stringify({ location_id: workspaceId })
+    });
+  }, []);
+
+  const loadWorkspace = useCallback(async (workspaceId = activeWorkspaceId) => {
+    setApiWorkspaceId(workspaceId);
     const [
       nextUsers,
       nextFolders,
@@ -46,6 +55,12 @@ export function useWorkspaceData() {
     ]);
 
     const activeFolders = nextFolders.filter((folder) => !folder.archived_at);
+    const resolvedWorkspaceId = workspaceId
+      ?? nextStorageSettings?.active_location
+      ?? nextStorageSettings?.locations[0]?.id
+      ?? null;
+    setActiveWorkspaceId(resolvedWorkspaceId);
+    setApiWorkspaceId(resolvedWorkspaceId);
     setUsers(nextUsers);
     setFolders(activeFolders);
     setTags(nextTags);
@@ -53,21 +68,25 @@ export function useWorkspaceData() {
     setStorageCapacity(nextStorageCapacity);
     setStorageSettings(nextStorageSettings);
     setIsWorkspaceLoaded(true);
-  }, []);
+  }, [activeWorkspaceId]);
 
   const bootstrap = useCallback(async () => {
     setIsLoading(true);
     setIsWorkspaceLoaded(false);
+    setApiWorkspaceId(activeWorkspaceId);
     try {
       const session = await apiFetch<{ user: UserRecord }>("/api/auth/session");
       setCurrentUser(session.user);
-      await loadWorkspace();
+      if (activeWorkspaceId) {
+        await activateWorkspaceSession(activeWorkspaceId);
+      }
+      await loadWorkspace(activeWorkspaceId);
     } catch {
       setCurrentUser(null);
     } finally {
       setIsLoading(false);
     }
-  }, [loadWorkspace]);
+  }, [activateWorkspaceSession, activeWorkspaceId, loadWorkspace]);
 
   const refreshNotes = useCallback(
     async (options: RefreshNotesOptions = {}) => {
@@ -185,14 +204,12 @@ export function useWorkspaceData() {
   const switchWorkspace = useCallback(
     async (locationId: string) => {
       setIsWorkspaceLoaded(false);
-      const response = await apiFetch<StorageSwitchResponse>("/api/settings/storage/active", {
-        method: "PATCH",
-        body: JSON.stringify({ location_id: locationId })
-      });
-      setStorageSettings(response.storage);
-      await loadWorkspace();
+      setActiveWorkspaceId(locationId);
+      setApiWorkspaceId(locationId);
+      await activateWorkspaceSession(locationId);
+      await loadWorkspace(locationId);
     },
-    [loadWorkspace]
+    [activateWorkspaceSession, loadWorkspace]
   );
 
   const activeWorkspace = storageSettings?.locations.find((location) => location.is_active) ?? null;

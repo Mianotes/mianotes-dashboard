@@ -1,14 +1,18 @@
 import type { DashboardUiState, FolderRecord, WorkspaceView } from "../api/types";
 
+type WorkspaceRoute = {
+  workspaceId: string | null;
+};
+
 export type InternalRoute =
-  | { kind: "dashboard" }
-  | { kind: "note"; noteId: string; edit: boolean }
-  | { kind: "folder"; folderName: string }
-  | { kind: "users" }
-  | { kind: "user"; userId: string }
-  | { kind: "publish" }
-  | { kind: "jobs" }
-  | { kind: "settings" };
+  | (WorkspaceRoute & { kind: "dashboard" })
+  | (WorkspaceRoute & { kind: "note"; noteId: string; edit: boolean })
+  | (WorkspaceRoute & { kind: "folder"; folderName: string })
+  | (WorkspaceRoute & { kind: "users" })
+  | (WorkspaceRoute & { kind: "user"; userId: string })
+  | (WorkspaceRoute & { kind: "publish" })
+  | (WorkspaceRoute & { kind: "jobs" })
+  | (WorkspaceRoute & { kind: "settings" });
 
 type RouteState = {
   workspaceView: WorkspaceView;
@@ -25,30 +29,32 @@ type RouteState = {
 
 export function readInternalRoute(pathname = window.location.pathname): InternalRoute {
   const segments = pathname.split("/").filter(Boolean).map(decodeRouteSegment);
-  const [section, id, mode] = segments;
+  const workspaceId = segments[0] === "workspace" && segments[1] ? segments[1] : null;
+  const routeSegments = workspaceId ? segments.slice(2) : segments;
+  const [section, id, mode] = routeSegments;
 
   if (section === "note" && id) {
-    return { kind: "note", noteId: id, edit: mode === "edit" };
+    return { kind: "note", noteId: id, edit: mode === "edit", workspaceId };
   }
   if (section === "folder" && id) {
-    return { kind: "folder", folderName: id };
+    return { kind: "folder", folderName: id, workspaceId };
   }
   if (section === "users" && !id) {
-    return { kind: "users" };
+    return { kind: "users", workspaceId };
   }
   if (section === "user" && id && (!mode || mode === "profile")) {
-    return { kind: "user", userId: id };
+    return { kind: "user", userId: id, workspaceId };
   }
   if (section === "publish" && !id) {
-    return { kind: "publish" };
+    return { kind: "publish", workspaceId };
   }
   if (section === "jobs" && !id) {
-    return { kind: "jobs" };
+    return { kind: "jobs", workspaceId };
   }
   if (section === "settings" && !id) {
-    return { kind: "settings" };
+    return { kind: "settings", workspaceId };
   }
-  return { kind: "dashboard" };
+  return { kind: "dashboard", workspaceId };
 }
 
 export function applyRouteToDashboardState(
@@ -115,30 +121,36 @@ export function findFolderForRoute(folders: FolderRecord[], folderName: string) 
   )) ?? null;
 }
 
-export function routePathForState(state: RouteState, folders: FolderRecord[]) {
+export function routePathForState(
+  state: RouteState,
+  folders: FolderRecord[],
+  workspaceId: string | null
+) {
+  const prefix = workspaceRoutePrefix(workspaceId);
   if (state.openedNoteId) {
     return noteRoutePath(
       state.openedNoteId,
-      state.noteIdToEditOnOpen === state.openedNoteId
+      state.noteIdToEditOnOpen === state.openedNoteId,
+      workspaceId
     );
   }
   if (state.workspaceView === "profile") {
     return state.profileUserId === "all"
-      ? "/users"
-      : `/user/${encodeRouteSegment(state.profileUserId)}/profile`;
+      ? `${prefix}/users`
+      : `${prefix}/user/${encodeRouteSegment(state.profileUserId)}/profile`;
   }
-  if (state.workspaceView === "publish") return "/publish";
-  if (state.workspaceView === "jobs") return "/jobs";
-  if (state.workspaceView === "settings") return "/settings";
+  if (state.workspaceView === "publish") return `${prefix}/publish`;
+  if (state.workspaceView === "jobs") return `${prefix}/jobs`;
+  if (state.workspaceView === "settings") return `${prefix}/settings`;
   if (state.selectedFolderId !== "all") {
     const folder = folders.find((item) => item.id === state.selectedFolderId);
-    return folder ? `/folder/${encodeRouteSegment(folder.slug || folder.name)}` : "/";
+    return folder ? `${prefix}/folder/${encodeRouteSegment(folder.slug || folder.name)}` : prefix || "/";
   }
-  return "/";
+  return prefix || "/";
 }
 
-export function noteRoutePath(noteId: string, edit = false) {
-  return `/note/${encodeRouteSegment(noteId)}${edit ? "/edit" : ""}`;
+export function noteRoutePath(noteId: string, edit = false, workspaceId: string | null = null) {
+  return `${workspaceRoutePrefix(workspaceId)}/note/${encodeRouteSegment(noteId)}${edit ? "/edit" : ""}`;
 }
 
 export function appUrlForPath(path: string) {
@@ -156,6 +168,10 @@ function decodeRouteSegment(value: string) {
 
 function encodeRouteSegment(value: string) {
   return encodeURIComponent(value);
+}
+
+function workspaceRoutePrefix(workspaceId: string | null) {
+  return workspaceId ? `/workspace/${encodeRouteSegment(workspaceId)}` : "";
 }
 
 function normaliseRouteValue(value: string) {

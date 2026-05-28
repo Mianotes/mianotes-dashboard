@@ -11,10 +11,10 @@ import {
 } from "../../utils/dashboardState";
 import {
   applyRouteToDashboardState,
+  type InternalRoute,
   noteEditIdForRoute,
   pendingFolderNameForRoute,
   profileUserIdForRoute,
-  readInternalRoute,
   workspaceViewForRoute
 } from "../../utils/internalRoutes";
 import type { DashboardView } from "./useDashboardNotes";
@@ -23,14 +23,15 @@ import { useWorkspaceNavigation } from "./useWorkspaceNavigation";
 
 type UseDashboardNavigationArgs = {
   currentUserId: string | null;
+  initialRoute: InternalRoute;
   resetWorkspaceData: () => void;
 };
 
 export function useDashboardNavigation({
   currentUserId,
+  initialRoute,
   resetWorkspaceData
 }: UseDashboardNavigationArgs) {
-  const initialRoute = useMemo(() => readInternalRoute(), []);
   const initialUiState = useMemo(
     () => applyRouteToDashboardState(readDashboardUiState(), initialRoute),
     [initialRoute]
