@@ -1,6 +1,7 @@
 export function isLocalOrPrivateHost(hostname: string) {
   const host = hostname.toLowerCase();
   if (host === "localhost" || host === "127.0.0.1" || host === "::1") return true;
+  if (host.endsWith(".local")) return true;
   if (/^10\./.test(host)) return true;
   if (/^192\.168\./.test(host)) return true;
   const match = host.match(/^172\.(\d+)\./);

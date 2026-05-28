@@ -1,4 +1,5 @@
 import { expect, test, type Page, type Route } from "@playwright/test";
+import { stableShareBase } from "../../src/utils/share";
 
 const adminUser = {
   id: "user-admin",
@@ -767,6 +768,14 @@ test("clears the copied share link notice when returning from a note", async ({ 
   await expect(shareNotice).toBeVisible();
   await page.getByLabel("Back to notes").click();
   await expect(shareNotice).toBeHidden();
+});
+
+test("treats local workspace origins as unstable share bases", () => {
+  expect(stableShareBase(null, "http://federico.local:8201")).toBeNull();
+  expect(stableShareBase(null, "http://192.168.1.20:8201")).toBeNull();
+  expect(stableShareBase("https://notes.example.test", "http://federico.local:8201")).toBe(
+    "https://notes.example.test"
+  );
 });
 
 test("blocks local share links until a workspace address is configured", async ({ page, context }) => {
