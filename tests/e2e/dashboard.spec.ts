@@ -773,6 +773,9 @@ test("clears the copied share link notice when returning from a note", async ({ 
 test("treats local workspace origins as unstable share bases", () => {
   expect(stableShareBase(null, "http://federico.local:8201")).toBeNull();
   expect(stableShareBase(null, "http://192.168.1.20:8201")).toBeNull();
+  expect(stableShareBase("fed.com", "http://federico.local:8201")).toBe("https://fed.com");
+  expect(stableShareBase("http://fed.com", "http://federico.local:8201")).toBe("http://fed.com");
+  expect(stableShareBase("http:://fed.com", "http://federico.local:8201")).toBe("http://fed.com");
   expect(stableShareBase("https://notes.example.test", "http://federico.local:8201")).toBe(
     "https://notes.example.test"
   );

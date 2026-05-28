@@ -9,7 +9,12 @@ export function isLocalOrPrivateHost(hostname: string) {
 }
 
 export function stableShareBase(workspaceUrl: string | null, currentOrigin: string) {
-  if (workspaceUrl) return workspaceUrl.replace(/\/$/, "");
+  if (workspaceUrl) {
+    const value = workspaceUrl.trim().replace(/^([a-z][a-z0-9+.-]*)::\/\//i, "$1://").replace(/\/$/, "");
+    if (!value) return null;
+    if (/^https?:\/\//i.test(value)) return value;
+    return `https://${value}`;
+  }
   const origin = new URL(currentOrigin);
   if (isLocalOrPrivateHost(origin.hostname)) return null;
   return origin.origin;

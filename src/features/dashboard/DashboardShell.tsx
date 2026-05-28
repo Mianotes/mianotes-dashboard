@@ -5,6 +5,7 @@ import type { NoteRecord, NoteShareRecord, ShareSettingsRecord, UserRecord } fro
 import logoUrl from "../../assets/logo_small.png";
 import { Sidebar } from "../../components/layout/Sidebar";
 import { Toolbar } from "../../components/layout/Toolbar";
+import { copyTextToClipboard } from "../../utils/clipboard";
 import { guestShareUrl, stableShareBase } from "../../utils/share";
 import { MoveNoteDialog } from "../notes/MoveNoteDialog";
 import { JobsScreen } from "../jobs/JobsScreen";
@@ -120,7 +121,7 @@ export function DashboardShell({
         method: "POST",
         body: JSON.stringify({})
       });
-      await navigator.clipboard?.writeText(guestShareUrl(shareBase, share.share_url, note.title));
+      await copyTextToClipboard(guestShareUrl(shareBase, share.share_url, note.title));
       setShareSuccessMessage("Share link copied to clipboard");
     } catch (error) {
       setShareSuccessMessage(null);
