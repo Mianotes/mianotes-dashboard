@@ -209,14 +209,13 @@ export function useDashboardNavigation({
   const handleDatabaseSwitched = useCallback(() => {
     window.localStorage.removeItem(dashboardUiStateKey);
     navigationStackRef.current = [];
-    resetWorkspaceData();
     restoreNavigationSnapshot({
       ...defaultDashboardUiState,
       workspaceView: "notes",
       profileUserId: "all",
       noteIdToEditOnOpen: null
     });
-  }, [resetWorkspaceData, restoreNavigationSnapshot]);
+  }, [restoreNavigationSnapshot]);
 
   const {
     openProfile,

@@ -6,6 +6,7 @@ import { NoteActionsMenu } from "./NoteActionsMenu";
 
 type NoteDocumentHeaderProps = {
   note: NoteRecord;
+  workspaceName: string;
   folderLabel: string;
   isEditing: boolean;
   isSaving: boolean;
@@ -25,6 +26,7 @@ type NoteDocumentHeaderProps = {
 
 export function NoteDocumentHeader({
   note,
+  workspaceName,
   folderLabel,
   isEditing,
   isSaving,
@@ -48,7 +50,11 @@ export function NoteDocumentHeader({
       </button>
       <Breadcrumb
         className="note-document-breadcrumb"
-        items={[{ label: "Folder", icon: <FolderIcon size={18} /> }, { label: folderLabel, current: true }]}
+        items={[
+          { label: workspaceName },
+          { label: "Folder", icon: <FolderIcon size={18} /> },
+          { label: folderLabel, current: true }
+        ]}
       />
       <div className="panel-actions">
         {isEditing ? (

@@ -4,8 +4,7 @@ import type { ReactNode } from "react";
 import { apiFetch } from "../../api/client";
 import type {
   StorageLocationRecord,
-  StorageSettingsRecord,
-  StorageSwitchResponse
+  StorageSettingsRecord
 } from "../../api/types";
 import { FolderIcon } from "../../components/icons/FolderIcon";
 import { Modal, ModalActions } from "../../components/ui/Modal";
@@ -14,14 +13,14 @@ type DatabaseSwitchModalProps = {
   storageSettings: StorageSettingsRecord;
   onClose: () => void;
   onSettingsChanged: (settings: StorageSettingsRecord) => void;
-  onDatabaseSwitched: () => void;
+  onSwitchWorkspace: (locationId: string) => Promise<void>;
 };
 
 export function DatabaseSwitchModal({
   storageSettings,
   onClose,
   onSettingsChanged,
-  onDatabaseSwitched
+  onSwitchWorkspace
 }: DatabaseSwitchModalProps) {
   const [selectedLocationId, setSelectedLocationId] = useState("");
   const [folderName, setFolderName] = useState("");
@@ -35,12 +34,12 @@ export function DatabaseSwitchModal({
   const selectedLocation = availableLocations.find((location) => location.id === selectedLocationId);
   const trimmedFolderName = folderName.trim();
   const trimmedFolderPath = folderPath.trim();
-  const canCreateFolder = Boolean(trimmedFolderName && trimmedFolderPath);
-  const canSwitchFolder = Boolean(selectedLocation && !selectedLocation.is_active);
+  const canCreateWorkspace = Boolean(trimmedFolderName && trimmedFolderPath);
+  const canSwitchWorkspace = Boolean(selectedLocation && !selectedLocation.is_active);
   const showSwitchAction = Boolean(selectedLocation && !isCreateFormOpen);
 
-  async function createFolderLocation() {
-    if (!canCreateFolder || isSubmitting) return;
+  async function createWorkspaceLocation() {
+    if (!canCreateWorkspace || isSubmitting) return;
     setIsSubmitting(true);
     setError(null);
     try {
@@ -57,24 +56,20 @@ export function DatabaseSwitchModal({
       setFolderPath("");
       setIsCreateFormOpen(false);
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Could not create folder.");
+      setError(error instanceof Error ? error.message : "Could not create workspace.");
     } finally {
       setIsSubmitting(false);
     }
   }
 
-  async function switchSelectedFolder() {
-    if (!canSwitchFolder || isSubmitting || !selectedLocation) return;
+  async function switchSelectedWorkspace() {
+    if (!canSwitchWorkspace || isSubmitting || !selectedLocation) return;
     setIsSubmitting(true);
     setError(null);
     try {
-      await apiFetch<StorageSwitchResponse>("/api/settings/storage/active", {
-        method: "PATCH",
-        body: JSON.stringify({ location_id: selectedLocation.id })
-      });
-      onDatabaseSwitched();
+      await onSwitchWorkspace(selectedLocation.id);
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Could not switch folder.");
+      setError(error instanceof Error ? error.message : "Could not switch workspace.");
     } finally {
       setIsSubmitting(false);
     }
@@ -84,9 +79,9 @@ export function DatabaseSwitchModal({
     <Modal className="folder-modal database-modal" labelledBy="database-switch-title" onClose={onClose}>
         <div className="folder-modal-header database-modal-header">
           <div>
-            <h2 id="database-switch-title">Switch folder</h2>
+            <h2 id="database-switch-title">Switch workspace</h2>
             <p>
-              Each folder has its own notes, users, settings, and agent activity. Choose a folder or create a new one.
+              Each workspace has its own notes, folders, sources, publishing history, and console activity.
             </p>
           </div>
           <button className="icon-button" type="button" aria-label="Close" onClick={onClose}>
@@ -95,24 +90,24 @@ export function DatabaseSwitchModal({
         </div>
         <div className="folder-modal-body database-modal-body">
           {error && <div className="modal-notice danger">{error}</div>}
-          <DatabaseLocationGroup title="Current folder">
+          <DatabaseLocationGroup title="Current workspace">
             {activeLocation && (
               <DatabaseLocationButton
                 location={activeLocation}
                 selected={false}
-                badge="Current folder"
+                badge="Current workspace"
               />
             )}
           </DatabaseLocationGroup>
           {isCreateFormOpen ? (
-            <DatabaseLocationGroup title="Create folder">
-              <div className={`database-create-card ${canCreateFolder ? "selected" : ""}`}>
+            <DatabaseLocationGroup title="Create workspace">
+              <div className={`database-create-card ${canCreateWorkspace ? "selected" : ""}`}>
                 <div className="database-create-icon">
                   <FolderIcon size={22} />
                 </div>
                 <div className="database-create-fields">
                   <label className="database-path-field">
-                    <span>Folder name</span>
+                    <span>Workspace name</span>
                     <input
                       value={folderName}
                       onChange={(event) => {
@@ -122,7 +117,7 @@ export function DatabaseSwitchModal({
                     />
                   </label>
                   <label className="database-path-field">
-                    <span>Folder path</span>
+                    <span>Workspace path</span>
                     <input
                       id="database-folder-path"
                       value={folderPath}
@@ -132,22 +127,22 @@ export function DatabaseSwitchModal({
                         setSelectedLocationId("");
                       }}
                     />
-                    <small>Mianotes will keep private data in a hidden .mianotes folder inside this folder.</small>
+                    <small>Mianotes will keep private data in a hidden .mianotes folder inside this workspace.</small>
                   </label>
                   <button
                     className="primary-button database-create-button"
                     type="button"
-                    disabled={!canCreateFolder || isSubmitting}
-                    onClick={() => void createFolderLocation()}
+                    disabled={!canCreateWorkspace || isSubmitting}
+                    onClick={() => void createWorkspaceLocation()}
                   >
                     {isSubmitting ? <Loader2 className="spin" size={16} /> : <FolderIcon size={16} />}
-                    Create folder
+                    Create workspace
                   </button>
                 </div>
               </div>
             </DatabaseLocationGroup>
           ) : (
-            <DatabaseLocationGroup title="Available folders">
+            <DatabaseLocationGroup title="Available workspaces">
               {availableLocations.length > 0 ? (
                 <div className="database-location-scroll">
                   {availableLocations.map((location) => (
@@ -166,8 +161,8 @@ export function DatabaseSwitchModal({
               ) : (
                 <div className="database-empty-state">
                   <FolderIcon size={38} />
-                  <strong>No other folders were found.</strong>
-                  <span>Create a folder to add another workspace.</span>
+                  <strong>No other workspaces were found.</strong>
+                  <span>Create a workspace to add another knowledge area.</span>
                 </div>
               )}
               <button
@@ -182,7 +177,7 @@ export function DatabaseSwitchModal({
                 }}
               >
                 <Plus size={14} />
-                Create a folder
+                Create a workspace
               </button>
             </DatabaseLocationGroup>
           )}
@@ -190,13 +185,13 @@ export function DatabaseSwitchModal({
         <ModalActions
           className="database-modal-actions"
           onCancel={onClose}
-          onPrimary={showSwitchAction ? () => void switchSelectedFolder() : undefined}
+          onPrimary={showSwitchAction ? () => void switchSelectedWorkspace() : undefined}
           primaryClassName="database-switch-button"
-          primaryDisabled={!canSwitchFolder || isSubmitting}
+          primaryDisabled={!canSwitchWorkspace || isSubmitting}
           primaryIcon={showSwitchAction ? (
             isSubmitting ? <Loader2 className="spin" size={16} /> : <FolderIcon size={16} />
           ) : undefined}
-          primaryLabel={showSwitchAction ? "Switch folder" : undefined}
+          primaryLabel={showSwitchAction ? "Switch workspace" : undefined}
         />
     </Modal>
   );

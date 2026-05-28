@@ -2,7 +2,7 @@ import { Loader2, RefreshCw, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { KeyboardEvent } from "react";
 import { apiFetch } from "../../api/client";
-import type { JobRecord, JobStatus, UserRecord } from "../../api/types";
+import type { JobRecord, JobStatus, StorageSettingsRecord, UserRecord } from "../../api/types";
 import { ConsoleIcon } from "../../components/icons/ConsoleIcon";
 import { ScreenToolbar } from "../../components/layout/ScreenToolbar";
 import { UserAvatar } from "../../components/ui/UserAvatar";
@@ -48,16 +48,22 @@ function clientLogoSvg(job: JobRecord) {
 
 export function JobsScreen({
   currentUser,
+  workspaceName,
+  storageSettings,
   onBack,
   onSignOut,
   onOpenProfile,
-  onOpenSettings
+  onOpenSettings,
+  onSwitchWorkspace
 }: {
   currentUser: UserRecord;
+  workspaceName: string;
+  storageSettings: StorageSettingsRecord | null;
   onBack: () => void;
   onSignOut: () => void;
   onOpenProfile: (profileId?: string | "all") => void;
   onOpenSettings: () => void;
+  onSwitchWorkspace: (locationId: string) => Promise<void>;
 }) {
   const [jobs, setJobs] = useState<JobRecord[]>([]);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(() => jobIdFromUrl());
@@ -129,6 +135,8 @@ export function JobsScreen({
     <section className="jobs-screen">
       <ScreenToolbar
         className="settings-toolbar jobs-toolbar"
+        workspaceName={workspaceName}
+        storageSettings={storageSettings}
         breadcrumbItems={[{ label: "Console", current: true }]}
         currentUser={currentUser}
         onBack={onBack}
@@ -136,6 +144,7 @@ export function JobsScreen({
         onOpenUsers={() => onOpenProfile("all")}
         onOpenSettings={onOpenSettings}
         onSignOut={onSignOut}
+        onSwitchWorkspace={onSwitchWorkspace}
       />
 
       <div className="jobs-document">

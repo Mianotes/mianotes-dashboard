@@ -65,7 +65,10 @@ export function DashboardShell({
     tags,
     notes,
     storageCapacity,
+    storageSettings,
+    activeWorkspace,
     loadWorkspace,
+    switchWorkspace,
     refreshNote,
     addOrMergeNote,
     updateUserInWorkspace,
@@ -94,6 +97,14 @@ export function DashboardShell({
   const activeShareBlockedNote = shareBlockedNote
     ? notes.find((note) => note.id === shareBlockedNote.id) ?? shareBlockedNote
     : null;
+  const workspaceName = activeWorkspace?.name ?? "Workspace";
+
+  async function switchWorkspaceAndReset(locationId: string) {
+    await switchWorkspace(locationId);
+    navigation.handleDatabaseSwitched();
+    setError(null);
+    setShareSuccessMessage(null);
+  }
 
   async function shareNote(note: NoteRecord) {
     setError(null);
@@ -208,6 +219,8 @@ export function DashboardShell({
           {navigation.workspaceView === "notes" && !openedNote && (
             <Toolbar
               isSidebarOpen={navigation.isSidebarOpen}
+              workspaceName={workspaceName}
+              storageSettings={storageSettings}
               breadcrumbItems={breadcrumbItems}
               selectedFolder={selectedFolder}
               selectedTag={selectedTagRecord}
@@ -223,6 +236,7 @@ export function DashboardShell({
               isAccountOpen={navigation.isAccountOpen}
               accountMenuRef={setAccountMenuRef}
               onOpenSidebar={() => navigation.setIsSidebarOpen(true)}
+              onSwitchWorkspace={switchWorkspaceAndReset}
               onClearTag={navigation.clearSelectedTag}
               onSearchChange={(query) => {
                 navigation.setCurrentPage(1);
@@ -256,12 +270,14 @@ export function DashboardShell({
               users={users}
               currentUser={currentUser}
               storageCapacity={storageCapacity}
+              workspaceName={workspaceName}
+              storageSettings={storageSettings}
               onBack={navigation.goBack}
               onSignOut={() => void signOut()}
               onOpenProfile={navigation.openProfile}
               onOpenSettings={navigation.openSettings}
               onFoldersRestored={loadWorkspace}
-              onDatabaseSwitched={navigation.handleDatabaseSwitched}
+              onSwitchWorkspace={switchWorkspaceAndReset}
             />
           ) : navigation.workspaceView === "publish" ? (
             <PublishScreen
@@ -269,19 +285,25 @@ export function DashboardShell({
               folders={folders}
               tags={tags}
               currentUser={currentUser}
+              workspaceName={workspaceName}
+              storageSettings={storageSettings}
               selectedFolderId={navigation.selectedFolderId}
               onBack={navigation.goBack}
               onSignOut={() => void signOut()}
               onOpenProfile={navigation.openProfile}
               onOpenSettings={navigation.openSettings}
+              onSwitchWorkspace={switchWorkspaceAndReset}
             />
           ) : navigation.workspaceView === "jobs" ? (
             <JobsScreen
               currentUser={currentUser}
+              workspaceName={workspaceName}
+              storageSettings={storageSettings}
               onBack={navigation.goBack}
               onSignOut={() => void signOut()}
               onOpenProfile={navigation.openProfile}
               onOpenSettings={navigation.openSettings}
+              onSwitchWorkspace={switchWorkspaceAndReset}
             />
           ) : navigation.workspaceView === "profile" ? (
             <ProfileScreen
@@ -289,6 +311,8 @@ export function DashboardShell({
               notes={notes}
               folders={folders}
               currentUser={currentUser}
+              workspaceName={workspaceName}
+              storageSettings={storageSettings}
               selectedUserId={navigation.profileUserId}
               onSelectUser={navigation.selectProfileUser}
               onBack={navigation.goBack}
@@ -306,11 +330,13 @@ export function DashboardShell({
               }}
               onSelectTag={navigation.openProfileTag}
               onOpenSettings={navigation.openSettings}
+              onSwitchWorkspace={switchWorkspaceAndReset}
             />
           ) : (
             <NotesWorkspace
               error={error}
               successMessage={shareSuccessMessage}
+              workspaceName={workspaceName}
               openedNote={openedNote}
               selectedFolder={selectedFolder}
               currentUser={currentUser}

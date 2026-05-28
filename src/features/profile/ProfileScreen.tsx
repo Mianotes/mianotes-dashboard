@@ -2,7 +2,13 @@ import { Loader2, ShieldCheck, Trash2, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { apiFetch, versionedMediaPath } from "../../api/client";
-import type { FolderRecord, NoteRecord, ProfileDraft, UserRecord } from "../../api/types";
+import type {
+  FolderRecord,
+  NoteRecord,
+  ProfileDraft,
+  StorageSettingsRecord,
+  UserRecord
+} from "../../api/types";
 import { randomAvatarTone } from "../../components/ui/UserAvatar";
 import { Modal, ModalActions } from "../../components/ui/Modal";
 import { AllProfilesView } from "./AllProfilesView";
@@ -16,6 +22,8 @@ export function ProfileScreen({
   notes,
   folders,
   currentUser,
+  workspaceName,
+  storageSettings,
   selectedUserId,
   onSelectUser,
   onBack,
@@ -24,12 +32,15 @@ export function ProfileScreen({
   onUserCreated,
   onUserDeleted,
   onSelectTag,
-  onOpenSettings
+  onOpenSettings,
+  onSwitchWorkspace
 }: {
   users: UserRecord[];
   notes: NoteRecord[];
   folders: FolderRecord[];
   currentUser: UserRecord;
+  workspaceName: string;
+  storageSettings: StorageSettingsRecord | null;
   selectedUserId: string | "all";
   onSelectUser: (userId: string | "all") => void;
   onBack: () => void;
@@ -39,6 +50,7 @@ export function ProfileScreen({
   onUserDeleted: (userId: string) => void;
   onSelectTag: (userId: string, tagSlug: string) => void;
   onOpenSettings: () => void;
+  onSwitchWorkspace: (locationId: string) => Promise<void>;
 }) {
   const selectedUser = selectedUserId === "all"
     ? null
@@ -267,6 +279,8 @@ export function ProfileScreen({
       <ProfileToolbar
         users={users}
         currentUser={currentUser}
+        workspaceName={workspaceName}
+        storageSettings={storageSettings}
         selectedUserId={selectedUserId}
         selectedUser={selectedUser}
         toolbarName={toolbarName}
@@ -286,6 +300,7 @@ export function ProfileScreen({
         }}
         onSignOut={onSignOut}
         onOpenSettings={onOpenSettings}
+        onSwitchWorkspace={onSwitchWorkspace}
       />
 
       {profileError && (

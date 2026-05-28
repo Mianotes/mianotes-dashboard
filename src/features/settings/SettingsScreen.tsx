@@ -61,25 +61,31 @@ export function SettingsScreen({
   users,
   currentUser,
   storageCapacity,
+  workspaceName,
+  storageSettings: dashboardStorageSettings,
   onBack,
   onSignOut,
   onOpenProfile,
   onOpenSettings,
   onFoldersRestored,
-  onDatabaseSwitched
+  onSwitchWorkspace
 }: {
   users: UserRecord[];
   currentUser: UserRecord;
   storageCapacity: StorageCapacityRecord | null;
+  workspaceName: string;
+  storageSettings: StorageSettingsRecord | null;
   onBack: () => void;
   onSignOut: () => void;
   onOpenProfile: (profileId?: string | "all") => void;
   onOpenSettings: () => void;
   onFoldersRestored: () => void | Promise<void>;
-  onDatabaseSwitched: () => void;
+  onSwitchWorkspace: (locationId: string) => Promise<void>;
 }) {
   const [archivedFolders, setArchivedFolders] = useState<FolderRecord[]>([]);
-  const [storageSettings, setStorageSettings] = useState<StorageSettingsRecord | null>(null);
+  const [storageSettings, setStorageSettings] = useState<StorageSettingsRecord | null>(
+    dashboardStorageSettings
+  );
   const [isLoadingArchivedFolders, setIsLoadingArchivedFolders] = useState(true);
   const [isLoadingStorageSettings, setIsLoadingStorageSettings] = useState(true);
   const [isDatabaseModalOpen, setIsDatabaseModalOpen] = useState(false);
@@ -98,6 +104,12 @@ export function SettingsScreen({
     void loadStorageSettings();
     void loadShareSettings();
   }, []);
+
+  useEffect(() => {
+    if (dashboardStorageSettings) {
+      setStorageSettings(dashboardStorageSettings);
+    }
+  }, [dashboardStorageSettings]);
 
   async function loadArchivedFolders() {
     setIsLoadingArchivedFolders(true);
@@ -122,6 +134,12 @@ export function SettingsScreen({
     } finally {
       setIsLoadingStorageSettings(false);
     }
+  }
+
+  async function switchWorkspace(locationId: string) {
+    await onSwitchWorkspace(locationId);
+    await loadStorageSettings();
+    setIsDatabaseModalOpen(false);
   }
 
   async function loadShareSettings() {
@@ -205,7 +223,7 @@ export function SettingsScreen({
   const currentFolderLabel = activeStorageLocation?.name
     ?? currentFolderPath.replace(/[\\/]+$/, "").split(/[\\/]+/).pop()
     ?? currentFolderPath;
-  const currentFolderDescription = `Current folder: ${compactFolderPath(currentFolderPath)}`;
+  const currentFolderDescription = `Current workspace: ${compactFolderPath(currentFolderPath)}`;
   const adminUsers = users.filter((user) => user.is_admin);
   const apiEnvironmentUrlValue = apiTokenUrl || apiEnvironmentUrl();
   const apiEnvironmentSnippet = [
@@ -217,6 +235,8 @@ export function SettingsScreen({
     <>
       <ScreenToolbar
         className="settings-toolbar"
+        workspaceName={workspaceName}
+        storageSettings={storageSettings}
         breadcrumbItems={[{ label: "Settings", current: true }]}
         currentUser={currentUser}
         onBack={onBack}
@@ -224,6 +244,7 @@ export function SettingsScreen({
         onOpenUsers={() => onOpenProfile("all")}
         onOpenSettings={onOpenSettings}
         onSignOut={onSignOut}
+        onSwitchWorkspace={onSwitchWorkspace}
       />
       <section className="settings-surface">
         <div className="settings-content">
@@ -246,24 +267,23 @@ export function SettingsScreen({
           )}
           <section className="settings-card settings-storage-card" aria-labelledby="settings-storage-title">
             <div className="settings-card-intro">
-              <h2 id="settings-storage-title">Switch folder</h2>
+              <h2 id="settings-storage-title">Workspaces</h2>
               <p>
-                Each folder has its own notes, users, settings, and agent activity. Choose the folder you want this
-                instance to use.
+                Each workspace has its own notes, folders, sources, publishing history, and console activity.
               </p>
             </div>
             <div className="settings-storage-panel">
               <FolderIcon size={24} />
               <span>
-                <strong>{isLoadingStorageSettings ? "Loading folder..." : currentFolderLabel}</strong>
-                <small>{isLoadingStorageSettings ? "Current folder" : currentFolderDescription}</small>
+                <strong>{isLoadingStorageSettings ? "Loading workspace..." : currentFolderLabel}</strong>
+                <small>{isLoadingStorageSettings ? "Current workspace" : currentFolderDescription}</small>
               </span>
               <button
                 className="settings-text-action"
                 type="button"
                 onClick={() => setIsDatabaseModalOpen(true)}
               >
-              Change folder
+              Change workspace
               </button>
             </div>
           </section>
@@ -272,7 +292,7 @@ export function SettingsScreen({
               <div className="settings-card-intro">
                 <h2 id="settings-team-title">Admin users</h2>
                 <p>
-                  These people can manage users, settings, API keys, and workspace folders.
+                  These people can manage users, settings, API keys, and workspaces.
                 </p>
               </div>
               <div className="settings-team-list" aria-label="Workspace admins">
@@ -336,7 +356,7 @@ export function SettingsScreen({
                 <h2 id="settings-api-title">Create API Key</h2>
                 <p>
                   Generate a secure API key so your agents, apps, and external tools can connect to Mia. This key works
-                  across all your Mianotes folders.
+                  across all your Mianotes workspaces.
                 </p>
               </div>
               <div className="settings-api-panel">
@@ -443,7 +463,7 @@ export function SettingsScreen({
           storageSettings={storageSettings}
           onClose={() => setIsDatabaseModalOpen(false)}
           onSettingsChanged={setStorageSettings}
-          onDatabaseSwitched={onDatabaseSwitched}
+          onSwitchWorkspace={switchWorkspace}
         />
       )}
     </>

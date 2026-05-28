@@ -9,6 +9,7 @@ import type {
   PublishNavigationGroupRecord,
   PublishResultRecord,
   PublishThemeRecord,
+  StorageSettingsRecord,
   TagRecord,
   UserRecord
 } from "../../api/types";
@@ -43,20 +44,26 @@ export function PublishScreen({
   folders,
   tags,
   currentUser,
+  workspaceName,
+  storageSettings,
   selectedFolderId,
   onBack,
   onSignOut,
   onOpenProfile,
-  onOpenSettings
+  onOpenSettings,
+  onSwitchWorkspace
 }: {
   folders: FolderRecord[];
   tags: TagRecord[];
   currentUser: UserRecord;
+  workspaceName: string;
+  storageSettings: StorageSettingsRecord | null;
   selectedFolderId: string | "all";
   onBack: () => void;
   onSignOut: () => void;
   onOpenProfile: (profileId?: string | "all") => void;
   onOpenSettings: () => void;
+  onSwitchWorkspace: (locationId: string) => Promise<void>;
 }) {
   const [themes, setThemes] = useState<PublishThemeRecord[]>([]);
   const [theme, setTheme] = useState("mialight");
@@ -222,6 +229,8 @@ export function PublishScreen({
     <section className="publish-screen">
       <ScreenToolbar
         className="settings-toolbar publish-toolbar"
+        workspaceName={workspaceName}
+        storageSettings={storageSettings}
         breadcrumbItems={[{ label: "Publish", current: true }]}
         currentUser={currentUser}
         onBack={onBack}
@@ -229,6 +238,7 @@ export function PublishScreen({
         onOpenUsers={() => onOpenProfile("all")}
         onOpenSettings={onOpenSettings}
         onSignOut={onSignOut}
+        onSwitchWorkspace={onSwitchWorkspace}
       />
 
       <form className="publish-document" onSubmit={publishSite}>

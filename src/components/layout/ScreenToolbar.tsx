@@ -1,13 +1,16 @@
 import { ChevronLeft } from "lucide-react";
 import { useCallback, useRef, useState } from "react";
 import type { ReactNode } from "react";
-import type { UserRecord } from "../../api/types";
+import type { StorageSettingsRecord, UserRecord } from "../../api/types";
 import { useOutsideAndEscape } from "../../hooks/useOutsideAndEscape";
 import { AccountMenu } from "./AccountMenu";
 import { Breadcrumb } from "./Breadcrumb";
 import type { BreadcrumbItem } from "./Breadcrumb";
+import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 
 type ScreenToolbarProps = {
+  workspaceName: string;
+  storageSettings: StorageSettingsRecord | null;
   breadcrumbItems: BreadcrumbItem[];
   currentUser: UserRecord;
   onBack: () => void;
@@ -18,9 +21,12 @@ type ScreenToolbarProps = {
   children?: ReactNode;
   className?: string;
   onOpenSettings?: () => void;
+  onSwitchWorkspace: (locationId: string) => Promise<void>;
 };
 
 export function ScreenToolbar({
+  workspaceName,
+  storageSettings,
   breadcrumbItems,
   currentUser,
   onBack,
@@ -30,7 +36,8 @@ export function ScreenToolbar({
   backLabel = "Back to notes",
   children,
   className,
-  onOpenSettings
+  onOpenSettings,
+  onSwitchWorkspace
 }: ScreenToolbarProps) {
   const [isAccountOpen, setIsAccountOpen] = useState(false);
   const accountMenuRef = useRef<HTMLDivElement | null>(null);
@@ -50,7 +57,11 @@ export function ScreenToolbar({
         <button className="back-square-button" type="button" onClick={onBack} aria-label={backLabel}>
           <ChevronLeft size={16} />
         </button>
-        <Breadcrumb items={breadcrumbItems} />
+        <WorkspaceSwitcher
+          storageSettings={storageSettings}
+          onSwitchWorkspace={onSwitchWorkspace}
+        />
+        <Breadcrumb items={[{ label: workspaceName }, ...breadcrumbItems]} />
       </div>
       <div className="toolbar-actions">
         {children}

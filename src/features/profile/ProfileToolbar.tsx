@@ -4,12 +4,14 @@ import {
   Loader2,
   User
 } from "lucide-react";
-import type { UserRecord } from "../../api/types";
+import type { StorageSettingsRecord, UserRecord } from "../../api/types";
 import { ScreenToolbar } from "../../components/layout/ScreenToolbar";
 
 export function ProfileToolbar({
   users,
   currentUser,
+  workspaceName,
+  storageSettings,
   selectedUserId,
   selectedUser,
   toolbarName,
@@ -25,10 +27,13 @@ export function ProfileToolbar({
   onStartEditing,
   onSelectUser,
   onSignOut,
-  onOpenSettings
+  onOpenSettings,
+  onSwitchWorkspace
 }: {
   users: UserRecord[];
   currentUser: UserRecord;
+  workspaceName: string;
+  storageSettings: StorageSettingsRecord | null;
   selectedUserId: string | "all";
   selectedUser: UserRecord | null;
   toolbarName: string;
@@ -45,9 +50,12 @@ export function ProfileToolbar({
   onSelectUser: (userId: string | "all") => void;
   onSignOut: () => void;
   onOpenSettings: () => void;
+  onSwitchWorkspace: (locationId: string) => Promise<void>;
 }) {
   return (
     <ScreenToolbar
+      workspaceName={workspaceName}
+      storageSettings={storageSettings}
       breadcrumbItems={[{ label: "Users" }, { label: toolbarName, current: true }]}
       currentUser={currentUser}
       onBack={onBack}
@@ -55,6 +63,7 @@ export function ProfileToolbar({
       onOpenUsers={() => onSelectUser("all")}
       onOpenSettings={onOpenSettings}
       onSignOut={onSignOut}
+      onSwitchWorkspace={onSwitchWorkspace}
     >
         {isAddingUser ? (
           <>

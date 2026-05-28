@@ -4,6 +4,8 @@ import type {
   FolderRecord,
   NoteRecord,
   StorageCapacityRecord,
+  StorageSettingsRecord,
+  StorageSwitchResponse,
   TagRecord,
   UserRecord
 } from "../../api/types";
@@ -21,6 +23,8 @@ export function useWorkspaceData() {
   const [notes, setNotes] = useState<NoteRecord[]>([]);
   const [storageCapacity, setStorageCapacity] =
     useState<StorageCapacityRecord | null>(null);
+  const [storageSettings, setStorageSettings] =
+    useState<StorageSettingsRecord | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isWorkspaceLoaded, setIsWorkspaceLoaded] = useState(false);
 
@@ -30,13 +34,15 @@ export function useWorkspaceData() {
       nextFolders,
       nextTags,
       nextNotes,
-      nextStorageCapacity
+      nextStorageCapacity,
+      nextStorageSettings
     ] = await Promise.all([
       apiFetch<UserRecord[]>("/api/users"),
       apiFetch<FolderRecord[]>("/api/folders"),
       apiFetch<TagRecord[]>("/api/tags"),
       apiFetch<NoteRecord[]>("/api/notes"),
-      apiFetch<StorageCapacityRecord>("/api/storage").catch(() => null)
+      apiFetch<StorageCapacityRecord>("/api/storage").catch(() => null),
+      apiFetch<StorageSettingsRecord>("/api/settings/storage").catch(() => null)
     ]);
 
     const activeFolders = nextFolders.filter((folder) => !folder.archived_at);
@@ -45,6 +51,7 @@ export function useWorkspaceData() {
     setTags(nextTags);
     setNotes(hydrateNotes(nextNotes, nextUsers, activeFolders));
     setStorageCapacity(nextStorageCapacity);
+    setStorageSettings(nextStorageSettings);
     setIsWorkspaceLoaded(true);
   }, []);
 
@@ -171,8 +178,24 @@ export function useWorkspaceData() {
     setTags([]);
     setNotes([]);
     setStorageCapacity(null);
+    setStorageSettings(null);
     setIsWorkspaceLoaded(false);
   }, []);
+
+  const switchWorkspace = useCallback(
+    async (locationId: string) => {
+      setIsWorkspaceLoaded(false);
+      const response = await apiFetch<StorageSwitchResponse>("/api/settings/storage/active", {
+        method: "PATCH",
+        body: JSON.stringify({ location_id: locationId })
+      });
+      setStorageSettings(response.storage);
+      await loadWorkspace();
+    },
+    [loadWorkspace]
+  );
+
+  const activeWorkspace = storageSettings?.locations.find((location) => location.is_active) ?? null;
 
   const signOut = useCallback(async () => {
     await apiFetch("/api/auth/logout", { method: "POST" });
@@ -186,6 +209,8 @@ export function useWorkspaceData() {
     tags,
     notes,
     storageCapacity,
+    storageSettings,
+    activeWorkspace,
     isLoading,
     isWorkspaceLoaded,
     bootstrap,
@@ -198,6 +223,7 @@ export function useWorkspaceData() {
     addUserToWorkspace,
     removeUserFromWorkspace,
     resetWorkspaceData,
+    switchWorkspace,
     signOut
   };
 }

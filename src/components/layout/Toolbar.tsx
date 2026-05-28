@@ -10,14 +10,17 @@ import {
 } from "lucide-react";
 import { useEffect, useRef } from "react";
 import type { RefCallback } from "react";
-import type { FolderRecord, TagRecord, UserRecord } from "../../api/types";
+import type { FolderRecord, StorageSettingsRecord, TagRecord, UserRecord } from "../../api/types";
 import { DashboardIcon } from "../icons/DashboardIcon";
 import { FolderIcon } from "../icons/FolderIcon";
 import { AccountMenu } from "./AccountMenu";
 import { Breadcrumb } from "./Breadcrumb";
+import { WorkspaceSwitcher } from "./WorkspaceSwitcher";
 
 type ToolbarProps = {
   isSidebarOpen: boolean;
+  workspaceName: string;
+  storageSettings: StorageSettingsRecord | null;
   breadcrumbItems: string[];
   selectedFolder?: FolderRecord | null;
   selectedTag?: TagRecord | null;
@@ -33,6 +36,7 @@ type ToolbarProps = {
   isAccountOpen: boolean;
   accountMenuRef: RefCallback<HTMLDivElement>;
   onOpenSidebar: () => void;
+  onSwitchWorkspace: (locationId: string) => Promise<void>;
   onClearTag: () => void;
   onSearchChange: (query: string) => void;
   onSelectTag: (tag: TagRecord) => void;
@@ -47,6 +51,8 @@ type ToolbarProps = {
 
 export function Toolbar({
   isSidebarOpen,
+  workspaceName,
+  storageSettings,
   breadcrumbItems,
   selectedFolder,
   selectedTag,
@@ -62,6 +68,7 @@ export function Toolbar({
   isAccountOpen,
   accountMenuRef,
   onOpenSidebar,
+  onSwitchWorkspace,
   onClearTag,
   onSearchChange,
   onSelectTag,
@@ -114,8 +121,13 @@ export function Toolbar({
       >
         <Menu size={20} />
       </button>
+      <WorkspaceSwitcher
+        storageSettings={storageSettings}
+        onSwitchWorkspace={onSwitchWorkspace}
+      />
       <Breadcrumb
         items={[
+          { label: workspaceName },
           ...rootBreadcrumbItems,
           ...breadcrumbItems.map((item, index) => ({
             label: item,

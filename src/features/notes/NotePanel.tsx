@@ -14,6 +14,7 @@ import { useNoteTitle } from "./useNoteTitle";
 
 export function NotePanel({
   note,
+  workspaceName,
   folderLabel,
   currentUser,
   startInEdit = false,
@@ -25,6 +26,7 @@ export function NotePanel({
   onDeleted
 }: {
   note: NoteRecord;
+  workspaceName: string;
   folderLabel: string;
   currentUser: UserRecord;
   startInEdit?: boolean;
@@ -218,6 +220,7 @@ export function NotePanel({
     <section className={`note-panel ${isEditing ? "editing" : ""}`}>
       <NoteDocumentHeader
         note={note}
+        workspaceName={workspaceName}
         folderLabel={folderLabel}
         isEditing={isEditing}
         isSaving={isSaving}

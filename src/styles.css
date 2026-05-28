@@ -550,6 +550,115 @@ button {
   background: #f7f7f8;
 }
 
+.workspace-switcher {
+  position: relative;
+  flex: 0 0 auto;
+}
+
+.workspace-switcher-button {
+  display: inline-grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid #e0e1e7;
+  border-radius: 8px;
+  color: #5f626d;
+  background: #ffffff;
+}
+
+.workspace-switcher-button:hover {
+  color: #202128;
+  border-color: #c7c9d1;
+}
+
+.workspace-switcher-button:disabled {
+  cursor: default;
+  color: #babdc7;
+  border-color: #ececf0;
+}
+
+.workspace-switcher-popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  z-index: 24;
+  display: grid;
+  gap: 4px;
+  width: min(320px, 78vw);
+  padding: 8px;
+  border: 1px solid #e1e2e7;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 16px 36px rgba(20, 20, 24, 0.14);
+}
+
+.workspace-switcher-title {
+  padding: 6px 8px 8px;
+  color: #81828c;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+}
+
+.workspace-switcher-popover button {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 42px;
+  padding: 8px;
+  border: 0;
+  border-radius: 6px;
+  color: #4e505b;
+  background: transparent;
+  text-align: left;
+}
+
+.workspace-switcher-popover button:hover {
+  background: #f7f7f8;
+}
+
+.workspace-switcher-popover button:disabled {
+  cursor: default;
+}
+
+.workspace-switcher-popover button:disabled:hover {
+  background: transparent;
+}
+
+.workspace-switcher-popover span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.workspace-switcher-popover strong,
+.workspace-switcher-popover small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.workspace-switcher-popover strong {
+  color: #202128;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.workspace-switcher-popover small {
+  color: #70737f;
+  font-size: 11px;
+}
+
+.workspace-switcher-popover em {
+  color: #70737f;
+  font-size: 11px;
+  font-style: normal;
+  font-weight: 600;
+}
+
 .toolbar-actions {
   display: flex;
   align-items: center;
