@@ -39,6 +39,14 @@ const archiveFolder = {
   sort_order: 1
 };
 
+const researchFolder = {
+  ...demoFolder,
+  id: "folder-research",
+  name: "Research notes",
+  slug: "research-notes",
+  sort_order: 0
+};
+
 const demoTag = {
   id: "tag-docs",
   name: "Docs",
@@ -81,40 +89,79 @@ type MockAppOptions = {
 async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
   let authenticated = options.authenticated ?? true;
   let workspaceUrl = options.workspaceUrl ?? null;
+  let activeLocationId = "storage-current";
   const requests: Record<string, unknown[]> = {};
   const notes = [note()];
   const users = [adminUser, memberUser];
   const folders = [demoFolder, archiveFolder];
-  const storageSettings = {
-    active_location: "storage-current",
-    database_file: "mia.db",
-    data_dir: "/tmp/test-user/Mianotes",
-    database_path: "/tmp/test-user/Mianotes/.mianotes/mia.db",
-    locations: [
-      {
-        id: "storage-current",
-        name: "Mianotes",
-        folder_path: "/tmp/test-user/Mianotes",
-        database_path: "/tmp/test-user/Mianotes/.mianotes/mia.db",
-        is_active: true,
-        database_exists: true,
-        notes_count: 1,
-        users_count: 1,
-        last_updated_at: now
-      },
-      {
-        id: "storage-archive",
-        name: "Archive",
-        folder_path: "/tmp/test-user/Archive",
-        database_path: "/tmp/test-user/Archive/.mianotes/mia.db",
-        is_active: false,
-        database_exists: true,
-        notes_count: 0,
-        users_count: 1,
-        last_updated_at: null
-      }
-    ]
-  };
+  const researchNotes = [
+    note({
+      id: "note-research",
+      folder: researchFolder,
+      folder_id: researchFolder.id,
+      title: "Research brief",
+      summary: "A note from the research workspace.",
+      text: "# Research brief\n\nA note from the research workspace.",
+      note_url: "/markdown/research/research-brief-note-research.md"
+    })
+  ];
+  const storageLocations = [
+    {
+      id: "storage-current",
+      name: "Mianotes",
+      folder_path: "/tmp/test-user/Mianotes",
+      database_path: "/tmp/test-user/Mianotes/.mianotes/mia.db",
+      database_exists: true,
+      notes_count: 1,
+      users_count: 1,
+      last_updated_at: now
+    },
+    {
+      id: "storage-archive",
+      name: "Research",
+      folder_path: "/tmp/test-user/Research",
+      database_path: "/tmp/test-user/Research/.mianotes/mia.db",
+      database_exists: true,
+      notes_count: 1,
+      users_count: 1,
+      last_updated_at: now
+    }
+  ];
+
+  function activeFolders() {
+    if (activeLocationId === "storage-archive") {
+      return [researchFolder];
+    }
+    if (activeLocationId === "storage-new") {
+      return [];
+    }
+    return folders;
+  }
+
+  function activeNotes() {
+    if (activeLocationId === "storage-archive") {
+      return researchNotes;
+    }
+    if (activeLocationId === "storage-new") {
+      return [];
+    }
+    return notes;
+  }
+
+  function storageSettings() {
+    const activeLocation = storageLocations.find((location) => location.id === activeLocationId)
+      ?? storageLocations[0];
+    return {
+      active_location: activeLocation.id,
+      database_file: "mia.db",
+      data_dir: activeLocation.folder_path,
+      database_path: activeLocation.database_path,
+      locations: storageLocations.map((location) => ({
+        ...location,
+        is_active: location.id === activeLocation.id
+      }))
+    };
+  }
 
   function remember(name: string, value: unknown) {
     requests[name] = [...(requests[name] ?? []), value];
@@ -225,7 +272,7 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
     }
 
     if (path === "/api/folders" && method === "GET") {
-      await fulfill(route, folders);
+      await fulfill(route, activeFolders());
       return;
     }
 
@@ -273,7 +320,7 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
     }
 
     if (path === "/api/notes" && method === "GET") {
-      await fulfill(route, notes);
+      await fulfill(route, activeNotes());
       return;
     }
 
@@ -288,9 +335,9 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
 
     if (path.startsWith("/api/notes/shared/") && method === "GET") {
       await fulfill(route, {
-        ...notes[0],
+        ...activeNotes()[0],
         user: {
-          ...notes[0].user,
+          ...activeNotes()[0].user,
           photo_url: "/.profiles/user-admin/avatar-seed.jpg"
         },
         shared_at: now,
@@ -423,7 +470,8 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
     }
 
     if (path.startsWith("/api/notes/") && method === "GET") {
-      await fulfill(route, notes.find((item) => path.endsWith(String(item.id))) ?? notes[0]);
+      const currentNotes = activeNotes();
+      await fulfill(route, currentNotes.find((item) => path.endsWith(String(item.id))) ?? currentNotes[0]);
       return;
     }
 
@@ -494,7 +542,7 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
     }
 
     if (path === "/api/settings/storage" && method === "GET") {
-      await fulfill(route, storageSettings);
+      await fulfill(route, storageSettings());
       return;
     }
 
@@ -512,26 +560,29 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
     }
 
     if (path === "/api/settings/storage/locations" && method === "POST") {
-      remember("storageLocation", await readJson(route));
-      storageSettings.locations.unshift({
+      const payload = await readJson(route);
+      remember("storageLocation", payload);
+      const name = String(payload.name);
+      const folderPath = String(payload.folder_path);
+      storageLocations.unshift({
         id: "storage-new",
-        name: "Research",
-        folder_path: "/tmp/test-user/Research",
-        database_path: "/tmp/test-user/Research/.mianotes/mia.db",
-        is_active: false,
+        name,
+        folder_path: folderPath,
+        database_path: `${folderPath}/.mianotes/mia.db`,
         database_exists: true,
         notes_count: 0,
         users_count: 1,
         last_updated_at: null
       });
-      await fulfill(route, storageSettings, 201);
+      await fulfill(route, storageSettings(), 201);
       return;
     }
 
     if (path === "/api/settings/storage/active" && method === "PATCH") {
-      remember("storageSwitch", await readJson(route));
-      authenticated = false;
-      await fulfill(route, { storage: storageSettings, session_ended: true });
+      const payload = await readJson(route);
+      remember("storageSwitch", payload);
+      activeLocationId = String(payload.location_id);
+      await fulfill(route, { storage: storageSettings(), session_ended: false });
       return;
     }
 
@@ -793,34 +844,58 @@ test("saves a workspace address from settings", async ({ page }) => {
   await page.goto("/");
   await page.locator(".account-avatar-button").click();
   await page.getByRole("menuitem", { name: "Settings" }).click();
-  await page.getByPlaceholder("https://notes.example.com").fill("https://notes.example.test/");
+  await page.getByPlaceholder("https://notes.yourdomain.com").fill("https://notes.example.test/");
   await page.getByRole("button", { name: "Save address" }).click();
 
   await expect(page.getByRole("status")).toContainText("Workspace address saved.");
-  await expect(page.getByPlaceholder("https://notes.example.com")).toHaveValue("https://notes.example.test");
+  await expect(page.getByPlaceholder("https://notes.yourdomain.com")).toHaveValue("https://notes.example.test");
   expect(requests.shareSettings?.[0]).toMatchObject({ workspace_url: "https://notes.example.test/" });
 });
 
-test("creates and switches workspace folders from settings", async ({ page }) => {
+test("switches workspaces from the breadcrumb switcher without signing out", async ({ page }) => {
+  const requests = await mockMianotesApi(page);
+
+  await page.goto("/");
+  await expect(page.locator(".breadcrumb")).toContainText("Mianotes");
+  await expect(page.getByRole("heading", { name: "Getting started" })).toBeVisible();
+
+  await page.getByRole("button", { name: /Switch workspace from Mianotes/ }).click();
+  await page.getByRole("menuitemradio", { name: /Research/ }).click();
+
+  await expect(page.locator(".breadcrumb")).toContainText("Research");
+  await expect(page.getByRole("heading", { name: "Research brief" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sign in" })).toBeHidden();
+  expect(requests.storageSwitch?.[0]).toMatchObject({ location_id: "storage-archive" });
+
+  await page.locator(".note-row").first().click();
+  await expect(page.locator(".note-document-breadcrumb")).toContainText("Research");
+  await expect(page.getByRole("heading", { name: "Research brief" })).toBeVisible();
+});
+
+test("creates and switches workspaces from settings without ending the session", async ({ page }) => {
   const requests = await mockMianotesApi(page);
 
   await page.goto("/");
   await page.locator(".account-avatar-button").click();
   await page.getByRole("menuitem", { name: "Settings" }).click();
-  await page.getByRole("button", { name: "Change folder" }).click();
+  await page.getByRole("button", { name: "Change workspace" }).click();
 
   await expect(page.locator("#database-switch-title")).toBeVisible();
-  await page.getByRole("button", { name: "Create a folder" }).click();
-  await page.getByLabel("Folder name").fill("Research");
-  await page.getByLabel("Folder path").fill("/tmp/test-user/Research");
-  await page.getByRole("button", { name: "Create folder" }).click();
-  await page.getByRole("button", { name: /Research/ }).click();
-  await page.getByRole("button", { name: "Switch folder" }).click();
+  await page.getByRole("button", { name: "Create a workspace" }).click();
+  await page.getByLabel("Workspace name").fill("Field notes");
+  await page.getByLabel("Workspace path").fill("/tmp/test-user/Field notes");
+  await page.getByRole("button", { name: "Create workspace" }).click();
+  await page.getByRole("button", { name: /Field notes/ }).click();
+  await page.getByRole("dialog", { name: "Switch workspace" })
+    .getByRole("button", { name: "Switch workspace", exact: true })
+    .click();
 
-  await expect(page.getByRole("heading", { name: "Sign in" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Sign in" })).toBeHidden();
+  await expect(page.locator(".breadcrumb")).toContainText("Field notes");
   expect(requests.storageLocation?.[0]).toMatchObject({
-    name: "Research",
-    folder_path: "/tmp/test-user/Research"
+    name: "Field notes",
+    folder_path: "/tmp/test-user/Field notes"
   });
   expect(requests.storageSwitch?.[0]).toMatchObject({ location_id: "storage-new" });
 });
