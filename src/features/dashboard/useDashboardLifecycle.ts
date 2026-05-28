@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { writeDashboardUiState } from "../../utils/dashboardState";
 import { findFolderForRoute, routePathForState } from "../../utils/internalRoutes";
-import { hasUsableNoteBody } from "../../utils/notes";
+import { hasUsableNoteContent } from "../../utils/notes";
 import type { DashboardNavigation } from "./useDashboardNavigation";
 import type { DashboardNotes } from "./useDashboardNotes";
 import type { WorkspaceData } from "./useWorkspaceData";
@@ -217,7 +217,7 @@ export function useDashboardLifecycle({
   }, [openedNote?.id, openedNote?.text, refreshNote]);
 
   useEffect(() => {
-    if (!openedNote || hasUsableNoteBody(openedNote) || openedNote.status === "failed") return;
+    if (!openedNote || hasUsableNoteContent(openedNote) || openedNote.status === "failed") return;
     if (["text", "markdown"].includes(openedNote.source_type) && openedNote.is_published) return;
 
     const noteId = openedNote.id;

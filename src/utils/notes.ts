@@ -55,11 +55,6 @@ export function hasUsableNoteContent(note: NoteRecord) {
     || Boolean(body && !isIndexingPlaceholder(body));
 }
 
-export function hasUsableNoteBody(note: NoteRecord) {
-  const body = noteBodyMarkdown(note.text ?? "").trim();
-  return Boolean(body && !isIndexingPlaceholder(body));
-}
-
 export function isNoteIndexing(note: NoteRecord) {
   const finalStatuses = ["ready", "published", "failed", "completed", "succeeded"];
   const indexingStatuses = ["pending_parse", "parsing"];
