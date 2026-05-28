@@ -4175,11 +4175,21 @@ textarea:focus {
   background: #ffffff;
   font-size: 14px;
   font-weight: 600;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease,
+    transform 0.1s ease;
 }
 
 .settings-text-action:hover {
   border-color: #bfc1ca;
   color: #17181d;
+}
+
+.settings-text-action:not(.disabled):active {
+  background: #eef0f5;
+  transform: translateY(1px);
 }
 
 .settings-text-action.disabled {
@@ -4275,6 +4285,21 @@ textarea:focus {
   background: #17181d;
   font-size: 14px;
   font-weight: 600;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.1s ease;
+}
+
+.settings-api-action:not(:disabled):hover {
+  border-color: #262831;
+  background: #262831;
+}
+
+.settings-api-action:not(:disabled):active {
+  border-color: #000000;
+  background: #000000;
+  transform: translateY(1px);
 }
 
 .settings-api-action:disabled {
@@ -4353,10 +4378,20 @@ textarea:focus {
   background: #1a1b20;
   font-size: 12px;
   font-weight: 600;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    transform 0.1s ease;
 }
 
 .settings-api-code-block button:hover {
   border-color: #747986;
+}
+
+.settings-api-code-block button:active {
+  border-color: #8c91a0;
+  background: #24262d;
+  transform: translateY(1px);
 }
 
 .settings-api-private-note {
@@ -4422,11 +4457,21 @@ textarea:focus {
   border-color: #e1e2e7;
   border-radius: 8px;
   background: #ffffff;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease,
+    transform 0.1s ease;
 }
 
 .restore-action:hover:not(:disabled) {
   border-color: #c8cad2;
   color: var(--ink);
+}
+
+.restore-action:active:not(:disabled) {
+  background: #eef0f5;
+  transform: translateY(1px);
 }
 
 .settings-empty-state {
