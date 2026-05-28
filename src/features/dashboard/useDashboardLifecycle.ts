@@ -24,12 +24,9 @@ export function useDashboardLifecycle({
     tags,
     notes,
     isWorkspaceLoaded,
-    activeWorkspace,
     bootstrap,
     refreshNotes: refreshWorkspaceNotes,
-    refreshNote,
-    resolveNoteWorkspace,
-    switchWorkspace
+    refreshNote
   } = workspace;
   const {
     selectedView,
@@ -94,6 +91,9 @@ export function useDashboardLifecycle({
     setSelectedTag((current) => (
       current === "all" || tags.some((tag) => tag.slug === current) ? current : "all"
     ));
+    setOpenedNoteId((current) => (
+      current === null || notes.some((note) => note.id === current) ? current : null
+    ));
   }, [
     currentUser,
     folders,
@@ -102,6 +102,7 @@ export function useDashboardLifecycle({
     pendingFolderRoute,
     setCurrentPage,
     setNoteIdToEditOnOpen,
+    setOpenedNoteId,
     setProfileUserId,
     setPendingFolderRoute,
     setSelectedFolderId,
@@ -110,54 +111,6 @@ export function useDashboardLifecycle({
     setWorkspaceView,
     tags,
     users
-  ]);
-
-  useEffect(() => {
-    if (
-      !currentUser
-      || !isWorkspaceLoaded
-      || !openedNoteId
-      || notes.some((note) => note.id === openedNoteId)
-    ) {
-      return;
-    }
-
-    let cancelled = false;
-    const noteId = openedNoteId;
-
-    async function openWorkspaceForNote() {
-      try {
-        const noteWorkspace = await resolveNoteWorkspace(noteId);
-        if (cancelled) return;
-        if (activeWorkspace?.id !== noteWorkspace.workspace_id) {
-          await switchWorkspace(noteWorkspace.workspace_id);
-          return;
-        }
-        await refreshNote(noteId);
-      } catch {
-        if (!cancelled) {
-          setOpenedNoteId(null);
-          setNoteIdToEditOnOpen(null);
-        }
-      }
-    }
-
-    void openWorkspaceForNote();
-
-    return () => {
-      cancelled = true;
-    };
-  }, [
-    activeWorkspace?.id,
-    currentUser,
-    isWorkspaceLoaded,
-    notes,
-    openedNoteId,
-    refreshNote,
-    resolveNoteWorkspace,
-    setNoteIdToEditOnOpen,
-    setOpenedNoteId,
-    switchWorkspace
   ]);
 
   useEffect(() => {

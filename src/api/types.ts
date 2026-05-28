@@ -103,11 +103,6 @@ export type StorageSwitchResponse = {
   session_ended: boolean;
 };
 
-export type NoteWorkspaceRecord = {
-  workspace_id: string;
-  workspace_name: string;
-};
-
 export type ServiceApiKeyRecord = {
   token: string;
   api_url: string;

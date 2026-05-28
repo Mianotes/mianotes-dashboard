@@ -2,7 +2,6 @@ import { useCallback, useState } from "react";
 import { apiFetch } from "../../api/client";
 import type {
   FolderRecord,
-  NoteWorkspaceRecord,
   NoteRecord,
   StorageCapacityRecord,
   StorageSettingsRecord,
@@ -90,17 +89,11 @@ export function useWorkspaceData() {
   const refreshNote = useCallback(async (noteId: string) => {
     const fullNote = await apiFetch<NoteRecord>(`/api/notes/${noteId}`);
     setNotes((items) =>
-      items.some((item) => item.id === noteId)
-        ? items.map((item) =>
-            item.id === noteId ? mergeNoteRecord(item, fullNote) : item
-          )
-        : [hydrateNotes([fullNote], users, folders)[0] ?? fullNote, ...items]
+      items.map((item) =>
+        item.id === noteId ? mergeNoteRecord(item, fullNote) : item
+      )
     );
     return fullNote;
-  }, [folders, users]);
-
-  const resolveNoteWorkspace = useCallback(async (noteId: string) => {
-    return apiFetch<NoteWorkspaceRecord>(`/api/notes/${noteId}/workspace`);
   }, []);
 
   const addOrMergeNote = useCallback(
@@ -224,7 +217,6 @@ export function useWorkspaceData() {
     loadWorkspace,
     refreshNotes,
     refreshNote,
-    resolveNoteWorkspace,
     addOrMergeNote,
     toggleNoteStar,
     updateUserInWorkspace,
