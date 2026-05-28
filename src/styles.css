@@ -674,16 +674,27 @@ button {
 .breadcrumb-workspace-switcher .workspace-switcher-button {
   width: 30px;
   height: 30px;
-  border-color: transparent;
+  margin-right: 8px;
+  border-color: #d9dae1;
   color: #5f626d;
-  background: transparent;
+  background: #ffffff;
+  transition:
+    border-color 0.15s ease,
+    color 0.15s ease,
+    background 0.15s ease,
+    transform 0.1s ease;
 }
 
 .breadcrumb-workspace-switcher .workspace-switcher-button:hover,
 .breadcrumb-workspace-switcher .workspace-switcher-button[aria-expanded="true"] {
   color: #202128;
-  border-color: #d9dae1;
-  background: #ffffff;
+  border-color: #bfc1ca;
+  background: #f7f7f8;
+}
+
+.breadcrumb-workspace-switcher .workspace-switcher-button:active {
+  background: #eef0f5;
+  transform: translateY(1px);
 }
 
 .breadcrumb-workspace-switcher .workspace-switcher-popover {
