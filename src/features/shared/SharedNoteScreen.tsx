@@ -48,6 +48,15 @@ export function SharedNoteScreen({ token }: SharedNoteScreenProps) {
     };
   }, [token]);
 
+  useEffect(() => {
+    if (!note || isLoading || error) return;
+    const searchParams = new URLSearchParams(window.location.search);
+    if (searchParams.get("print") !== "1") return;
+
+    const printTimer = window.setTimeout(() => window.print(), 500);
+    return () => window.clearTimeout(printTimer);
+  }, [error, isLoading, note]);
+
   return (
     <main className="shared-note-screen">
       <article className="shared-note-document">

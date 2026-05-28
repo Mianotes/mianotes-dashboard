@@ -769,8 +769,11 @@ test("clears the copied share link notice when returning from a note", async ({ 
   await expect(shareNotice).toBeHidden();
 });
 
-test("blocks local share links until a workspace address is configured", async ({ page }) => {
-  await mockMianotesApi(page);
+test("blocks local share links until a workspace address is configured", async ({ page, context }) => {
+  const requests = await mockMianotesApi(page);
+  await context.addInitScript(() => {
+    window.print = () => undefined;
+  });
 
   await page.goto("/");
   await page.locator(".note-row-actions").first().getByRole("button", { name: "More note actions" }).click();
@@ -782,6 +785,13 @@ test("blocks local share links until a workspace address is configured", async (
   await expect(dialog).toContainText("Add a public workspace address to create reliable links");
   await expect(dialog.getByRole("button", { name: "Go to settings" })).toBeVisible();
   await expect(dialog.getByRole("button", { name: "Download PDF" })).toBeVisible();
+
+  const popupPromise = page.waitForEvent("popup");
+  await dialog.getByRole("button", { name: "Download PDF" }).click();
+  const popup = await popupPromise;
+
+  await expect(popup).toHaveURL(/\/shared\/getting-started\/share-token\?print=1$/);
+  expect(requests.shareNote?.[0]).toMatchObject({ note_id: "note-demo" });
 });
 
 test("opens guest shared notes without signing in", async ({ page }) => {

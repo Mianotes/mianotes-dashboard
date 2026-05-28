@@ -128,6 +128,29 @@ export function DashboardShell({
     }
   }
 
+  async function downloadSharedNotePdf(note: NoteRecord) {
+    const printWindow = window.open("", "_blank");
+    setError(null);
+    try {
+      const share = await apiFetch<NoteShareRecord>(`/api/notes/${note.id}/share`, {
+        method: "POST",
+        body: JSON.stringify({})
+      });
+      const printUrl = new URL(
+        guestShareUrl(window.location.origin, share.share_url, note.title)
+      );
+      printUrl.searchParams.set("print", "1");
+      if (printWindow) {
+        printWindow.location.assign(printUrl.toString());
+        return;
+      }
+      window.location.assign(printUrl.toString());
+    } catch (error) {
+      printWindow?.close();
+      setError(error instanceof Error ? error.message : "Could not prepare this note for PDF download.");
+    }
+  }
+
   useEffect(() => {
     setShareSuccessMessage(null);
   }, [navigation.workspaceView, openedNote?.id]);
@@ -440,6 +463,7 @@ export function DashboardShell({
             setShareBlockedNote(null);
             navigation.openSettings();
           }}
+          onDownloadPdf={(note) => void downloadSharedNotePdf(note)}
         />
       )}
     </main>
