@@ -13,6 +13,7 @@ import { SidebarSection } from "./SidebarSection";
 
 type SidebarProps = {
   isOpen: boolean;
+  workspaceName: string;
   workspaceView: WorkspaceView;
   selectedFolderId: string;
   folders: FolderRecord[];
@@ -36,6 +37,7 @@ type SidebarProps = {
 
 export function Sidebar({
   isOpen,
+  workspaceName,
   workspaceView,
   selectedFolderId,
   folders,
@@ -170,7 +172,7 @@ export function Sidebar({
           onClick={onSelectDashboard}
         >
           <DashboardIcon size={18} />
-          <span>Dashboard</span>
+          <span>{workspaceName}</span>
         </button>
         <button
           className={`nav-item ${workspaceView === "jobs" ? "active" : ""}`}

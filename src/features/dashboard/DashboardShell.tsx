@@ -187,6 +187,7 @@ export function DashboardShell({
       >
         <Sidebar
           isOpen={navigation.isSidebarOpen}
+          workspaceName={workspaceName}
           workspaceView={navigation.workspaceView}
           selectedFolderId={navigation.selectedFolderId}
           folders={folders}

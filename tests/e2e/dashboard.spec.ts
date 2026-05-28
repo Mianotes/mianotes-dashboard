@@ -857,12 +857,20 @@ test("switches workspaces from the breadcrumb switcher without signing out", asy
 
   await page.goto("/");
   await expect(page.locator(".breadcrumb")).toContainText("Mianotes");
+  await expect(
+    page.getByRole("navigation", { name: "Dashboard navigation" })
+      .getByRole("button", { name: "Mianotes" })
+  ).toBeVisible();
   await expect(page.getByRole("heading", { name: "Getting started" })).toBeVisible();
 
   await page.getByRole("button", { name: /Switch workspace from Mianotes/ }).click();
   await page.getByRole("menuitemradio", { name: /Research/ }).click();
 
   await expect(page.locator(".breadcrumb")).toContainText("Research");
+  await expect(
+    page.getByRole("navigation", { name: "Dashboard navigation" })
+      .getByRole("button", { name: "Research" })
+  ).toBeVisible();
   await expect(page.getByRole("heading", { name: "Research brief" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeHidden();
   expect(requests.storageSwitch?.[0]).toMatchObject({ location_id: "storage-archive" });
