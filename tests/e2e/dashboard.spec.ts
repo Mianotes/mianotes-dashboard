@@ -802,8 +802,25 @@ test("blocks local share links until a workspace address is configured", async (
   await dialog.getByRole("button", { name: "Download PDF" }).click();
   const popup = await popupPromise;
 
-  await expect(popup).toHaveURL(/\/shared\/getting-started\/share-token\?print=1$/);
-  expect(requests.shareNote?.[0]).toMatchObject({ note_id: "note-demo" });
+  await expect(popup).toHaveURL(/\/workspace\/storage-current\/note\/note-demo\?print=1$/);
+  expect(requests.shareNote).toBeUndefined();
+});
+
+test("exports notes as PDF without creating a share link", async ({ page, context }) => {
+  const requests = await mockMianotesApi(page);
+  await context.addInitScript(() => {
+    window.print = () => undefined;
+  });
+
+  await page.goto("/");
+  await page.locator(".note-row-actions").first().getByRole("button", { name: "More note actions" }).click();
+
+  const popupPromise = page.waitForEvent("popup");
+  await page.getByRole("menuitem", { name: "Export as PDF" }).click();
+  const popup = await popupPromise;
+
+  await expect(popup).toHaveURL(/\/workspace\/storage-current\/note\/note-demo\?print=1$/);
+  expect(requests.shareNote).toBeUndefined();
 });
 
 test("opens guest shared notes without signing in", async ({ page }) => {

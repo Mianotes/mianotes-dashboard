@@ -8,6 +8,7 @@ import { useDashboardLifecycle } from "./features/dashboard/useDashboardLifecycl
 import { useDashboardNavigation } from "./features/dashboard/useDashboardNavigation";
 import { useDashboardNotes } from "./features/dashboard/useDashboardNotes";
 import { useWorkspaceData } from "./features/dashboard/useWorkspaceData";
+import { PrintableNoteScreen } from "./features/notes/PrintableNoteScreen";
 import { SharedNoteScreen } from "./features/shared/SharedNoteScreen";
 import { readInternalRoute } from "./utils/internalRoutes";
 
@@ -28,6 +29,10 @@ export function App() {
 
 function AuthenticatedApp() {
   const initialRoute = useMemo(() => readInternalRoute(), []);
+  const isPrintNoteRoute = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    return initialRoute.kind === "note" && new URLSearchParams(window.location.search).get("print") === "1";
+  }, [initialRoute]);
   const workspace = useWorkspaceData(initialRoute.workspaceId);
   const {
     currentUser,
@@ -124,6 +129,10 @@ function AuthenticatedApp() {
 
   if (!currentUser) {
     return <AuthScreen onSignedIn={bootstrap} />;
+  }
+
+  if (isPrintNoteRoute && initialRoute.kind === "note") {
+    return <PrintableNoteScreen noteId={initialRoute.noteId} />;
   }
 
   return (

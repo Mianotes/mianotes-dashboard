@@ -6,6 +6,7 @@ import logoUrl from "../../assets/logo_small.png";
 import { Sidebar } from "../../components/layout/Sidebar";
 import { Toolbar } from "../../components/layout/Toolbar";
 import { copyTextToClipboard } from "../../utils/clipboard";
+import { appUrlForPath, noteRoutePath } from "../../utils/internalRoutes";
 import { guestShareUrl, stableShareBase } from "../../utils/share";
 import { MoveNoteDialog } from "../notes/MoveNoteDialog";
 import { JobsScreen } from "../jobs/JobsScreen";
@@ -129,26 +130,15 @@ export function DashboardShell({
     }
   }
 
-  async function downloadSharedNotePdf(note: NoteRecord) {
-    const printWindow = window.open("", "_blank");
+  function exportNotePdf(note: NoteRecord) {
     setError(null);
-    try {
-      const share = await apiFetch<NoteShareRecord>(`/api/notes/${note.id}/share`, {
-        method: "POST",
-        body: JSON.stringify({})
-      });
-      const printUrl = new URL(
-        guestShareUrl(window.location.origin, share.share_url, note.title)
-      );
-      printUrl.searchParams.set("print", "1");
-      if (printWindow) {
-        printWindow.location.assign(printUrl.toString());
-        return;
-      }
+    const printUrl = new URL(
+      appUrlForPath(noteRoutePath(note.id, false, activeWorkspace?.id ?? null))
+    );
+    printUrl.searchParams.set("print", "1");
+    const printWindow = window.open(printUrl.toString(), "_blank", "noopener,noreferrer");
+    if (!printWindow) {
       window.location.assign(printUrl.toString());
-    } catch (error) {
-      printWindow?.close();
-      setError(error instanceof Error ? error.message : "Could not prepare this note for PDF download.");
     }
   }
 
@@ -391,7 +381,7 @@ export function DashboardShell({
               onOpenNote={(note, edit) => void actions.openNote(note, edit)}
               onMoveNote={setMovingNote}
               onShareNote={(note) => void shareNote(note)}
-              onExportNotePdf={(note) => void downloadSharedNotePdf(note)}
+              onExportNotePdf={(note) => exportNotePdf(note)}
               onToggleStar={(note) => void actions.toggleNoteStar(note)}
               onNotesDeleted={actions.refreshNotes}
               onError={setError}
@@ -465,7 +455,7 @@ export function DashboardShell({
             setShareBlockedNote(null);
             navigation.openSettings();
           }}
-          onDownloadPdf={(note) => void downloadSharedNotePdf(note)}
+          onDownloadPdf={(note) => exportNotePdf(note)}
         />
       )}
     </main>
