@@ -14,30 +14,85 @@ import type {
   UserRecord
 } from "../../api/types";
 import { ScreenToolbar } from "../../components/layout/ScreenToolbar";
-import { JsonBlock } from "./JsonBlock";
 import { PublishNavigationTable } from "./PublishNavigationTable";
 import { PublishControls } from "./PublishControls";
+import {
+  PublishSiteConfigurationForm,
+  type PublishHeaderLink,
+  type PublishSiteConfigurationState
+} from "./PublishSiteConfigurationForm";
 import { PublishStep } from "./PublishStep";
 import { UpdatedNotesTable } from "./UpdatedNotesTable";
 
-function prettyJson(value: unknown) {
-  return JSON.stringify(value, null, 2);
-}
-
-function parseJsonBlock<T>(label: string, value: string): T {
-  try {
-    return JSON.parse(value) as T;
-  } catch {
-    throw new Error(`${label} must be valid JSON.`);
-  }
-}
-
-type PublishJsonErrors = {
+type PublishConfigurationErrors = {
   siteConfig?: string;
+};
+
+const knownSiteConfigurationKeys = new Set([
+  "brand",
+  "version",
+  "headerLinks",
+  "showPreviousVersions",
+  "footerHtml"
+]);
+
+const defaultSiteConfiguration: PublishSiteConfigurationState = {
+  brand: "mianotes",
+  version: "0.1.0",
+  headerLinks: [],
+  showPreviousVersions: true,
+  footerHtml: "Copyright © Your Name Here.",
+  extraConfiguration: {}
 };
 
 function navigationPathSet(groups: PublishNavigationGroupRecord[]) {
   return new Set(groups.flatMap((group) => group.items.map((item) => item.path)));
+}
+
+function stringValue(value: unknown, fallback: string) {
+  return typeof value === "string" ? value : fallback;
+}
+
+function headerLinksFromConfig(value: unknown): PublishHeaderLink[] {
+  if (!Array.isArray(value)) return [];
+  return value.flatMap((item) => {
+    if (!item || typeof item !== "object") return [];
+    const candidate = item as Record<string, unknown>;
+    const title = stringValue(candidate.title, "").trim();
+    const url = stringValue(candidate.url, "").trim();
+    return title && url ? [{ title, url }] : [];
+  }).slice(0, 6);
+}
+
+function siteConfigurationFromRecord(
+  value: Record<string, unknown>
+): PublishSiteConfigurationState {
+  const extraConfiguration = Object.fromEntries(
+    Object.entries(value).filter(([key]) => !knownSiteConfigurationKeys.has(key))
+  );
+  return {
+    brand: stringValue(value.brand, defaultSiteConfiguration.brand),
+    version: stringValue(value.version, defaultSiteConfiguration.version),
+    headerLinks: headerLinksFromConfig(value.headerLinks),
+    showPreviousVersions: typeof value.showPreviousVersions === "boolean"
+      ? value.showPreviousVersions
+      : defaultSiteConfiguration.showPreviousVersions,
+    footerHtml: stringValue(value.footerHtml, defaultSiteConfiguration.footerHtml),
+    extraConfiguration
+  };
+}
+
+function siteConfigurationPayload(
+  value: PublishSiteConfigurationState
+): Record<string, unknown> {
+  return {
+    ...value.extraConfiguration,
+    brand: value.brand.trim(),
+    version: value.version.trim(),
+    headerLinks: value.headerLinks,
+    showPreviousVersions: value.showPreviousVersions,
+    footerHtml: value.footerHtml
+  };
 }
 
 export function PublishScreen({
@@ -69,7 +124,14 @@ export function PublishScreen({
   const [theme, setTheme] = useState("mialight");
   const [folderId, setFolderId] = useState<string | "all">(selectedFolderId);
   const [tagId, setTagId] = useState<string | "all">("all");
-  const [siteConfig, setSiteConfig] = useState("{}");
+  const [siteConfig, setSiteConfig] = useState<PublishSiteConfigurationState>(
+    defaultSiteConfiguration
+  );
+  const [headerLinkDraft, setHeaderLinkDraft] = useState<PublishHeaderLink>({
+    title: "",
+    url: ""
+  });
+  const [headerLinkError, setHeaderLinkError] = useState<string | null>(null);
   const [navigationGroups, setNavigationGroups] = useState<PublishNavigationGroupRecord[]>([]);
   const [updatedNotes, setUpdatedNotes] = useState<PublishDraftNoteRecord[]>([]);
   const [hasDraft, setHasDraft] = useState(false);
@@ -77,7 +139,7 @@ export function PublishScreen({
   const [isPreparing, setIsPreparing] = useState(false);
   const [isPublishing, setIsPublishing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [jsonErrors, setJsonErrors] = useState<PublishJsonErrors>({});
+  const [configurationErrors, setConfigurationErrors] = useState<PublishConfigurationErrors>({});
   const [result, setResult] = useState<PublishResultRecord | null>(null);
   const noticeRef = useRef<HTMLDivElement | null>(null);
   const statusRef = useRef<HTMLDivElement | null>(null);
@@ -138,28 +200,22 @@ export function PublishScreen({
     setHasDraft(false);
     setResult(null);
     setError(null);
-    setJsonErrors({});
+    setConfigurationErrors({});
+    setHeaderLinkError(null);
   }
 
   function validatePublishPayload() {
-    let nextSiteConfig: Record<string, unknown> | null = null;
-    const nextErrors: PublishJsonErrors = {};
+    const nextErrors: PublishConfigurationErrors = {};
+    const nextSiteConfig = siteConfigurationPayload(siteConfig);
 
-    try {
-      const parsedSiteConfig = parseJsonBlock<unknown>("Site configuration", siteConfig);
-      if (!parsedSiteConfig || Array.isArray(parsedSiteConfig) || typeof parsedSiteConfig !== "object") {
-        nextErrors.siteConfig = "Site configuration must be a JSON object.";
-      } else {
-        nextSiteConfig = parsedSiteConfig as Record<string, unknown>;
-      }
-    } catch (caughtError) {
-      nextErrors.siteConfig = caughtError instanceof Error
-        ? caughtError.message
-        : "Site configuration must be valid JSON.";
+    if (!String(nextSiteConfig.brand).trim()) {
+      nextErrors.siteConfig = "Brand is required.";
+    } else if (!String(nextSiteConfig.version).trim()) {
+      nextErrors.siteConfig = "Version is required.";
     }
 
-    setJsonErrors(nextErrors);
-    if (nextErrors.siteConfig || !nextSiteConfig) {
+    setConfigurationErrors(nextErrors);
+    if (nextErrors.siteConfig) {
       scrollToElement(siteConfigRef.current);
       return null;
     }
@@ -178,7 +234,8 @@ export function PublishScreen({
   async function prepareDraft() {
     setError(null);
     setResult(null);
-    setJsonErrors({});
+    setConfigurationErrors({});
+    setHeaderLinkError(null);
     setIsPreparing(true);
     try {
       const params = new URLSearchParams({ theme });
@@ -189,7 +246,7 @@ export function PublishScreen({
         params.set("tag_id", tagId);
       }
       const draft = await apiFetch<PublishDraftRecord>(`/api/publish/draft?${params.toString()}`);
-      setSiteConfig(prettyJson(draft.site_configuration));
+      setSiteConfig(siteConfigurationFromRecord(draft.site_configuration));
       setNavigationGroups(draft.navigation);
       setUpdatedNotes(draft.updated_notes);
       setHasDraft(true);
@@ -223,6 +280,35 @@ export function PublishScreen({
     } finally {
       setIsPublishing(false);
     }
+  }
+
+  function addHeaderLink() {
+    const title = headerLinkDraft.title.trim();
+    const url = headerLinkDraft.url.trim();
+    if (!title || !url) {
+      setHeaderLinkError("Add both a title and a URL.");
+      return;
+    }
+    try {
+      const parsedUrl = new URL(url);
+      if (!["http:", "https:", "mailto:"].includes(parsedUrl.protocol)) {
+        setHeaderLinkError("Use a http, https, or mailto URL.");
+        return;
+      }
+    } catch {
+      setHeaderLinkError("Use a valid URL.");
+      return;
+    }
+    if (siteConfig.headerLinks.length >= 6) {
+      setHeaderLinkError("You can add up to 6 header links.");
+      return;
+    }
+    setSiteConfig((current) => ({
+      ...current,
+      headerLinks: [...current.headerLinks, { title, url }]
+    }));
+    setHeaderLinkDraft({ title: "", url: "" });
+    setHeaderLinkError(null);
   }
 
   return (
@@ -322,21 +408,28 @@ export function PublishScreen({
                 description="Review the generated configuration, navigation, and updated notes before Mianotes builds a static HTML site."
               >
                 <div className="publish-blocks">
-                  <div ref={siteConfigRef}>
-                    <JsonBlock
-                      title="Site configuration"
-                      error={jsonErrors.siteConfig}
-                      value={siteConfig}
-                      onChange={(value) => {
-                        setSiteConfig(value);
-                        setJsonErrors((current) => ({ ...current, siteConfig: undefined }));
-                      }}
-                    />
-                  </div>
                   <PublishNavigationTable
                     groups={navigationGroups}
                     onChange={setNavigationGroups}
                   />
+                  <div ref={siteConfigRef}>
+                    <PublishSiteConfigurationForm
+                      value={siteConfig}
+                      error={configurationErrors.siteConfig}
+                      linkDraft={headerLinkDraft}
+                      linkError={headerLinkError}
+                      onChange={(value) => {
+                        setSiteConfig(value);
+                        setConfigurationErrors((current) => ({
+                          ...current,
+                          siteConfig: undefined
+                        }));
+                      }}
+                      onLinkDraftChange={setHeaderLinkDraft}
+                      onAddLink={addHeaderLink}
+                      onClearLinkError={() => setHeaderLinkError(null)}
+                    />
+                  </div>
                   <UpdatedNotesTable notes={visibleUpdatedNotes} />
                 </div>
                 <footer className="publish-actions">
