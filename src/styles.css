@@ -5481,7 +5481,8 @@ textarea:focus {
 .share-copy-notice {
   position: fixed;
   top: 20px;
-  right: 24px;
+  left: 50%;
+  transform: translateX(-50%);
   z-index: 80;
   width: auto;
   max-width: min(420px, calc(100vw - 32px));
