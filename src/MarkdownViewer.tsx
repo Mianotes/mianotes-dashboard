@@ -130,6 +130,7 @@ const codeMirrorThemeExtensions = [
 const fencedCodeBlockPattern = /(```[\s\S]*?```|~~~[\s\S]*?~~~)/g;
 const autolinkPattern = /^<(?:[A-Za-z][A-Za-z0-9+.-]{1,31}:[^\s<>]*|[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+)>/;
 const htmlTagPattern = /^<\/?([A-Za-z][A-Za-z0-9-]*)(?=[\s>/])[^<>]*?>/;
+const accidentalTextDirectivePattern = /(?<![\\:]):(?=[A-Za-z])/g;
 const htmlTagNames = new Set([
   "a", "abbr", "address", "article", "aside", "b", "base", "blockquote", "br",
   "caption", "cite", "code", "col", "colgroup", "dd", "del", "details", "div",
@@ -194,7 +195,10 @@ function escapeMdxUnsafeInlineText(text: string) {
 function normalizeMdxUnsafeMarkdown(markdown: string) {
   return markdown
     .split(fencedCodeBlockPattern)
-    .map((part, index) => index % 2 === 0 ? escapeMdxUnsafeInlineText(part) : part)
+    .map((part, index) => {
+      if (index % 2 !== 0) return part;
+      return escapeMdxUnsafeInlineText(part).replace(accidentalTextDirectivePattern, "\\:");
+    })
     .join("");
 }
 
