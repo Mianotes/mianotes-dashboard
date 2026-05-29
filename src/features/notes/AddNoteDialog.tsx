@@ -5,6 +5,29 @@ import { apiFetch } from "../../api/client";
 import type { FolderRecord, NoteRecord } from "../../api/types";
 import { Modal, ModalActions } from "../../components/ui/Modal";
 
+const supportedUploadAccept = [
+  ".csv",
+  ".doc",
+  ".docx",
+  ".htm",
+  ".html",
+  ".jpeg",
+  ".jpg",
+  ".m4a",
+  ".md",
+  ".markdown",
+  ".mp3",
+  ".mp4",
+  ".odt",
+  ".pdf",
+  ".png",
+  ".rtf",
+  ".tif",
+  ".tiff",
+  ".txt",
+  ".wav"
+].join(",");
+
 export function AddNoteDialog({
   folders,
   selectedFolderId,
@@ -186,13 +209,14 @@ export function AddNoteDialog({
                 <input
                   ref={fileInputRef}
                   type="file"
+                  accept={supportedUploadAccept}
                   onChange={(event) => selectFile(event.target.files?.[0] ?? null)}
                 />
                 {!file ? (
                   <span className="file-dropzone-empty">
                     <Upload size={20} />
                     <strong>Drop a file here or browse</strong>
-                    <small>PDF, Word, Excel, CSV, images, and audio files are supported.</small>
+                    <small>PDF, Word, Excel, CSV, images, audio, and video files are supported.</small>
                   </span>
                 ) : (
                   <span className="file-chip">

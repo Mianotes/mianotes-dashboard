@@ -1,5 +1,5 @@
 import { Loader2 } from "lucide-react";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AuthScreen } from "./features/auth/AuthScreen";
 import { DashboardShell } from "./features/dashboard/DashboardShell";
 import { useDashboardActions } from "./features/dashboard/useDashboardActions";
@@ -65,6 +65,12 @@ function AuthenticatedApp() {
   const accountMenuRef = useRef<HTMLDivElement | null>(null);
   const viewFilterRef = useRef<HTMLDivElement | null>(null);
   const folderActionsMenuRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (!error) return undefined;
+    const timeout = window.setTimeout(() => setError(null), 4500);
+    return () => window.clearTimeout(timeout);
+  }, [error]);
 
   const closeAccountMenu = useCallback(() => setIsAccountOpen(false), [setIsAccountOpen]);
   const closeViewFilter = useCallback(() => setIsViewFilterOpen(false), [setIsViewFilterOpen]);

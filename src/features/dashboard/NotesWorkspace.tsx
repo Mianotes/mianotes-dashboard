@@ -65,7 +65,7 @@ export function NotesWorkspace({
   return (
     <>
       {error && (
-        <div className="dashboard-notice" role="status">
+        <div className="dashboard-notice dashboard-toast-notice" role="status">
           <span>{error}</span>
           <button type="button" aria-label="Dismiss message" onClick={onDismissError}>
             <X size={14} />
@@ -73,7 +73,7 @@ export function NotesWorkspace({
         </div>
       )}
       {successMessage && (
-        <div className="dashboard-notice success share-copy-notice" role="status">
+        <div className="dashboard-notice success dashboard-toast-notice share-copy-notice" role="status">
           <span>{successMessage}</span>
           <button type="button" aria-label="Dismiss message" onClick={onDismissSuccess}>
             <X size={14} />
