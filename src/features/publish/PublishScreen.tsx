@@ -22,7 +22,6 @@ import {
   type PublishSiteConfigurationState
 } from "./PublishSiteConfigurationForm";
 import { PublishStep } from "./PublishStep";
-import { UpdatedNotesTable } from "./UpdatedNotesTable";
 
 type PublishConfigurationErrors = {
   siteConfig?: string;
@@ -430,7 +429,6 @@ export function PublishScreen({
                       onClearLinkError={() => setHeaderLinkError(null)}
                     />
                   </div>
-                  <UpdatedNotesTable notes={visibleUpdatedNotes} />
                 </div>
                 <footer className="publish-actions">
                   <button className="primary-action" type="submit" disabled={isPublishing}>
