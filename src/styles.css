@@ -481,7 +481,7 @@ button {
   min-width: 190px;
   color: #777781;
   font-size: 13px;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .breadcrumb-home,
