@@ -2932,8 +2932,7 @@ textarea:focus {
 }
 
 .primary-button:not(:disabled):active {
-  background: #000000;
-  transform: translateY(1px);
+  background: #444444;
 }
 
 .primary-button.small {
@@ -4368,9 +4367,8 @@ textarea:focus {
 }
 
 .settings-api-action:not(:disabled):active {
-  border-color: #000000;
-  background: #000000;
-  transform: translateY(1px);
+  border-color: #444444;
+  background: #444444;
 }
 
 .settings-api-action:disabled {
@@ -5688,11 +5686,16 @@ textarea:focus {
   border-color: #bfc1c9;
 }
 
-.primary-action:not(:disabled):active,
-.secondary-action:not(:disabled):active {
+.primary-action:not(:disabled):active {
   color: #ffffff;
-  border-color: #15161a;
-  background: #15161a;
+  border-color: #444444;
+  background: #444444;
+}
+
+.secondary-action:not(:disabled):active {
+  border-color: #bfc1c9;
+  color: #363741;
+  background: #eef0f5;
 }
 
 .dashboard-notice.success {
