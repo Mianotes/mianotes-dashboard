@@ -685,10 +685,15 @@ button {
 }
 
 .workspace-switcher-popover em {
-  color: #70737f;
+  padding: 5px 8px;
+  border: 1px solid #cce0ff;
+  border-radius: 6px;
+  color: #1d63e9;
+  background: #eaf2ff;
   font-size: 11px;
+  line-height: 1;
   font-style: normal;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .breadcrumb-workspace-switcher .workspace-switcher-button {
