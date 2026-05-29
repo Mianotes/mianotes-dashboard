@@ -1,4 +1,4 @@
-import { Edit3, Eye, Loader2, MoreVertical, Share2, Trash2 } from "lucide-react";
+import { Download, Edit3, Eye, Loader2, MoreVertical, Share2, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { SyntheticEvent } from "react";
 import { mediaPath } from "../../api/client";
@@ -15,6 +15,7 @@ type NoteActionsMenuProps = {
   onEdit: () => void;
   onMove: () => void;
   onShare: () => void | Promise<void>;
+  onExportPdf: () => void | Promise<void>;
   onDelete: () => void | Promise<void>;
 };
 
@@ -42,6 +43,7 @@ export function NoteActionsMenu({
   onEdit,
   onMove,
   onShare,
+  onExportPdf,
   onDelete
 }: NoteActionsMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -173,6 +175,10 @@ export function NoteActionsMenu({
           <button type="button" role="menuitem" onClick={() => void runAndClose(onShare)}>
             <Share2 size={15} />
             Share
+          </button>
+          <button type="button" role="menuitem" onClick={() => void runAndClose(onExportPdf)}>
+            <Download size={15} />
+            Export as PDF
           </button>
           {note.source_files?.[0]?.url ? (
             <button

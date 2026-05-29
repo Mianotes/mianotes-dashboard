@@ -23,6 +23,7 @@ export function NotePanel({
   onEditModeChange,
   onMove,
   onShare,
+  onExportPdf,
   onDeleted
 }: {
   note: NoteRecord;
@@ -35,6 +36,7 @@ export function NotePanel({
   onEditModeChange: (isEditing: boolean) => void;
   onMove: (note: NoteRecord) => void;
   onShare: (note: NoteRecord) => void;
+  onExportPdf: (note: NoteRecord) => void;
   onDeleted: () => Promise<void>;
 }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -235,6 +237,7 @@ export function NotePanel({
         onEdit={startEditing}
         onMove={() => onMove(note)}
         onShare={() => onShare(note)}
+        onExportPdf={() => onExportPdf(note)}
         onDelete={deleteNote}
       />
       {noteError && (

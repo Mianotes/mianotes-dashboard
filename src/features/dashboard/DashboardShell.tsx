@@ -391,6 +391,7 @@ export function DashboardShell({
               onOpenNote={(note, edit) => void actions.openNote(note, edit)}
               onMoveNote={setMovingNote}
               onShareNote={(note) => void shareNote(note)}
+              onExportNotePdf={(note) => void downloadSharedNotePdf(note)}
               onToggleStar={(note) => void actions.toggleNoteStar(note)}
               onNotesDeleted={actions.refreshNotes}
               onError={setError}

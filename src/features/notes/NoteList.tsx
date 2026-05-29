@@ -15,6 +15,7 @@ type NoteListProps = {
   onOpenNote: (note: NoteRecord, edit?: boolean) => void;
   onMoveNote: (note: NoteRecord) => void;
   onShareNote: (note: NoteRecord) => void;
+  onExportNotePdf: (note: NoteRecord) => void;
   onToggleStar: (note: NoteRecord) => void;
   onDeleted: () => Promise<void>;
   onError: (message: string | null) => void;
@@ -33,6 +34,7 @@ export function NoteList({
   onOpenNote,
   onMoveNote,
   onShareNote,
+  onExportNotePdf,
   onToggleStar,
   onDeleted,
   onError,
@@ -54,6 +56,7 @@ export function NoteList({
               onEdit={() => onOpenNote(note, true)}
               onMove={() => onMoveNote(note)}
               onShare={() => onShareNote(note)}
+              onExportPdf={() => onExportNotePdf(note)}
               onDeleted={onDeleted}
               onError={onError}
             />

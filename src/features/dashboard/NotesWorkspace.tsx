@@ -27,6 +27,7 @@ type NotesWorkspaceProps = {
   onOpenNote: (note: NoteRecord, edit?: boolean) => void;
   onMoveNote: (note: NoteRecord) => void;
   onShareNote: (note: NoteRecord) => void;
+  onExportNotePdf: (note: NoteRecord) => void;
   onToggleStar: (note: NoteRecord) => void;
   onNotesDeleted: () => Promise<void>;
   onError: (message: string | null) => void;
@@ -57,6 +58,7 @@ export function NotesWorkspace({
   onOpenNote,
   onMoveNote,
   onShareNote,
+  onExportNotePdf,
   onToggleStar,
   onNotesDeleted,
   onError,
@@ -94,6 +96,7 @@ export function NotesWorkspace({
             onEditModeChange={onNoteEditModeChange}
             onMove={onMoveNote}
             onShare={onShareNote}
+            onExportPdf={onExportNotePdf}
             onDeleted={onOpenedNoteDeleted}
           />
         ) : (
@@ -109,6 +112,7 @@ export function NotesWorkspace({
             onOpenNote={onOpenNote}
             onMoveNote={onMoveNote}
             onShareNote={onShareNote}
+            onExportNotePdf={onExportNotePdf}
             onToggleStar={onToggleStar}
             onDeleted={onNotesDeleted}
             onError={onError}

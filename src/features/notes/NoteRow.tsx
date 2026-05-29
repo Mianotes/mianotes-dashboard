@@ -15,6 +15,7 @@ type NoteRowProps = {
   onEdit: () => void;
   onMove: () => void;
   onShare: () => void;
+  onExportPdf: () => void;
   onDeleted: () => Promise<void>;
   onError: (message: string | null) => void;
 };
@@ -27,6 +28,7 @@ export function NoteRow({
   onEdit,
   onMove,
   onShare,
+  onExportPdf,
   onDeleted,
   onError
 }: NoteRowProps) {
@@ -119,6 +121,7 @@ export function NoteRow({
           onEdit={onEdit}
           onMove={onMove}
           onShare={onShare}
+          onExportPdf={onExportPdf}
           onDelete={deleteNote}
         />
       </div>

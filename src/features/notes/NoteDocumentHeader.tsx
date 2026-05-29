@@ -20,6 +20,7 @@ type NoteDocumentHeaderProps = {
   onEdit: () => void;
   onMove: () => void;
   onShare: () => void | Promise<void>;
+  onExportPdf: () => void | Promise<void>;
   onDelete: () => void | Promise<void>;
 };
 
@@ -40,6 +41,7 @@ export function NoteDocumentHeader({
   onEdit,
   onMove,
   onShare,
+  onExportPdf,
   onDelete
 }: NoteDocumentHeaderProps) {
   return (
@@ -87,6 +89,7 @@ export function NoteDocumentHeader({
               onEdit={onEdit}
               onMove={onMove}
               onShare={onShare}
+              onExportPdf={onExportPdf}
               onDelete={onDelete}
             />
           </>
