@@ -127,6 +127,20 @@ const codeMirrorThemeExtensions = [
   Prec.highest(syntaxHighlighting(openAiCodeHighlight))
 ];
 
+const fencedCodeBlockPattern = /(```[\s\S]*?```|~~~[\s\S]*?~~~)/g;
+const autolinkPattern = /^<(?:[A-Za-z][A-Za-z0-9+.-]{1,31}:[^\s<>]*|[A-Za-z0-9.!#$%&'*+/=?^_`{|}~-]+@[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?(?:\.[A-Za-z0-9](?:[A-Za-z0-9-]{0,61}[A-Za-z0-9])?)+)>/;
+const htmlTagPattern = /^<\/?([A-Za-z][A-Za-z0-9-]*)(?=[\s>/])[^<>]*?>/;
+const htmlTagNames = new Set([
+  "a", "abbr", "address", "article", "aside", "b", "base", "blockquote", "br",
+  "caption", "cite", "code", "col", "colgroup", "dd", "del", "details", "div",
+  "dl", "dt", "em", "figcaption", "figure", "footer", "h1", "h2", "h3", "h4",
+  "h5", "h6", "header", "hr", "i", "iframe", "img", "input", "ins", "kbd",
+  "li", "link", "main", "mark", "meta", "nav", "object", "ol", "p", "param",
+  "pre", "q", "s", "samp", "section", "small", "source", "span", "strong",
+  "sub", "summary", "sup", "table", "tbody", "td", "tfoot", "th", "thead",
+  "track", "tr", "u", "ul", "var"
+]);
+
 function contentKey(value: string) {
   let hash = 0;
   for (let index = 0; index < value.length; index += 1) {
@@ -140,6 +154,52 @@ function isAdmonition(editorInFocus: EditorInFocus | null) {
   if (!node || node.getType() !== "directive") return false;
   const directiveName = (node as unknown as { getMdastNode?: () => { name?: string } }).getMdastNode?.().name;
   return ["note", "tip", "danger", "info", "caution"].includes(directiveName ?? "");
+}
+
+function escapeAngleBrackets(text: string) {
+  return text.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function escapeMdxUnsafeInlineText(text: string) {
+  let output = "";
+  let index = 0;
+  while (index < text.length) {
+    if (text[index] !== "<") {
+      output += text[index];
+      index += 1;
+      continue;
+    }
+
+    const rest = text.slice(index);
+    const autolink = rest.match(autolinkPattern);
+    if (autolink) {
+      output += autolink[0];
+      index += autolink[0].length;
+      continue;
+    }
+
+    const htmlTag = rest.match(htmlTagPattern);
+    if (htmlTag) {
+      output += htmlTagNames.has(htmlTag[1].toLowerCase()) ? htmlTag[0] : escapeAngleBrackets(htmlTag[0]);
+      index += htmlTag[0].length;
+      continue;
+    }
+
+    output += "&lt;";
+    index += 1;
+  }
+  return output;
+}
+
+function normalizeMdxUnsafeMarkdown(markdown: string) {
+  return markdown
+    .split(fencedCodeBlockPattern)
+    .map((part, index) => index % 2 === 0 ? escapeMdxUnsafeInlineText(part) : part)
+    .join("");
+}
+
+function normalizeEditorMarkdown(markdown: string) {
+  return normalizeMdxUnsafeMarkdown(normalizeMarkdownMediaPaths(markdown));
 }
 
 function SourceModeToolbar() {
@@ -175,7 +235,7 @@ function richMarkdownPlugins(imageUploadHandler?: ImageUploadHandler) {
 }
 
 export default function MarkdownViewer({ id, updatedAt, markdown }: { id: string; updatedAt: string; markdown: string }) {
-  const normalizedMarkdown = normalizeMarkdownMediaPaths(markdown);
+  const normalizedMarkdown = normalizeEditorMarkdown(markdown);
   return (
     <MDXEditor
       key={`${id}-${updatedAt}-${contentKey(normalizedMarkdown)}`}
@@ -250,7 +310,7 @@ export const MarkdownEditor = forwardRef<MDXEditorMethods, MarkdownEditorProps>(
   },
   ref
 ) {
-  const normalizedMarkdown = normalizeMarkdownMediaPaths(markdown);
+  const normalizedMarkdown = normalizeEditorMarkdown(markdown);
   const editorRef = useRef<MDXEditorMethods | null>(null);
   const setEditorRef = useCallback((editor: MDXEditorMethods | null) => {
     editorRef.current = editor;
