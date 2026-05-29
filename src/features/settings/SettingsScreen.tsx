@@ -111,6 +111,16 @@ export function SettingsScreen({
     }
   }, [dashboardStorageSettings]);
 
+  useEffect(() => {
+    if (!settingsMessage) return undefined;
+
+    const timeoutId = window.setTimeout(() => {
+      setSettingsMessage(null);
+    }, 4000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [settingsMessage]);
+
   async function loadArchivedFolders() {
     setIsLoadingArchivedFolders(true);
     setSettingsError(null);
@@ -251,7 +261,7 @@ export function SettingsScreen({
         <div className="settings-content">
           <h1>Settings</h1>
           {settingsError && (
-            <div className="dashboard-notice settings-notice" role="alert">
+            <div className="dashboard-notice dashboard-toast-notice settings-notice" role="alert">
               <span>{settingsError}</span>
               <button type="button" aria-label="Dismiss" onClick={() => setSettingsError(null)}>
                 <X size={16} />
@@ -259,7 +269,7 @@ export function SettingsScreen({
             </div>
           )}
           {settingsMessage && (
-            <div className="dashboard-notice success settings-notice" role="status">
+            <div className="dashboard-notice success dashboard-toast-notice settings-notice" role="status">
               <span>{settingsMessage}</span>
               <button type="button" aria-label="Dismiss" onClick={() => setSettingsMessage(null)}>
                 <X size={16} />
@@ -345,7 +355,6 @@ export function SettingsScreen({
                   disabled={isSavingShareSettings || isLoadingShareSettings}
                   onClick={() => void saveShareSettings()}
                 >
-                  {isSavingShareSettings ? <Loader2 className="spin" size={18} /> : null}
                   Save address
                 </button>
               </div>
@@ -383,7 +392,6 @@ export function SettingsScreen({
                   disabled={isCreatingApiToken}
                   onClick={() => void createApiToken()}
                 >
-                  {isCreatingApiToken ? <Loader2 className="spin" size={18} /> : null}
                   Create API Key
                 </button>
               </div>
