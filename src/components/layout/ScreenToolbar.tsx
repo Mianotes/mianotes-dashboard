@@ -23,6 +23,7 @@ type ScreenToolbarProps = {
   className?: string;
   onOpenSettings?: () => void;
   onSwitchWorkspace: (locationId: string) => Promise<void>;
+  showAccountMenu?: boolean;
   showWorkspaceBreadcrumb?: boolean;
 };
 
@@ -40,6 +41,7 @@ export function ScreenToolbar({
   className,
   onOpenSettings,
   onSwitchWorkspace,
+  showAccountMenu = true,
   showWorkspaceBreadcrumb = true
 }: ScreenToolbarProps) {
   const [isAccountOpen, setIsAccountOpen] = useState(false);
@@ -83,18 +85,20 @@ export function ScreenToolbar({
       </div>
       <div className="toolbar-actions">
         {children}
-        <AccountMenu
-          className="profile-account-menu"
-          avatarClassName="profile-toolbar-avatar"
-          currentUser={currentUser}
-          isOpen={isAccountOpen}
-          menuRef={accountMenuRef}
-          onToggle={() => setIsAccountOpen((value) => !value)}
-          onOpenProfile={() => runAccountAction(onOpenProfile)}
-          onOpenUsers={() => runAccountAction(onOpenUsers)}
-          onOpenSettings={onOpenSettings ? () => runAccountAction(onOpenSettings) : undefined}
-          onSignOut={() => runAccountAction(onSignOut)}
-        />
+        {showAccountMenu ? (
+          <AccountMenu
+            className="profile-account-menu"
+            avatarClassName="profile-toolbar-avatar"
+            currentUser={currentUser}
+            isOpen={isAccountOpen}
+            menuRef={accountMenuRef}
+            onToggle={() => setIsAccountOpen((value) => !value)}
+            onOpenProfile={() => runAccountAction(onOpenProfile)}
+            onOpenUsers={() => runAccountAction(onOpenUsers)}
+            onOpenSettings={onOpenSettings ? () => runAccountAction(onOpenSettings) : undefined}
+            onSignOut={() => runAccountAction(onSignOut)}
+          />
+        ) : null}
       </div>
     </header>
   );

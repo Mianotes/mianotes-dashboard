@@ -282,18 +282,15 @@ export function ProfileScreen({
         workspaceName={workspaceName}
         storageSettings={storageSettings}
         selectedUserId={selectedUserId}
-        selectedUser={selectedUser}
         toolbarName={toolbarName}
         isAddingUser={isAddingUser}
         isEditing={isEditing}
         isSaving={isSaving}
-        canEditSelectedUser={canEditSelectedUser}
         onBack={onBack}
         onCancelEditing={cancelEditing}
         onSaveNewUser={() => void saveNewUser()}
         onSaveProfile={() => void saveProfile()}
         onStartAddingUser={startAddingUser}
-        onStartEditing={() => setIsEditing(true)}
         onSelectUser={(userId) => {
           setIsAddingUser(false);
           onSelectUser(userId);
@@ -327,8 +324,10 @@ export function ProfileScreen({
             isEditing={isEditing}
             draft={draft}
             onDraftChange={setDraft}
-            canUploadPhoto={canEditSelectedUser}
+            canUploadPhoto={canEditSelectedUser && isEditing}
             isUploadingPhoto={isUploadingPhoto}
+            canEditProfile={canEditSelectedUser}
+            onEditProfile={() => setIsEditing(true)}
             onPhotoUpload={uploadProfilePhoto}
             onSelectTag={onSelectTag}
           />

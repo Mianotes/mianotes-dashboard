@@ -1,4 +1,7 @@
+import { Edit3, MoreVertical } from "lucide-react";
+import { useRef, useState } from "react";
 import type { FolderRecord, NoteRecord, ProfileDraft, UserRecord } from "../../api/types";
+import { useOutsideAndEscape } from "../../hooks/useOutsideAndEscape";
 import { ProfileSummaryCard } from "./ProfileSummaryCard";
 import { profileTags, userDisplayRole } from "./profileUtils";
 
@@ -12,6 +15,8 @@ export function SingleProfileView({
   canUploadPhoto,
   isUploadingPhoto,
   onPhotoUpload,
+  canEditProfile,
+  onEditProfile,
   onSelectTag
 }: {
   user: UserRecord;
@@ -23,13 +28,51 @@ export function SingleProfileView({
   canUploadPhoto: boolean;
   isUploadingPhoto: boolean;
   onPhotoUpload: (file: File) => void;
+  canEditProfile: boolean;
+  onEditProfile: () => void;
   onSelectTag: (userId: string, tagSlug: string) => void;
 }) {
   const tags = profileTags(user, notes, folders);
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  useOutsideAndEscape(isMenuOpen, menuRef, () => setIsMenuOpen(false));
 
   function setDraftField(field: keyof ProfileDraft, value: string) {
     onDraftChange({ ...draft, [field]: value });
   }
+
+  const menu = canEditProfile && !isEditing ? (
+    <div className="profile-card-menu single-profile-menu" ref={menuRef}>
+      <button
+        className="profile-card-menu-button"
+        type="button"
+        aria-label={`Open actions for ${user.name}`}
+        aria-expanded={isMenuOpen}
+        onClick={(event) => {
+          event.stopPropagation();
+          setIsMenuOpen((current) => !current);
+        }}
+      >
+        <MoreVertical size={17} />
+      </button>
+      {isMenuOpen ? (
+        <div className="profile-card-menu-popover" role="menu">
+          <button
+            type="button"
+            role="menuitem"
+            onClick={(event) => {
+              event.stopPropagation();
+              setIsMenuOpen(false);
+              onEditProfile();
+            }}
+          >
+            <Edit3 size={15} />
+            Edit
+          </button>
+        </div>
+      ) : null}
+    </div>
+  ) : null;
 
   return (
     <div className="profile-layout">
@@ -39,6 +82,7 @@ export function SingleProfileView({
         folders={folders}
         canUploadPhoto={canUploadPhoto}
         isUploadingPhoto={isUploadingPhoto}
+        menu={menu}
         onPhotoUpload={onPhotoUpload}
       />
       <div className="profile-detail-column">

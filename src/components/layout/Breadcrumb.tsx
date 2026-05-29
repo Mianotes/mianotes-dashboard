@@ -23,7 +23,11 @@ export function Breadcrumb({ items, className, children }: BreadcrumbProps) {
       {items.map((item, index) => (
         <span
           key={item.key ?? `${item.label}-${index}`}
-          className={["breadcrumb-item", item.current ? "current" : undefined].filter(Boolean).join(" ")}
+          className={[
+            "breadcrumb-item",
+            item.leading ? "has-leading" : undefined,
+            item.current ? "current" : undefined
+          ].filter(Boolean).join(" ")}
         >
           {index > 0 ? (
             <i className="breadcrumb-separator" aria-hidden="true">

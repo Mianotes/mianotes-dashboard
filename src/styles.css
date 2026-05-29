@@ -536,6 +536,10 @@ button {
   flex: 0 1 auto;
 }
 
+.breadcrumb-item.has-leading {
+  overflow: visible;
+}
+
 .breadcrumb-separator {
   display: inline-flex;
   align-items: center;
@@ -2358,6 +2362,7 @@ button {
 }
 
 .profile-card {
+  position: relative;
   display: grid;
   justify-items: center;
   align-content: start;

@@ -1,4 +1,5 @@
 import { Camera, Loader2 } from "lucide-react";
+import type { ReactNode } from "react";
 import type { FolderRecord, NoteRecord, UserRecord } from "../../api/types";
 import { UserAvatar } from "../../components/ui/UserAvatar";
 import { profileStats, userDisplayRole } from "./profileUtils";
@@ -10,6 +11,7 @@ export function ProfileSummaryCard({
   compact = false,
   canUploadPhoto = false,
   isUploadingPhoto = false,
+  menu,
   onPhotoUpload
 }: {
   user: UserRecord;
@@ -18,12 +20,14 @@ export function ProfileSummaryCard({
   compact?: boolean;
   canUploadPhoto?: boolean;
   isUploadingPhoto?: boolean;
+  menu?: ReactNode;
   onPhotoUpload?: (file: File) => void;
 }) {
   const stats = profileStats(user, notes, folders);
 
   return (
-    <article className={`profile-card${compact ? " compact" : ""}`}>
+    <article className={`profile-card${compact ? " compact" : ""}${menu ? " has-menu" : ""}`}>
+      {menu}
       <div className="profile-avatar-wrap">
         <UserAvatar user={user} className="profile-avatar" />
         {canUploadPhoto && (

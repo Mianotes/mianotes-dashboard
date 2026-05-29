@@ -1,6 +1,5 @@
 import {
   ChevronDown,
-  Edit3,
   Loader2,
   User
 } from "lucide-react";
@@ -13,18 +12,15 @@ export function ProfileToolbar({
   workspaceName,
   storageSettings,
   selectedUserId,
-  selectedUser,
   toolbarName,
   isAddingUser,
   isEditing,
   isSaving,
-  canEditSelectedUser,
   onBack,
   onCancelEditing,
   onSaveNewUser,
   onSaveProfile,
   onStartAddingUser,
-  onStartEditing,
   onSelectUser,
   onSignOut,
   onOpenSettings,
@@ -35,18 +31,15 @@ export function ProfileToolbar({
   workspaceName: string;
   storageSettings: StorageSettingsRecord | null;
   selectedUserId: string | "all";
-  selectedUser: UserRecord | null;
   toolbarName: string;
   isAddingUser: boolean;
   isEditing: boolean;
   isSaving: boolean;
-  canEditSelectedUser: boolean;
   onBack: () => void;
   onCancelEditing: () => void;
   onSaveNewUser: () => void;
   onSaveProfile: () => void;
   onStartAddingUser: () => void;
-  onStartEditing: () => void;
   onSelectUser: (userId: string | "all") => void;
   onSignOut: () => void;
   onOpenSettings: () => void;
@@ -64,6 +57,7 @@ export function ProfileToolbar({
       onOpenSettings={onOpenSettings}
       onSignOut={onSignOut}
       onSwitchWorkspace={onSwitchWorkspace}
+      showAccountMenu={!isAddingUser && !isEditing}
       showWorkspaceBreadcrumb={false}
     >
         {isAddingUser ? (
@@ -81,56 +75,42 @@ export function ProfileToolbar({
               Cancel
             </button>
           </>
-        ) : selectedUser && canEditSelectedUser && (
-          isEditing ? (
-            <>
-              <button
-                className="primary-button compact save-profile-button"
-                type="button"
-                disabled={isSaving}
-                onClick={onSaveProfile}
-              >
-                {isSaving ? <Loader2 className="spin" size={15} /> : null}
-                Save
-              </button>
-              <button className="text-button compact" type="button" onClick={onCancelEditing}>
-                Cancel
-              </button>
-            </>
-          ) : (
-            <>
-              {currentUser.is_admin && (
-                <button className="primary-button compact add-user-button" type="button" onClick={onStartAddingUser}>
-                  Add User
-                </button>
-              )}
-              <button className="secondary-action-button" type="button" onClick={onStartEditing}>
-                <Edit3 size={16} />
-                Edit
-              </button>
-            </>
-          )
-        )}
-        {!isAddingUser && (!selectedUser || !canEditSelectedUser) && currentUser.is_admin && (
+        ) : isEditing ? (
+          <>
+            <button
+              className="primary-button compact save-profile-button"
+              type="button"
+              disabled={isSaving}
+              onClick={onSaveProfile}
+            >
+              {isSaving ? <Loader2 className="spin" size={15} /> : null}
+              Save
+            </button>
+            <button className="text-button compact" type="button" onClick={onCancelEditing}>
+              Cancel
+            </button>
+          </>
+        ) : currentUser.is_admin ? (
           <button className="primary-button compact add-user-button" type="button" onClick={onStartAddingUser}>
             Add User
           </button>
+        ) : null}
+        {!isAddingUser && !isEditing && (
+          <label className="select-button user-select-button profile-user-select">
+            <User className="select-button-icon" size={16} />
+            <span className="select-button-label">{toolbarName}</span>
+            <select
+              value={selectedUserId}
+              onChange={(event) => onSelectUser(event.target.value)}
+            >
+              <option value="all">All users</option>
+              {users.map((person) => (
+                <option value={person.id} key={person.id}>{person.name}</option>
+              ))}
+            </select>
+            <ChevronDown className="select-button-chevron" size={12} />
+          </label>
         )}
-        <label className="select-button user-select-button profile-user-select">
-          <User className="select-button-icon" size={16} />
-          <span className="select-button-label">{toolbarName}</span>
-          <select
-            value={selectedUserId}
-            onChange={(event) => onSelectUser(event.target.value)}
-            disabled={isAddingUser}
-          >
-            <option value="all">All users</option>
-            {users.map((person) => (
-              <option value={person.id} key={person.id}>{person.name}</option>
-            ))}
-          </select>
-          <ChevronDown className="select-button-chevron" size={12} />
-        </label>
     </ScreenToolbar>
   );
 }
