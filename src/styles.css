@@ -2619,6 +2619,21 @@ button {
   z-index: 1;
 }
 
+.profile-card.has-menu .profile-card-menu {
+  z-index: 4;
+}
+
+.single-profile-menu {
+  top: 18px;
+  right: 18px;
+}
+
+.single-profile-menu .profile-card-menu-button {
+  width: 34px;
+  height: 34px;
+  color: #747581;
+}
+
 .profile-card-menu-button {
   display: inline-flex;
   align-items: center;
