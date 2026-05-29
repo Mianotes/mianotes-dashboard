@@ -481,7 +481,7 @@ button {
   min-width: 190px;
   color: #777781;
   font-size: 13px;
-  overflow: visible;
+  overflow: hidden;
 }
 
 .breadcrumb-home,
@@ -522,18 +522,34 @@ button {
   height: 18px;
 }
 
-.breadcrumb span {
+.breadcrumb-item {
   display: inline-flex;
   align-items: center;
   gap: 4px;
+  flex: 0 1 auto;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+}
+
+.breadcrumb-item:first-child {
+  flex: 0 1 auto;
+}
+
+.breadcrumb-separator {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 14px;
+  font-style: normal;
+}
+
+.breadcrumb-label {
+  display: inline-block;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.breadcrumb span:first-child {
-  overflow: visible;
 }
 
 .breadcrumb .current {
@@ -3610,6 +3626,8 @@ textarea:focus {
 
   .mobile-sidebar-toggle {
     display: inline-flex;
+    width: 40px;
+    height: 40px;
   }
 
   .workspace {
@@ -3634,6 +3652,11 @@ textarea:focus {
     min-width: 0;
   }
 
+  .breadcrumb-workspace-switcher .workspace-switcher-button {
+    width: 40px;
+    height: 40px;
+  }
+
   .toolbar-actions {
     flex: 0 0 auto;
     justify-content: flex-end;
@@ -3642,6 +3665,10 @@ textarea:focus {
 
   .search-box {
     width: 200px;
+  }
+
+  .search-shortcut {
+    display: none;
   }
 
   .profile-layout {
@@ -3727,6 +3754,8 @@ textarea:focus {
 
   .mobile-sidebar-toggle {
     display: inline-flex;
+    width: 40px;
+    height: 40px;
   }
 
   .sidebar .folder-note-count {
@@ -3755,13 +3784,23 @@ textarea:focus {
     min-width: 0;
   }
 
-  .breadcrumb span {
+  .breadcrumb-item {
     flex: 0 1 auto;
     max-width: 42vw;
   }
 
-  .breadcrumb span:first-child {
-    flex: 0 0 auto;
+  .breadcrumb-item:first-child {
+    flex: 0 1 auto;
+    max-width: 38vw;
+  }
+
+  .breadcrumb-label {
+    min-width: 0;
+  }
+
+  .breadcrumb-workspace-switcher .workspace-switcher-button {
+    width: 40px;
+    height: 40px;
   }
 
   .breadcrumb-filter-chip {
