@@ -69,7 +69,7 @@ export function DatabaseSwitchModal({
     try {
       await onSwitchWorkspace(selectedLocation.id);
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Could not switch workspace.");
+      setError(error instanceof Error ? error.message : "Could not change workspace.");
     } finally {
       setIsSubmitting(false);
     }
@@ -79,7 +79,7 @@ export function DatabaseSwitchModal({
     <Modal className="folder-modal database-modal" labelledBy="database-switch-title" onClose={onClose}>
         <div className="folder-modal-header database-modal-header">
           <div>
-            <h2 id="database-switch-title">Switch workspace</h2>
+            <h2 id="database-switch-title">Change workspace</h2>
             <p>
               Each workspace has its own notes, folders, sources, publishing history, and console activity.
             </p>
@@ -191,7 +191,7 @@ export function DatabaseSwitchModal({
           primaryIcon={showSwitchAction ? (
             isSubmitting ? <Loader2 className="spin" size={16} /> : <FolderIcon size={16} />
           ) : undefined}
-          primaryLabel={showSwitchAction ? "Switch workspace" : undefined}
+          primaryLabel={showSwitchAction ? "Change workspace" : undefined}
         />
     </Modal>
   );

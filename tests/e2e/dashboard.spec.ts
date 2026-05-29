@@ -902,7 +902,7 @@ test("switches workspaces from the breadcrumb switcher without signing out", asy
   ).toBeVisible();
   await expect(page.getByRole("heading", { name: "Getting started" })).toBeVisible();
 
-  await page.getByRole("button", { name: /Switch workspace from Mianotes/ }).click();
+  await page.getByRole("button", { name: /Change workspace from Mianotes/ }).click();
   await page.getByRole("menuitemradio", { name: /Research/ }).click();
 
   await expect(page.locator(".breadcrumb")).toContainText("Research");
@@ -933,8 +933,8 @@ test("creates and switches workspaces from settings without ending the session",
   await page.getByLabel("Workspace path").fill("/tmp/test-user/Field notes");
   await page.getByRole("button", { name: "Create workspace" }).click();
   await page.getByRole("button", { name: /Field notes/ }).click();
-  await page.getByRole("dialog", { name: "Switch workspace" })
-    .getByRole("button", { name: "Switch workspace", exact: true })
+  await page.getByRole("dialog", { name: "Change workspace" })
+    .getByRole("button", { name: "Change workspace", exact: true })
     .click();
 
   await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();

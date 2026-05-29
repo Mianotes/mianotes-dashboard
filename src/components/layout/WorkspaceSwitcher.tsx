@@ -44,7 +44,7 @@ export function WorkspaceSwitcher({
       <button
         className="workspace-switcher-button"
         type="button"
-        aria-label={`Switch workspace${activeWorkspace ? ` from ${activeWorkspace.name}` : ""}`}
+        aria-label={`Change workspace${activeWorkspace ? ` from ${activeWorkspace.name}` : ""}`}
         aria-expanded={isOpen}
         aria-haspopup="menu"
         disabled={!storageSettings || locations.length === 0}
