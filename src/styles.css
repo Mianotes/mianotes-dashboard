@@ -2000,7 +2000,7 @@ button {
 .mianotes-rich-editor [class*="toolbarRoot"] {
   position: sticky;
   top: 0;
-  z-index: 3000;
+  z-index: 20;
   flex-wrap: wrap;
   margin: 0 0 22px;
   padding: 8px 0;
@@ -2029,13 +2029,13 @@ button {
 }
 
 [class*="dialogOverlay"] {
-  z-index: 4000 !important;
+  z-index: 6000 !important;
 }
 
 [class*="dialogContent"],
 [class*="largeDialogContent"],
 [class*="linkDialogPopoverContent"] {
-  z-index: 4001 !important;
+  z-index: 6001 !important;
   pointer-events: auto;
 }
 
@@ -2044,18 +2044,8 @@ button {
 [class*="toolbarCodeBlockLanguageSelectContent"],
 [class*="selectContainer"],
 [class*="popoverContent"] {
-  z-index: 4002 !important;
+  z-index: 5000 !important;
   pointer-events: auto;
-}
-
-[class*="linkDialogPopoverContent"] {
-  position: fixed !important;
-  top: 50% !important;
-  left: 50% !important;
-  width: min(520px, calc(100vw - 32px)) !important;
-  max-height: calc(100vh - 32px);
-  overflow: auto;
-  transform: translate(-50%, -50%) !important;
 }
 
 .mianotes-admonition-trigger {
