@@ -1795,16 +1795,35 @@ button {
 }
 
 .mianotes-rich-content [class*="admonition" i]:not([class*="title" i]):not([class*="content" i]) {
+  --mianotes-admonition-accent: #8b5cf6;
   margin: 24px 0 !important;
   padding: 16px 18px !important;
   border: 1px solid #e5e7eb !important;
-  border-left: 4px solid #7c3aed !important;
+  border-left: 4px solid var(--mianotes-admonition-accent) !important;
   border-radius: 12px !important;
   color: #334155 !important;
   background: #fafafa !important;
   box-shadow: none !important;
   font-size: 14px !important;
   line-height: 1.6 !important;
+}
+
+.mianotes-rich-content [class*="admonition" i][class*="tip" i]:not([class*="title" i]):not([class*="content" i]) {
+  --mianotes-admonition-accent: #22c55e;
+}
+
+.mianotes-rich-content [class*="admonition" i][class*="info" i]:not([class*="title" i]):not([class*="content" i]),
+.mianotes-rich-content [class*="admonition" i][class*="important" i]:not([class*="title" i]):not([class*="content" i]) {
+  --mianotes-admonition-accent: #3b82f6;
+}
+
+.mianotes-rich-content [class*="admonition" i][class*="caution" i]:not([class*="title" i]):not([class*="content" i]),
+.mianotes-rich-content [class*="admonition" i][class*="warning" i]:not([class*="title" i]):not([class*="content" i]) {
+  --mianotes-admonition-accent: #f59e0b;
+}
+
+.mianotes-rich-content [class*="admonition" i][class*="danger" i]:not([class*="title" i]):not([class*="content" i]) {
+  --mianotes-admonition-accent: #ef4444;
 }
 
 .mianotes-rich-content [class*="admonition" i] [class*="title" i] {
