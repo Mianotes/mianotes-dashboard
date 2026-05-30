@@ -1744,6 +1744,7 @@ button {
 .mianotes-rich-content [class*="codeMirrorWrapper"],
 .mianotes-rich-editor [class*="codeMirrorWrapper"] {
   margin: 24px 0 56px;
+  padding: 0 0.8rem;
   border: 1px solid #e2e2e2;
   border-radius: 12px;
   background: #ffffff;
