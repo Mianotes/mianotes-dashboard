@@ -1826,6 +1826,10 @@ button {
   background: transparent !important;
 }
 
+.mianotes-rich-content [class*="admonition" i] [class*="nestedEditor" i] {
+  background: transparent !important;
+}
+
 .mianotes-rich-content [class*="admonition" i] p {
   margin: 0 0 12px !important;
   color: inherit !important;
