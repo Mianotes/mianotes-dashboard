@@ -839,21 +839,21 @@ test("opens guest shared notes without signing in", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeHidden();
 });
 
-test("validates publish JSON before publishing and hides the form after success", async ({ page }) => {
+test("validates publish configuration before publishing and hides the form after success", async ({ page }) => {
   const requests = await mockMianotesApi(page);
 
-  await page.goto("/");
+  await page.goto("/folder/archive");
+  await expect(page.getByRole("button", { name: /Archive/ })).toHaveClass(/active/);
   await page.getByRole("button", { name: "Publish" }).click();
+  await expect(page.locator(".publish-controls select").first()).toHaveValue("all");
   await page.getByRole("button", { name: "Continue" }).click();
 
   await expect(page.getByRole("heading", { name: "Site configuration" })).toBeVisible();
-  await page.locator(".json-block textarea").first().fill("{");
+  await page.getByLabel("Version").fill("");
   await page.locator("form").getByRole("button", { name: "Publish" }).click();
-  await expect(page.getByRole("alert")).toContainText("Site configuration must be valid JSON.");
+  await expect(page.getByRole("alert")).toContainText("Version is required.");
 
-  await page.locator(".json-block textarea").first().fill(
-    JSON.stringify({ brand: "mianotes", version: "0.1.0", showPreviousVersions: true }, null, 2)
-  );
+  await page.getByLabel("Version").fill("0.1.0");
   await page.locator("form").getByRole("button", { name: "Publish" }).click();
 
   await expect(page.getByRole("status")).toContainText("Your static site is ready.");

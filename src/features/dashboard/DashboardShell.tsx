@@ -302,7 +302,6 @@ export function DashboardShell({
               currentUser={currentUser}
               workspaceName={workspaceName}
               storageSettings={storageSettings}
-              selectedFolderId={navigation.selectedFolderId}
               onBack={navigation.goBack}
               onSignOut={() => void signOut()}
               onOpenProfile={navigation.openProfile}

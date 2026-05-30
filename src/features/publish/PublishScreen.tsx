@@ -100,7 +100,6 @@ export function PublishScreen({
   currentUser,
   workspaceName,
   storageSettings,
-  selectedFolderId,
   onBack,
   onSignOut,
   onOpenProfile,
@@ -112,7 +111,6 @@ export function PublishScreen({
   currentUser: UserRecord;
   workspaceName: string;
   storageSettings: StorageSettingsRecord | null;
-  selectedFolderId: string | "all";
   onBack: () => void;
   onSignOut: () => void;
   onOpenProfile: (profileId?: string | "all") => void;
@@ -121,7 +119,7 @@ export function PublishScreen({
 }) {
   const [themes, setThemes] = useState<PublishThemeRecord[]>([]);
   const [theme, setTheme] = useState("mialight");
-  const [folderId, setFolderId] = useState<string | "all">(selectedFolderId);
+  const [folderId, setFolderId] = useState<string | "all">("all");
   const [tagId, setTagId] = useState<string | "all">("all");
   const [siteConfig, setSiteConfig] = useState<PublishSiteConfigurationState>(
     defaultSiteConfiguration
