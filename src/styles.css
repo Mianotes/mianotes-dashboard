@@ -2227,7 +2227,38 @@ button {
 .mianotes-rich-editor table td p,
 .mianotes-rich-editor table th p {
   margin: 0;
-  line-height: 1.35;
+  line-height: inherit;
+}
+
+.mianotes-rich-content [class*="tableEditor"] {
+  table-layout: auto !important;
+  border-collapse: collapse !important;
+  border-spacing: 0 !important;
+}
+
+.mianotes-rich-content [class*="tableEditor"] th:not([data-tool-cell]):not([class*="toolCell"]),
+.mianotes-rich-content [class*="tableEditor"] td:not([data-tool-cell]):not([class*="toolCell"]) {
+  padding: 14px 28px 14px 0 !important;
+  border: 0 !important;
+  border-bottom: 1px solid #e7e7e7 !important;
+  color: #565656;
+  font-size: 14px;
+  line-height: 21px;
+  text-align: left;
+  vertical-align: top;
+}
+
+.mianotes-rich-content [class*="tableEditor"] th:not([data-tool-cell]):not([class*="toolCell"]) {
+  padding-top: 0 !important;
+  padding-bottom: 12px !important;
+  border-bottom-color: #dcdcdc !important;
+  color: #111827;
+  font-weight: 700;
+}
+
+.mianotes-rich-content [class*="tableEditor"] td:first-child:not([data-tool-cell]):not([class*="toolCell"]) {
+  color: #242933;
+  font-weight: 700;
 }
 
 .editor-loading {
