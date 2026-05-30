@@ -9,6 +9,9 @@ import type {
 import { FolderIcon } from "../../components/icons/FolderIcon";
 import { Modal, ModalActions } from "../../components/ui/Modal";
 
+const COMPATIBLE_MARKDOWN_IMPORT_MESSAGE =
+  "This folder contains compatible Markdown notes, but no workspace database was found. Import the notes and create a new Mianotes database for this workspace?";
+
 type DatabaseSwitchModalProps = {
   storageSettings: StorageSettingsRecord;
   onClose: () => void;
@@ -43,10 +46,7 @@ export function DatabaseSwitchModal({
     setIsSubmitting(true);
     setError(null);
     try {
-      const nextSettings = await apiFetch<StorageSettingsRecord>("/api/settings/storage/locations", {
-        method: "POST",
-        body: JSON.stringify({ name: trimmedFolderName, folder_path: trimmedFolderPath })
-      });
+      const nextSettings = await createWorkspaceRequest();
       onSettingsChanged(nextSettings);
       const createdLocation = [...nextSettings.locations].reverse().find(
         (location) => location.folder_path === trimmedFolderPath || location.name === trimmedFolderName
@@ -56,10 +56,40 @@ export function DatabaseSwitchModal({
       setFolderPath("");
       setIsCreateFormOpen(false);
     } catch (error) {
-      setError(error instanceof Error ? error.message : "Could not create workspace.");
+      if (error instanceof Error && error.message === COMPATIBLE_MARKDOWN_IMPORT_MESSAGE) {
+        try {
+          const shouldImportMarkdown = window.confirm(COMPATIBLE_MARKDOWN_IMPORT_MESSAGE);
+          const nextSettings = await createWorkspaceRequest(shouldImportMarkdown);
+          onSettingsChanged(nextSettings);
+          const createdLocation = [...nextSettings.locations].reverse().find(
+            (location) => location.folder_path === trimmedFolderPath || location.name === trimmedFolderName
+          ) ?? nextSettings.locations[nextSettings.locations.length - 1];
+          setSelectedLocationId(createdLocation?.id ?? "");
+          setFolderName("");
+          setFolderPath("");
+          setIsCreateFormOpen(false);
+        } catch (nextError) {
+          setError(nextError instanceof Error ? nextError.message : "Could not create workspace.");
+        }
+      } else {
+        setError(error instanceof Error ? error.message : "Could not create workspace.");
+      }
     } finally {
       setIsSubmitting(false);
     }
+  }
+
+  function createWorkspaceRequest(importExistingMarkdown?: boolean) {
+    return apiFetch<StorageSettingsRecord>("/api/settings/storage/locations", {
+      method: "POST",
+      body: JSON.stringify({
+        name: trimmedFolderName,
+        folder_path: trimmedFolderPath,
+        ...(importExistingMarkdown === undefined
+          ? {}
+          : { import_existing_markdown: importExistingMarkdown })
+      })
+    });
   }
 
   async function switchSelectedWorkspace() {
