@@ -195,7 +195,11 @@ export function SettingsScreen({
       setSettingsMessage(`Restored "${restoredFolder.name}".`);
       await onFoldersRestored();
     } catch (error) {
-      setSettingsError(error instanceof Error ? error.message : "Could not restore this folder.");
+      const message = error instanceof Error ? error.message : "Could not restore this folder.";
+      if (message === "Archived folder no longer exists in the filesystem") {
+        setArchivedFolders((items) => items.filter((item) => item.id !== folder.id));
+      }
+      setSettingsError(message);
     } finally {
       setRestoringFolderId(null);
     }
