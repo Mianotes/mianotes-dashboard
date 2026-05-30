@@ -136,9 +136,9 @@ export function DashboardShell({
       appUrlForPath(noteRoutePath(note.id, false, activeWorkspace?.id ?? null))
     );
     printUrl.searchParams.set("print", "1");
-    const printWindow = window.open(printUrl.toString(), "_blank", "noopener,noreferrer");
-    if (!printWindow) {
-      window.location.assign(printUrl.toString());
+    const printWindow = window.open(printUrl.toString(), "_blank");
+    if (printWindow) {
+      printWindow.opener = null;
     }
   }
 
