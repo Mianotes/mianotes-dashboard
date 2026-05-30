@@ -2058,6 +2058,56 @@ button {
   transform: translate(-50%, -50%) !important;
 }
 
+.mianotes-admonition-trigger {
+  display: inline-flex !important;
+  align-items: center;
+  gap: 2px;
+}
+
+.mianotes-admonition-trigger-arrow {
+  display: inline-flex;
+  align-items: center;
+}
+
+.mianotes-admonition-trigger-arrow svg {
+  width: 16px;
+  height: 16px;
+}
+
+.mianotes-admonition-menu {
+  position: fixed;
+  z-index: 5000;
+  display: flex;
+  min-width: 168px;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #dedfe6;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 18px 38px rgba(20, 20, 24, 0.16);
+}
+
+.mianotes-admonition-menu button {
+  display: flex;
+  min-height: 38px;
+  align-items: center;
+  border: 0;
+  background: transparent;
+  padding: 10px 12px;
+  color: #17181d;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mianotes-admonition-menu button:hover,
+.mianotes-admonition-menu button:focus {
+  outline: none;
+  background: #f4f5f8;
+}
+
 .mianotes-rich-editor [class*="dialogContent"] > h2,
 .mianotes-rich-editor [class*="dialogContent"] > [class*="dialogTitle"] {
   display: none;

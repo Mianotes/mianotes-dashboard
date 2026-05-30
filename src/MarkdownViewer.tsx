@@ -14,12 +14,13 @@ import {
   directivesPlugin,
   type EditorInFocus,
   headingsPlugin,
+  iconComponentFor$,
   imagePlugin,
   InsertImage,
-  InsertAdmonition,
   InsertCodeBlock,
   InsertTable,
   InsertThematicBreak,
+  insertDirective$,
   linkDialogPlugin,
   linkPlugin,
   listsPlugin,
@@ -32,9 +33,15 @@ import {
   tablePlugin,
   thematicBreakPlugin,
   toolbarPlugin,
-  UndoRedo
+  UndoRedo,
+  useCellValue,
+  usePublisher,
+  useTranslation,
+  readOnly$,
+  Button
 } from "@mdxeditor/editor";
-import { forwardRef, useCallback, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
+import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ForwardedRef, MutableRefObject } from "react";
 import { cpp } from "@codemirror/lang-cpp";
 import { css } from "@codemirror/lang-css";
@@ -122,6 +129,113 @@ const openAiCodeHighlight = HighlightStyle.define([
     class: "mn-code-punctuation"
   }
 ]);
+
+type AdmonitionType = "note" | "tip" | "danger" | "info" | "caution";
+
+function InsertMianotesAdmonition() {
+  const insertDirective = usePublisher(insertDirective$);
+  const iconComponentFor = useCellValue(iconComponentFor$);
+  const readOnly = useCellValue(readOnly$);
+  const t = useTranslation();
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  const [open, setOpen] = useState(false);
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+  const title = t("toolbar.admonition", "Insert Admonition");
+  const items = useMemo(
+    () => [
+      { value: "note" as const, label: t("admonitions.note", "Note") },
+      { value: "tip" as const, label: t("admonitions.tip", "Tip") },
+      { value: "danger" as const, label: t("admonitions.danger", "Danger") },
+      { value: "info" as const, label: t("admonitions.info", "Info") },
+      { value: "caution" as const, label: t("admonitions.caution", "Caution") }
+    ],
+    [t]
+  );
+
+  const updateMenuPosition = useCallback(() => {
+    const rect = buttonRef.current?.getBoundingClientRect();
+    if (!rect) {
+      return;
+    }
+    const menuWidth = 168;
+    const left = Math.min(Math.max(8, rect.left), window.innerWidth - menuWidth - 8);
+    setMenuPosition({ top: rect.bottom + 8, left });
+  }, []);
+
+  useEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+    updateMenuPosition();
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+      if (target && (buttonRef.current?.contains(target) || menuRef.current?.contains(target))) {
+        return;
+      }
+      setOpen(false);
+    };
+
+    window.addEventListener("resize", updateMenuPosition);
+    window.addEventListener("scroll", updateMenuPosition, true);
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => {
+      window.removeEventListener("resize", updateMenuPosition);
+      window.removeEventListener("scroll", updateMenuPosition, true);
+      document.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [open, updateMenuPosition]);
+
+  const chooseAdmonition = (name: AdmonitionType) => {
+    insertDirective({
+      type: "containerDirective",
+      name
+    });
+    setOpen(false);
+  };
+
+  return (
+    <>
+      <Button
+        ref={buttonRef}
+        aria-label={title}
+        title={title}
+        disabled={readOnly}
+        className="mianotes-admonition-trigger"
+        onClick={(event) => {
+          event.preventDefault();
+          setOpen((current) => !current);
+        }}
+      >
+        {iconComponentFor("admonition")}
+        <span className="mianotes-admonition-trigger-arrow">{iconComponentFor("arrow_drop_down")}</span>
+      </Button>
+      {open && typeof document !== "undefined"
+        ? createPortal(
+            <div
+              ref={menuRef}
+              className="mianotes-admonition-menu"
+              role="menu"
+              style={{ top: menuPosition.top, left: menuPosition.left }}
+            >
+              {items.map((item) => (
+                <button
+                  key={item.value}
+                  type="button"
+                  role="menuitem"
+                  onClick={() => chooseAdmonition(item.value)}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>,
+            document.body
+          )
+        : null}
+    </>
+  );
+}
 
 const codeMirrorThemeExtensions = [
   Prec.highest(syntaxHighlighting(openAiCodeHighlight))
@@ -275,7 +389,7 @@ function richMarkdownEditorPlugins(imageUploadHandler?: ImageUploadHandler) {
           <InsertImage />
           <InsertTable />
           <InsertThematicBreak />
-          <InsertAdmonition />
+          <InsertMianotesAdmonition />
           <InsertCodeBlock />
           <CodeToggle />
         </DiffSourceToggleWrapper>
