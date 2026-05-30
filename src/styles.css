@@ -2000,10 +2000,11 @@ button {
 .mianotes-rich-editor [class*="toolbarRoot"] {
   position: sticky;
   top: 0;
-  z-index: 1;
+  z-index: 3000;
   flex-wrap: wrap;
   margin: 0 0 22px;
   padding: 8px 0;
+  overflow: visible;
   overflow-x: visible;
   background: #ffffff;
 }
@@ -2035,6 +2036,15 @@ button {
 [class*="largeDialogContent"],
 [class*="linkDialogPopoverContent"] {
   z-index: 4001 !important;
+  pointer-events: auto;
+}
+
+[class*="toolbarNodeKindSelectContainer"],
+[class*="toolbarButtonDropdownContainer"],
+[class*="toolbarCodeBlockLanguageSelectContent"],
+[class*="selectContainer"],
+[class*="popoverContent"] {
+  z-index: 4002 !important;
   pointer-events: auto;
 }
 
