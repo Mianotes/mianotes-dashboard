@@ -2038,6 +2038,16 @@ button {
   pointer-events: auto;
 }
 
+[class*="linkDialogPopoverContent"] {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  width: min(520px, calc(100vw - 32px)) !important;
+  max-height: calc(100vh - 32px);
+  overflow: auto;
+  transform: translate(-50%, -50%) !important;
+}
+
 .mianotes-rich-editor [class*="dialogContent"] > h2,
 .mianotes-rich-editor [class*="dialogContent"] > [class*="dialogTitle"] {
   display: none;
