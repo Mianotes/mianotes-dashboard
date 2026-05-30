@@ -154,7 +154,7 @@ function isAdmonition(editorInFocus: EditorInFocus | null) {
   const node = editorInFocus?.rootNode;
   if (!node || node.getType() !== "directive") return false;
   const directiveName = (node as unknown as { getMdastNode?: () => { name?: string } }).getMdastNode?.().name;
-  return ["note", "tip", "danger", "info", "caution"].includes(directiveName ?? "");
+  return ["note", "tip", "important", "warning", "danger", "info", "caution"].includes(directiveName ?? "");
 }
 
 function escapeAngleBrackets(text: string) {

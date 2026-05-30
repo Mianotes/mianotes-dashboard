@@ -1794,6 +1794,53 @@ button {
   margin: 0 0 1em;
 }
 
+.mianotes-rich-content [class*="admonition" i]:not([class*="title" i]):not([class*="content" i]) {
+  margin: 24px 0 !important;
+  padding: 16px 18px !important;
+  border: 1px solid #e5e7eb !important;
+  border-left: 4px solid #7c3aed !important;
+  border-radius: 12px !important;
+  color: #334155 !important;
+  background: #fafafa !important;
+  box-shadow: none !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+}
+
+.mianotes-rich-content [class*="admonition" i] [class*="title" i] {
+  margin: 0 0 8px !important;
+  padding: 0 !important;
+  border: 0 !important;
+  color: #111827 !important;
+  background: transparent !important;
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  line-height: 1.6 !important;
+}
+
+.mianotes-rich-content [class*="admonition" i] [class*="content" i] {
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  color: inherit !important;
+  background: transparent !important;
+}
+
+.mianotes-rich-content [class*="admonition" i] p {
+  margin: 0 0 12px !important;
+  color: inherit !important;
+  font-size: 14px !important;
+  line-height: 1.6 !important;
+}
+
+.mianotes-rich-content [class*="admonition" i] p:last-child {
+  margin-bottom: 0 !important;
+}
+
+.mianotes-rich-content [class*="admonition" i] a {
+  text-decoration: underline;
+}
+
 .mianotes-rich-editor {
   background: transparent;
 }
