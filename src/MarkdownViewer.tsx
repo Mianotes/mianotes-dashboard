@@ -628,8 +628,13 @@ export const MarkdownEditor = forwardRef<MDXEditorMethods, MarkdownEditorProps>(
     if (!autoFocus) return;
 
     const timeout = window.setTimeout(() => {
+      const previousScrollX = window.scrollX;
+      const previousScrollY = window.scrollY;
       editorRef.current?.focus();
       onAutoFocused?.();
+      window.requestAnimationFrame(() => {
+        window.scrollTo(previousScrollX, previousScrollY);
+      });
     }, 80);
 
     return () => window.clearTimeout(timeout);
