@@ -60,10 +60,16 @@ export function NotePanel({
   }, []);
 
   useEffect(() => {
+    const nextText = noteBodyMarkdown(note.text ?? "");
     if (!isEditing) {
-      setDraftText(noteBodyMarkdown(note.text ?? ""));
+      setDraftText(nextText);
+      return;
     }
-  }, [isEditing, note.text]);
+
+    if (startInEdit && !draftText.trim() && nextText.trim()) {
+      setDraftText(nextText);
+    }
+  }, [draftText, isEditing, note.text, startInEdit]);
 
   const authorName = note.user?.name ?? "Unknown";
   const canChangeNote = currentUser.is_admin || note.user_id === currentUser.id || note.user?.id === currentUser.id;
