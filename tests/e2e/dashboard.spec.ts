@@ -111,7 +111,7 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
       id: "storage-current",
       name: "Mianotes",
       folder_path: "/tmp/test-user/Mianotes",
-      database_path: "/tmp/test-user/Mianotes/.mianotes/mia.db",
+      database_path: "/tmp/test-user/data/workspaces/storage-current.db",
       database_exists: true,
       notes_count: 1,
       users_count: 1,
@@ -121,7 +121,7 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
       id: "storage-archive",
       name: "Research",
       folder_path: "/tmp/test-user/Research",
-      database_path: "/tmp/test-user/Research/.mianotes/mia.db",
+      database_path: "/tmp/test-user/data/workspaces/storage-archive.db",
       database_exists: true,
       notes_count: 1,
       users_count: 1,
@@ -154,7 +154,6 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
       ?? storageLocations[0];
     return {
       active_location: activeLocation.id,
-      database_file: "mia.db",
       data_dir: activeLocation.folder_path,
       database_path: activeLocation.database_path,
       locations: storageLocations.map((location) => ({
@@ -569,7 +568,7 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
         id: "storage-new",
         name,
         folder_path: folderPath,
-        database_path: `${folderPath}/.mianotes/mia.db`,
+        database_path: "/tmp/test-user/data/workspaces/storage-new.db",
         database_exists: true,
         notes_count: 0,
         users_count: 1,

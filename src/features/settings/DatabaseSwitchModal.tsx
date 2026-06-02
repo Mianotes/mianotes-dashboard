@@ -157,7 +157,7 @@ export function DatabaseSwitchModal({
                         setSelectedLocationId("");
                       }}
                     />
-                    <small>Mianotes will keep private data in a hidden .mianotes folder inside this workspace.</small>
+                    <small>Mianotes will store this workspace's database in the app data folder.</small>
                   </label>
                   <button
                     className="primary-button database-create-button"

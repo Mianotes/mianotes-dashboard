@@ -92,7 +92,6 @@ export type StorageLocationRecord = {
 
 export type StorageSettingsRecord = {
   active_location: string;
-  database_file: string;
   data_dir: string;
   database_path: string;
   locations: StorageLocationRecord[];
