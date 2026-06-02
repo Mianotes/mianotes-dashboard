@@ -1998,11 +1998,12 @@ button {
   background: transparent;
 }
 
+.mianotes-rich-editor-toolbar,
 .mianotes-rich-editor .mdxeditor-toolbar,
 .mianotes-rich-editor [class*="toolbarRoot"] {
   position: sticky;
   top: 0;
-  z-index: 20;
+  z-index: 5;
   flex-wrap: wrap;
   margin: 0 0 22px;
   padding: 8px 0;
@@ -2011,16 +2012,128 @@ button {
   background: #ffffff;
 }
 
+.mianotes-block-type-trigger {
+  display: inline-flex !important;
+  min-width: 128px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding: 4px 8px !important;
+  border-radius: 6px;
+  color: #30313a;
+  font-weight: 600;
+}
+
+.mianotes-block-type-trigger-arrow {
+  display: inline-flex;
+  align-items: center;
+}
+
+.mianotes-block-type-trigger-arrow svg {
+  width: 16px;
+  height: 16px;
+}
+
+.mianotes-block-type-menu {
+  position: fixed;
+  z-index: 7000;
+  display: flex;
+  min-width: 184px;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid #dedfe6;
+  border-radius: 8px;
+  background: #ffffff;
+  box-shadow: 0 14px 32px rgba(20, 20, 24, 0.16);
+}
+
+.mianotes-block-type-menu button {
+  display: flex;
+  width: 100%;
+  min-height: 38px;
+  align-items: center;
+  border: 0;
+  border-radius: 0;
+  color: #30313a;
+  background: transparent;
+  padding: 10px 12px;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 400;
+  text-align: left;
+  cursor: pointer;
+}
+
+.mianotes-block-type-menu button:hover,
+.mianotes-block-type-menu button:focus,
+.mianotes-block-type-menu button[aria-checked="true"] {
+  background: #f4f4f6;
+  outline: none;
+}
+
 .mianotes-rich-editor [class*="dialogOverlay"] {
-  z-index: 1000;
+  z-index: 9000 !important;
+}
+
+.mianotes-rich-editor:has([class*="dialogOverlay"]) .mianotes-rich-editor-toolbar,
+.mianotes-rich-editor:has([class*="dialogOverlay"]) .mdxeditor-toolbar,
+.mianotes-rich-editor:has([class*="dialogOverlay"]) [class*="toolbarRoot"] {
+  z-index: 0;
+}
+
+[data-radix-popper-content-wrapper],
+[data-radix-portal] {
+  z-index: 9100 !important;
 }
 
 .mianotes-rich-editor [class*="linkDialogPopoverContent"] {
-  z-index: 1001;
+  position: fixed !important;
+  z-index: 9001 !important;
 }
 
-.mianotes-rich-editor [class*="dialogContent"] {
-  z-index: 1001;
+[data-radix-popper-content-wrapper]:has([class*="linkDialogPopoverContent"]) {
+  position: fixed !important;
+  top: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: 50% !important;
+  z-index: 9100 !important;
+  width: min(520px, calc(100vw - 32px)) !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+[data-radix-popper-content-wrapper]:has(form[class*="multiFieldForm"]) {
+  position: fixed !important;
+  top: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: 50% !important;
+  z-index: 9100 !important;
+  width: min(520px, calc(100vw - 32px)) !important;
+  transform: translate(-50%, -50%) !important;
+}
+
+[data-radix-popper-content-wrapper]:has(form[class*="multiFieldForm"]) [class*="popoverContent"] {
+  width: min(520px, calc(100vw - 32px));
+  max-height: calc(100vh - 64px);
+  overflow: auto;
+}
+
+.mianotes-rich-editor [class*="linkDialogPopoverContent"],
+[class*="linkDialogPopoverContent"] {
+  position: fixed !important;
+  top: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: 50% !important;
+  width: min(520px, calc(100vw - 32px));
+  transform: translate(-50%, -50%) !important;
+}
+
+.mianotes-rich-editor [class*="dialogContent"],
+.mianotes-rich-editor [class*="largeDialogContent"] {
+  position: fixed !important;
+  z-index: 9001 !important;
   width: min(520px, calc(100vw - 32px));
   padding: 0;
   overflow: hidden;
@@ -2031,14 +2144,27 @@ button {
 }
 
 [class*="dialogOverlay"] {
-  z-index: 6000 !important;
+  position: fixed !important;
+  z-index: 9000 !important;
 }
 
 [class*="dialogContent"],
 [class*="largeDialogContent"],
 [class*="linkDialogPopoverContent"] {
-  z-index: 6001 !important;
+  z-index: 9001 !important;
   pointer-events: auto;
+}
+
+[class*="dialogContent"],
+[class*="largeDialogContent"] {
+  position: fixed !important;
+  top: 50% !important;
+  right: auto !important;
+  bottom: auto !important;
+  left: 50% !important;
+  max-height: calc(100vh - 64px);
+  overflow: auto;
+  transform: translate(-50%, -50%) !important;
 }
 
 [class*="toolbarNodeKindSelectContainer"],
@@ -2046,7 +2172,7 @@ button {
 [class*="toolbarCodeBlockLanguageSelectContent"],
 [class*="selectContainer"],
 [class*="popoverContent"] {
-  z-index: 5000 !important;
+  z-index: 7000 !important;
   pointer-events: auto;
 }
 
@@ -2068,7 +2194,7 @@ button {
 
 .mianotes-admonition-menu {
   position: fixed;
-  z-index: 5000;
+  z-index: 7000;
   display: flex;
   min-width: 168px;
   flex-direction: column;

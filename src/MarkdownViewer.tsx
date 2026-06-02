@@ -1,6 +1,7 @@
 import {
   AdmonitionDirectiveDescriptor,
-  BlockTypeSelect,
+  activePlugins$,
+  allowedHeadingLevels$,
   BoldItalicUnderlineToggles,
   ChangeAdmonitionType,
   ChangeCodeMirrorLanguage,
@@ -8,7 +9,9 @@ import {
   codeBlockPlugin,
   codeMirrorPlugin,
   ConditionalContents,
+  convertSelectionToNode$,
   CreateLink,
+  currentBlockType$,
   diffSourcePlugin,
   DiffSourceToggleWrapper,
   directivesPlugin,
@@ -40,6 +43,8 @@ import {
   readOnly$,
   Button
 } from "@mdxeditor/editor";
+import { $createHeadingNode, $createQuoteNode, type HeadingTagType } from "@lexical/rich-text";
+import { $createParagraphNode } from "lexical";
 import { createPortal } from "react-dom";
 import { forwardRef, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ForwardedRef, MutableRefObject } from "react";
@@ -130,7 +135,159 @@ const openAiCodeHighlight = HighlightStyle.define([
   }
 ]);
 
+type BlockTypeValue = "paragraph" | "quote" | HeadingTagType;
 type AdmonitionType = "note" | "tip" | "danger" | "info" | "caution";
+
+function MianotesBlockTypeSelect() {
+  const convertSelectionToNode = usePublisher(convertSelectionToNode$);
+  const currentBlockType = useCellValue(currentBlockType$);
+  const activePlugins = useCellValue(activePlugins$);
+  const allowedHeadingLevels = useCellValue(allowedHeadingLevels$);
+  const iconComponentFor = useCellValue(iconComponentFor$);
+  const readOnly = useCellValue(readOnly$);
+  const t = useTranslation();
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const menuRef = useRef<HTMLDivElement | null>(null);
+  const [open, setOpen] = useState(false);
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
+  const hasQuote = activePlugins.includes("quote");
+  const hasHeadings = activePlugins.includes("headings");
+
+  const items = useMemo(() => {
+    const nextItems: Array<{ value: BlockTypeValue; label: string }> = [
+      { value: "paragraph", label: t("toolbar.blockTypes.paragraph", "Paragraph") }
+    ];
+
+    if (hasQuote) {
+      nextItems.push({ value: "quote", label: t("toolbar.blockTypes.quote", "Quote") });
+    }
+
+    if (hasHeadings) {
+      nextItems.push(
+        ...allowedHeadingLevels.map((level) => ({
+          value: `h${level}` as const,
+          label: t("toolbar.blockTypes.heading", "Heading {{level}}", { level })
+        }))
+      );
+    }
+
+    return nextItems;
+  }, [allowedHeadingLevels, hasHeadings, hasQuote, t]);
+
+  const activeItem = items.find((item) => item.value === currentBlockType) ?? items[0];
+  const title = t("toolbar.blockTypeSelect.selectBlockTypeTooltip", "Select block type");
+
+  const calculateMenuPosition = useCallback(() => {
+    const rect = buttonRef.current?.getBoundingClientRect();
+    if (!rect) {
+      return null;
+    }
+    const menuWidth = 184;
+    const left = Math.min(Math.max(8, rect.left), window.innerWidth - menuWidth - 8);
+    return { top: rect.bottom + 8, left };
+  }, []);
+
+  const updateMenuPosition = useCallback(() => {
+    const nextPosition = calculateMenuPosition();
+    if (nextPosition) {
+      setMenuPosition(nextPosition);
+    }
+  }, [calculateMenuPosition]);
+
+  useEffect(() => {
+    if (!open) {
+      return undefined;
+    }
+    updateMenuPosition();
+
+    const handlePointerDown = (event: PointerEvent) => {
+      const target = event.target as Node | null;
+      if (target && (buttonRef.current?.contains(target) || menuRef.current?.contains(target))) {
+        return;
+      }
+      setOpen(false);
+    };
+
+    window.addEventListener("resize", updateMenuPosition);
+    window.addEventListener("scroll", updateMenuPosition, true);
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => {
+      window.removeEventListener("resize", updateMenuPosition);
+      window.removeEventListener("scroll", updateMenuPosition, true);
+      document.removeEventListener("pointerdown", handlePointerDown);
+    };
+  }, [open, updateMenuPosition]);
+
+  if (!hasQuote && !hasHeadings) {
+    return null;
+  }
+
+  const chooseBlockType = (blockType: BlockTypeValue) => {
+    switch (blockType) {
+      case "quote":
+        convertSelectionToNode(() => $createQuoteNode());
+        break;
+      case "paragraph":
+        convertSelectionToNode(() => $createParagraphNode());
+        break;
+      default:
+        convertSelectionToNode(() => $createHeadingNode(blockType));
+        break;
+    }
+    setOpen(false);
+  };
+
+  return (
+    <>
+      <Button
+        ref={buttonRef}
+        aria-label={title}
+        title={title}
+        disabled={readOnly}
+        className="mianotes-block-type-trigger"
+        onMouseDown={(event) => {
+          event.preventDefault();
+        }}
+        onClick={(event) => {
+          event.preventDefault();
+          setOpen((current) => {
+            if (current) {
+              return false;
+            }
+            setMenuPosition(calculateMenuPosition());
+            return true;
+          });
+        }}
+      >
+        <span>{activeItem?.label ?? t("toolbar.blockTypeSelect.placeholder", "Block type")}</span>
+        <span className="mianotes-block-type-trigger-arrow">{iconComponentFor("arrow_drop_down")}</span>
+      </Button>
+      {open && menuPosition && typeof document !== "undefined"
+        ? createPortal(
+            <div
+              ref={menuRef}
+              className="mianotes-block-type-menu"
+              role="menu"
+              style={{ top: menuPosition.top, left: menuPosition.left }}
+            >
+              {items.map((item) => (
+                <button
+                  key={item.value}
+                  type="button"
+                  role="menuitemradio"
+                  aria-checked={item.value === currentBlockType}
+                  onClick={() => chooseBlockType(item.value)}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>,
+            document.body
+          )
+        : null}
+    </>
+  );
+}
 
 function InsertMianotesAdmonition() {
   const insertDirective = usePublisher(insertDirective$);
@@ -140,7 +297,7 @@ function InsertMianotesAdmonition() {
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const menuRef = useRef<HTMLDivElement | null>(null);
   const [open, setOpen] = useState(false);
-  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0 });
+  const [menuPosition, setMenuPosition] = useState<{ top: number; left: number } | null>(null);
   const title = t("toolbar.admonition", "Insert Admonition");
   const items = useMemo(
     () => [
@@ -153,15 +310,22 @@ function InsertMianotesAdmonition() {
     [t]
   );
 
-  const updateMenuPosition = useCallback(() => {
+  const calculateMenuPosition = useCallback(() => {
     const rect = buttonRef.current?.getBoundingClientRect();
     if (!rect) {
-      return;
+      return null;
     }
     const menuWidth = 168;
     const left = Math.min(Math.max(8, rect.left), window.innerWidth - menuWidth - 8);
-    setMenuPosition({ top: rect.bottom + 8, left });
+    return { top: rect.bottom + 8, left };
   }, []);
+
+  const updateMenuPosition = useCallback(() => {
+    const nextPosition = calculateMenuPosition();
+    if (nextPosition) {
+      setMenuPosition(nextPosition);
+    }
+  }, [calculateMenuPosition]);
 
   useEffect(() => {
     if (!open) {
@@ -205,13 +369,19 @@ function InsertMianotesAdmonition() {
         className="mianotes-admonition-trigger"
         onClick={(event) => {
           event.preventDefault();
-          setOpen((current) => !current);
+          setOpen((current) => {
+            if (current) {
+              return false;
+            }
+            setMenuPosition(calculateMenuPosition());
+            return true;
+          });
         }}
       >
         {iconComponentFor("admonition")}
         <span className="mianotes-admonition-trigger-arrow">{iconComponentFor("arrow_drop_down")}</span>
       </Button>
-      {open && typeof document !== "undefined"
+      {open && menuPosition && typeof document !== "undefined"
         ? createPortal(
             <div
               ref={menuRef}
@@ -371,6 +541,7 @@ function richMarkdownEditorPlugins(imageUploadHandler?: ImageUploadHandler) {
     ...richMarkdownPlugins(imageUploadHandler),
     diffSourcePlugin({ viewMode: "rich-text", codeMirrorExtensions: codeMirrorThemeExtensions }),
     toolbarPlugin({
+      toolbarClassName: "mianotes-rich-editor-toolbar",
       toolbarContents: () => (
         <DiffSourceToggleWrapper options={["rich-text", "source"]} SourceToolbar={<SourceModeToolbar />}>
           <UndoRedo />
@@ -379,7 +550,7 @@ function richMarkdownEditorPlugins(imageUploadHandler?: ImageUploadHandler) {
             options={[
               { when: (editor) => editor?.editorType === "codeblock", contents: () => <ChangeCodeMirrorLanguage /> },
               { when: isAdmonition, contents: () => <ChangeAdmonitionType /> },
-              { fallback: () => <BlockTypeSelect /> }
+              { fallback: () => <MianotesBlockTypeSelect /> }
             ]}
           />
           <BoldItalicUnderlineToggles />
@@ -430,10 +601,28 @@ export const MarkdownEditor = forwardRef<MDXEditorMethods, MarkdownEditorProps>(
 ) {
   const normalizedMarkdown = normalizeEditorMarkdown(markdown);
   const editorRef = useRef<MDXEditorMethods | null>(null);
+  const lastAppliedMarkdownRef = useRef(normalizedMarkdown);
   const setEditorRef = useCallback((editor: MDXEditorMethods | null) => {
     editorRef.current = editor;
     assignForwardedRef(ref, editor);
   }, [ref]);
+
+  useEffect(() => {
+    const editor = editorRef.current;
+    if (!editor) {
+      lastAppliedMarkdownRef.current = normalizedMarkdown;
+      return;
+    }
+
+    if (lastAppliedMarkdownRef.current === normalizedMarkdown) {
+      return;
+    }
+
+    if (editor.getMarkdown() !== normalizedMarkdown) {
+      editor.setMarkdown(normalizedMarkdown);
+    }
+    lastAppliedMarkdownRef.current = normalizedMarkdown;
+  }, [normalizedMarkdown]);
 
   useEffect(() => {
     if (!autoFocus) return;
