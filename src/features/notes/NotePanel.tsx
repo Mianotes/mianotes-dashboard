@@ -164,6 +164,9 @@ export function NotePanel({
       setIsEditing(false);
       onEditModeChange(false);
       await onRefresh();
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : "Could not save note";
       setNoteError(
