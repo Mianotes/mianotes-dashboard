@@ -2,7 +2,14 @@ import { Loader2, RefreshCw, X } from "lucide-react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { KeyboardEvent } from "react";
 import { apiFetch } from "../../api/client";
-import type { JobRecord, JobStatus, StorageSettingsRecord, UserRecord } from "../../api/types";
+import type {
+  JobListItemRecord,
+  JobListPageRecord,
+  JobRecord,
+  JobStatus,
+  StorageSettingsRecord,
+  UserRecord
+} from "../../api/types";
 import { ConsoleIcon } from "../../components/icons/ConsoleIcon";
 import { ScreenToolbar } from "../../components/layout/ScreenToolbar";
 import { UserAvatar } from "../../components/ui/UserAvatar";
@@ -41,7 +48,7 @@ function formatTimestamp(value: string) {
   }).format(new Date(value));
 }
 
-function clientLogoSvg(job: JobRecord) {
+function clientLogoSvg(job: JobListItemRecord | JobRecord) {
   if (!job.client) return null;
   return CLIENT_LOGOS.get(job.client.key) ?? CLIENT_LOGOS.get("mcp") ?? null;
 }
@@ -65,11 +72,27 @@ export function JobsScreen({
   onOpenSettings: () => void;
   onSwitchWorkspace: (locationId: string) => Promise<void>;
 }) {
-  const [jobs, setJobs] = useState<JobRecord[]>([]);
+  const [jobs, setJobs] = useState<JobListItemRecord[]>([]);
   const [selectedJobId, setSelectedJobId] = useState<string | null>(() => jobIdFromUrl());
+  const [selectedJobDetail, setSelectedJobDetail] = useState<JobRecord | null>(null);
+  const [isLoadingSelectedJob, setIsLoadingSelectedJob] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const loadSelectedJob = useCallback(async (jobId: string) => {
+    setIsLoadingSelectedJob(true);
+    try {
+      const item = await apiFetch<JobRecord>(`/api/jobs/${encodeURIComponent(jobId)}`);
+      setSelectedJobDetail(item);
+      setError(null);
+    } catch (caughtError) {
+      setSelectedJobDetail(null);
+      setError(caughtError instanceof Error ? caughtError.message : "Could not load job output.");
+    } finally {
+      setIsLoadingSelectedJob(false);
+    }
+  }, []);
 
   const loadJobs = useCallback(async ({ silent = false }: { silent?: boolean } = {}) => {
     if (silent) {
@@ -78,15 +101,14 @@ export function JobsScreen({
       setIsLoading(true);
     }
     try {
-      const items = await apiFetch<JobRecord[]>("/api/jobs");
+      const page = await apiFetch<JobListPageRecord>("/api/jobs");
+      const items = page.items;
       setJobs(items);
       setError(null);
       setSelectedJobId((current) => {
         if (current && items.some((item) => item.id === current)) return current;
         const requestedJobId = jobIdFromUrl();
-        if (requestedJobId && items.some((item) => item.id === requestedJobId)) {
-          return requestedJobId;
-        }
+        if (requestedJobId) return requestedJobId;
         return items[0]?.id ?? null;
       });
     } catch (caughtError) {
@@ -108,13 +130,23 @@ export function JobsScreen({
     return () => window.clearInterval(interval);
   }, [loadJobs]);
 
-  const selectedJob = useMemo(
+  useEffect(() => {
+    if (!selectedJobId) {
+      setSelectedJobDetail(null);
+      return;
+    }
+    void loadSelectedJob(selectedJobId);
+  }, [loadSelectedJob, selectedJobId]);
+
+  const selectedJobSummary = useMemo(
     () => jobs.find((job) => job.id === selectedJobId) ?? jobs[0] ?? null,
     [jobs, selectedJobId]
   );
+  const selectedJob = selectedJobDetail?.id === selectedJobId ? selectedJobDetail : selectedJobSummary;
   const activeJobCount = jobs.filter((job) => ACTIVE_STATUSES.has(job.status)).length;
 
   function selectJob(jobId: string) {
+    setSelectedJobDetail(null);
     setSelectedJobId(jobId);
     if (window.location.pathname === "/jobs") {
       window.history.replaceState(
@@ -255,8 +287,10 @@ export function JobsScreen({
           </header>
 
           <div className="jobs-console">
-            {selectedJob && selectedJob.log.length > 0 ? (
-              selectedJob.log.map((entry, index) => (
+            {isLoadingSelectedJob ? (
+              <p>Loading console output...</p>
+            ) : selectedJobDetail && selectedJobDetail.log.length > 0 ? (
+              selectedJobDetail.log.map((entry, index) => (
                 <div className="jobs-console-entry" key={`${entry.timestamp}-${index}`}>
                   <div className="jobs-console-command">
                     <span>{formatTimestamp(entry.timestamp)}</span>

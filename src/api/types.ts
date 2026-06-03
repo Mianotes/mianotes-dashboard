@@ -212,6 +212,18 @@ export type JobRecord = {
   finished_at?: string | null;
 };
 
+export type JobListItemRecord = Omit<JobRecord, "input" | "result" | "log"> & {
+  input?: Record<string, unknown> | null;
+  result?: Record<string, unknown> | null;
+  log?: JobLogEntryRecord[] | null;
+};
+
+export type JobListPageRecord = {
+  items: JobListItemRecord[];
+  limit: number;
+  next_cursor?: string | null;
+};
+
 export type EmailCheckResponse = {
   user_id: string | null;
   is_first_user?: boolean;
