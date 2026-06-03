@@ -1,4 +1,4 @@
-import { useCallback, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { apiFetch, setApiWorkspaceId } from "../../api/client";
 import type {
   FolderRecord,
@@ -60,6 +60,16 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
     useState<StorageSettingsRecord | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isWorkspaceLoaded, setIsWorkspaceLoaded] = useState(false);
+  const usersRef = useRef<UserRecord[]>([]);
+  const foldersRef = useRef<FolderRecord[]>([]);
+
+  useEffect(() => {
+    usersRef.current = users;
+  }, [users]);
+
+  useEffect(() => {
+    foldersRef.current = folders;
+  }, [folders]);
 
   const activateWorkspaceSession = useCallback(async (workspaceId: string) => {
     await apiFetch<unknown>("/api/settings/storage/active", {
@@ -71,21 +81,21 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
 
   const applyNotePage = useCallback((
     page: NoteListPageRecord,
-    nextUsers = users,
-    nextFolders = folders
+    nextUsers: UserRecord[],
+    nextFolders: FolderRecord[]
   ) => {
     setNotes(hydrateNotes(page.items, nextUsers, nextFolders));
     setNotesTotal(page.total);
     setNextNotesCursor(page.next_cursor);
     setFolderNoteCounts(page.counts?.folders ?? {});
-  }, [folders, users]);
+  }, []);
 
   const loadNotesPage = useCallback(async (
     filters: NotePageFilters = {},
     cursor: string | null = null
   ) => {
     const page = await apiFetch<NoteListPageRecord>(noteListUrl(filters, cursor));
-    applyNotePage(page);
+    applyNotePage(page, usersRef.current, foldersRef.current);
     return page;
   }, [applyNotePage]);
 
@@ -116,6 +126,8 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
     setApiWorkspaceId(resolvedWorkspaceId);
     setUsers(nextUsers);
     setFolders(activeFolders);
+    usersRef.current = nextUsers;
+    foldersRef.current = activeFolders;
     setTags(nextTags);
     applyNotePage(nextNotes, nextUsers, activeFolders);
     setStorageCapacity(nextStorageCapacity);
@@ -146,7 +158,7 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
       const page = await apiFetch<NoteListPageRecord>(
         noteListUrl(options.filters, options.cursor ?? null)
       );
-      const hydrated = hydrateNotes(page.items, users, folders);
+      const hydrated = hydrateNotes(page.items, usersRef.current, foldersRef.current);
       const availableNoteIds = new Set(hydrated.map((note) => note.id));
 
       setNotes((items) =>
@@ -161,12 +173,13 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
       options.onMissingOpenedNote?.(availableNoteIds);
       return page;
     },
-    [folders, users]
+    []
   );
 
   const refreshNote = useCallback(async (noteId: string) => {
     const fullNote = await apiFetch<NoteRecord>(`/api/notes/${noteId}`);
-    const hydratedNote = hydrateNotes([fullNote], users, folders)[0] ?? fullNote;
+    const hydratedNote = hydrateNotes([fullNote], usersRef.current, foldersRef.current)[0]
+      ?? fullNote;
     setNotes((items) =>
       items.some((item) => item.id === noteId)
         ? items.map((item) =>
@@ -175,11 +188,11 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
         : [hydratedNote, ...items]
     );
     return fullNote;
-  }, [folders, users]);
+  }, []);
 
   const addOrMergeNote = useCallback(
     (note: NoteRecord) => {
-      const hydratedNote = hydrateNotes([note], users, folders)[0] ?? note;
+      const hydratedNote = hydrateNotes([note], usersRef.current, foldersRef.current)[0] ?? note;
       setNotes((items) =>
         items.some((item) => item.id === note.id)
           ? items.map((item) =>
@@ -188,7 +201,7 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
           : [hydratedNote, ...items]
       );
     },
-    [folders, users]
+    []
   );
 
   const toggleNoteStar = useCallback(async (note: NoteRecord) => {
