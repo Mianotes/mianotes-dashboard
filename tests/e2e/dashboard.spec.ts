@@ -149,6 +149,32 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
     return notes;
   }
 
+  function noteListPage(items = activeNotes()) {
+    const counts = items.reduce<Record<string, number>>((acc, item) => {
+      if (typeof item.folder_id === "string") {
+        acc[item.folder_id] = (acc[item.folder_id] ?? 0) + 1;
+      }
+      return acc;
+    }, {});
+    return {
+      items,
+      total: items.length,
+      limit: 10,
+      next_cursor: null,
+      counts: { folders: counts }
+    };
+  }
+
+  function profileSummaries() {
+    return users.map((user) => ({
+      user_id: user.id,
+      notes_count: activeNotes().filter((item) => item.user_id === user.id).length,
+      tags_count: user.id === adminUser.id ? 1 : 0,
+      folders_count: user.id === adminUser.id ? activeFolders().length : 0,
+      tags: user.id === adminUser.id ? [demoTag] : []
+    }));
+  }
+
   function storageSettings() {
     const activeLocation = storageLocations.find((location) => location.id === activeLocationId)
       ?? storageLocations[0];
@@ -216,6 +242,11 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
       remember("join", payload);
       authenticated = true;
       await fulfill(route, { user: adminUser });
+      return;
+    }
+
+    if (path === "/api/users/profile-summaries" && method === "GET") {
+      await fulfill(route, profileSummaries());
       return;
     }
 
@@ -320,11 +351,11 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
     }
 
     if (path === "/api/notes" && method === "GET") {
-      await fulfill(route, activeNotes());
+      await fulfill(route, noteListPage());
       return;
     }
 
-    if (path === "/api/notes/shared/share-token/avatar" && method === "GET") {
+    if (path === "/api/notes/shared/workspaces/storage-current/share-token/avatar" && method === "GET") {
       await route.fulfill({
         status: 200,
         contentType: "image/svg+xml",
@@ -333,7 +364,7 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
       return;
     }
 
-    if (path.startsWith("/api/notes/shared/") && method === "GET") {
+    if (path.startsWith("/api/notes/shared/workspaces/") && method === "GET") {
       await fulfill(route, {
         ...activeNotes()[0],
         user: {
@@ -341,7 +372,7 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
           photo_url: "/.profiles/user-admin/avatar-seed.jpg"
         },
         shared_at: now,
-        share_url: "/api/notes/shared/share-token"
+        share_url: "/api/notes/shared/workspaces/storage-current/share-token"
       });
       return;
     }
@@ -462,10 +493,12 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
         notes[index] = {
           ...notes[index],
           shared_at: now,
-          share_url: "http://127.0.0.1:8200/api/notes/shared/share-token"
+          share_url: "http://127.0.0.1:8200/api/notes/shared/workspaces/storage-current/share-token"
         };
       }
-      await fulfill(route, { share_url: "http://127.0.0.1:8200/api/notes/shared/share-token" });
+      await fulfill(route, {
+        share_url: "http://127.0.0.1:8200/api/notes/shared/workspaces/storage-current/share-token"
+      });
       return;
     }
 
@@ -746,7 +779,7 @@ test("creates and copies a guest share link when a workspace address is configur
   await expect(shareNotice).toBeVisible();
   await expect(shareNotice).toHaveClass(/success/);
   await expect.poll(() => page.evaluate(() => navigator.clipboard.readText())).toBe(
-    "https://notes.example.test/shared/getting-started/share-token"
+    "https://notes.example.test/shared/workspaces/storage-current/getting-started/share-token"
   );
   await page.locator(".account-avatar-button").click();
   await page.getByRole("menuitem", { name: "Settings" }).click();
@@ -825,14 +858,14 @@ test("exports notes as PDF without creating a share link", async ({ page, contex
 test("opens guest shared notes without signing in", async ({ page }) => {
   await mockMianotesApi(page, { authenticated: false });
 
-  await page.goto("/shared/getting-started/share-token");
+  await page.goto("/shared/workspaces/storage-current/getting-started/share-token");
 
   await expect(page.getByRole("heading", { name: "Getting started" })).toBeVisible();
   await expect(page.getByText("Welcome to Mianotes.").first()).toBeVisible();
   await expect(page.locator(".shared-note-screen > header")).toHaveCount(0);
   await expect(page.locator(".shared-note-author img.avatar-photo")).toHaveAttribute(
     "src",
-    /\/api\/notes\/shared\/share-token\/avatar$/
+    /\/api\/notes\/shared\/workspaces\/storage-current\/share-token\/avatar$/
   );
   await expect(page.locator(".shared-note-footer img")).toBeVisible();
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeHidden();

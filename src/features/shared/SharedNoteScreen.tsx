@@ -9,17 +9,19 @@ import { noteBodyMarkdown } from "../../utils/notes";
 const MarkdownViewer = lazy(() => import("../../MarkdownViewer"));
 
 type SharedNoteScreenProps = {
+  workspaceId: string;
   token: string;
 };
 
-export function SharedNoteScreen({ token }: SharedNoteScreenProps) {
+export function SharedNoteScreen({ workspaceId, token }: SharedNoteScreenProps) {
   const [note, setNote] = useState<NoteRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const sharedApiPath = `/api/notes/shared/workspaces/${encodeURIComponent(workspaceId)}/${encodeURIComponent(token)}`;
   const sharedAuthor = note?.user
     ? {
         ...note.user,
-        photo_url: note.user.photo_url ? `/api/notes/shared/${encodeURIComponent(token)}/avatar` : null
+        photo_url: note.user.photo_url ? `${sharedApiPath}/avatar` : null
       }
     : null;
 
@@ -30,7 +32,7 @@ export function SharedNoteScreen({ token }: SharedNoteScreenProps) {
       setIsLoading(true);
       setError(null);
       try {
-        const sharedNote = await apiFetch<NoteRecord>(`/api/notes/shared/${encodeURIComponent(token)}`);
+        const sharedNote = await apiFetch<NoteRecord>(sharedApiPath);
         if (!cancelled) setNote(sharedNote);
       } catch (loadError) {
         if (!cancelled) {
@@ -46,7 +48,7 @@ export function SharedNoteScreen({ token }: SharedNoteScreenProps) {
     return () => {
       cancelled = true;
     };
-  }, [token]);
+  }, [sharedApiPath]);
 
   useEffect(() => {
     if (!note || isLoading || error) return;

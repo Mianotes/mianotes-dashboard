@@ -12,17 +12,26 @@ import { PrintableNoteScreen } from "./features/notes/PrintableNoteScreen";
 import { SharedNoteScreen } from "./features/shared/SharedNoteScreen";
 import { readInternalRoute } from "./utils/internalRoutes";
 
-function sharedNoteTokenFromPath() {
+function sharedNoteRouteFromPath() {
   if (typeof window === "undefined") return null;
   const parts = window.location.pathname.split("/").filter(Boolean);
   if (parts[0] !== "shared" || parts.length < 2) return null;
-  return decodeURIComponent(parts[parts.length - 1]);
+  if (parts[1] === "workspaces" && parts.length >= 4) {
+    return {
+      workspaceId: decodeURIComponent(parts[2]),
+      token: decodeURIComponent(parts[parts.length - 1])
+    };
+  }
+  return {
+    workspaceId: "default",
+    token: decodeURIComponent(parts[parts.length - 1])
+  };
 }
 
 export function App() {
-  const sharedNoteToken = sharedNoteTokenFromPath();
-  if (sharedNoteToken) {
-    return <SharedNoteScreen token={sharedNoteToken} />;
+  const sharedNoteRoute = sharedNoteRouteFromPath();
+  if (sharedNoteRoute) {
+    return <SharedNoteScreen workspaceId={sharedNoteRoute.workspaceId} token={sharedNoteRoute.token} />;
   }
   return <AuthenticatedApp />;
 }

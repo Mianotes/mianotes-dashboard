@@ -20,10 +20,18 @@ export function stableShareBase(workspaceUrl: string | null, currentOrigin: stri
   return origin.origin;
 }
 
-export function shareTokenFromApiUrl(shareUrl: string) {
+export type ShareRouteParts = {
+  workspaceId: string;
+  token: string;
+};
+
+export function sharePartsFromApiUrl(shareUrl: string): ShareRouteParts {
   const url = new URL(shareUrl, window.location.origin);
   const parts = url.pathname.split("/").filter(Boolean);
-  return parts[parts.length - 1] ?? "";
+  const workspaceIndex = parts.findIndex((part, index) => part === "workspaces" && index > 0);
+  const workspaceId = workspaceIndex >= 0 ? parts[workspaceIndex + 1] : "default";
+  const token = parts[parts.length - 1] ?? "";
+  return { workspaceId, token };
 }
 
 export function noteShareSlug(title: string, maxLength = 35) {
@@ -38,8 +46,12 @@ export function noteShareSlug(title: string, maxLength = 35) {
 }
 
 export function guestShareUrl(baseUrl: string, shareUrl: string, title?: string) {
-  const token = encodeURIComponent(shareTokenFromApiUrl(shareUrl));
+  const { workspaceId, token } = sharePartsFromApiUrl(shareUrl);
+  const workspaceSegment = encodeURIComponent(workspaceId);
   const slug = title ? noteShareSlug(title) : null;
-  const path = slug ? `/shared/${encodeURIComponent(slug)}/${token}` : `/shared/${token}`;
+  const tokenSegment = encodeURIComponent(token);
+  const path = slug
+    ? `/shared/workspaces/${workspaceSegment}/${encodeURIComponent(slug)}/${tokenSegment}`
+    : `/shared/workspaces/${workspaceSegment}/${tokenSegment}`;
   return `${baseUrl.replace(/\/$/, "")}${path}`;
 }
