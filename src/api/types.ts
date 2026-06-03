@@ -69,12 +69,16 @@ export type NoteRecord = {
 
 export type NoteListPageRecord = {
   items: NoteRecord[];
-  total: number;
+  total: number | null;
   limit: number;
   next_cursor: string | null;
   counts: {
     folders: Record<string, number>;
-  };
+  } | null;
+};
+
+export type FolderNoteCountsRecord = {
+  folders: Record<string, number>;
 };
 
 export type MiaPromptRecord = {

@@ -53,33 +53,43 @@ async function mockLoadedDashboard(page: Page) {
       await fulfill(route, [folder]);
       return;
     }
+    if (path === "/api/folders/counts") {
+      await fulfill(route, { folders: { [folder.id]: 1 } });
+      return;
+    }
     if (path === "/api/tags") {
       await fulfill(route, []);
       return;
     }
     if (path === "/api/notes") {
-      await fulfill(route, [
-        {
-          id: "note-demo",
-          user: adminUser,
-          user_id: adminUser.id,
-          folder,
-          folder_id: folder.id,
-          title: "Mobile layout",
-          status: "ready",
-          source_type: "text",
-          revision_number: 1,
-          is_published: false,
-          is_starred: false,
-          created_at: now,
-          updated_at: now,
-          summary: "Sidebar should not move the page.",
-          text: "# Mobile layout\n\nSidebar should not move the page.",
-          note_url: "/markdown/demo/mobile-layout-note-demo.md",
-          source_files: [],
-          tags: []
-        }
-      ]);
+      await fulfill(route, {
+        items: [
+          {
+            id: "note-demo",
+            user: adminUser,
+            user_id: adminUser.id,
+            folder,
+            folder_id: folder.id,
+            title: "Mobile layout",
+            status: "ready",
+            source_type: "text",
+            revision_number: 1,
+            is_published: false,
+            is_starred: false,
+            created_at: now,
+            updated_at: now,
+            summary: "Sidebar should not move the page.",
+            text: "# Mobile layout\n\nSidebar should not move the page.",
+            note_url: "/markdown/demo/mobile-layout-note-demo.md",
+            source_files: [],
+            tags: []
+          }
+        ],
+        total: null,
+        limit: 10,
+        next_cursor: null,
+        counts: null
+      });
       return;
     }
     if (path === "/api/storage") {

@@ -6,11 +6,12 @@ import { NoteRow } from "./NoteRow";
 type NoteListProps = {
   notes: NoteRecord[];
   currentUser: UserRecord;
-  filteredCount: number;
+  filteredCount: number | null;
   currentPage: number;
-  totalPages: number;
   visibleStart: number;
   visibleEnd: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
   onAdd: () => void;
   onOpenNote: (note: NoteRecord, edit?: boolean) => void;
   onMoveNote: (note: NoteRecord) => void;
@@ -27,9 +28,10 @@ export function NoteList({
   currentUser,
   filteredCount,
   currentPage,
-  totalPages,
   visibleStart,
   visibleEnd,
+  hasPreviousPage,
+  hasNextPage,
   onAdd,
   onOpenNote,
   onMoveNote,
@@ -43,7 +45,7 @@ export function NoteList({
   return (
     <>
       <section className="note-list" aria-label="Notes">
-        {filteredCount === 0 ? (
+        {notes.length === 0 ? (
           <EmptyState onAdd={onAdd} />
         ) : (
           notes.map((note) => (
@@ -63,15 +65,15 @@ export function NoteList({
           ))
         )}
       </section>
-      {filteredCount > 0 && (
+      {notes.length > 0 && (
         <footer className="list-pagination" aria-label="Note list pagination">
           <span className="result-count">
-            {visibleStart}-{visibleEnd} notes of {filteredCount}
+            {visibleStart}-{visibleEnd} notes{filteredCount !== null ? ` of ${filteredCount}` : ""}
           </span>
           <button
             className="icon-button"
             aria-label="Previous page"
-            disabled={currentPage <= 1}
+            disabled={!hasPreviousPage}
             onClick={() => onPageChange(Math.max(1, currentPage - 1))}
           >
             <ChevronLeft size={18} />
@@ -79,8 +81,8 @@ export function NoteList({
           <button
             className="icon-button"
             aria-label="Next page"
-            disabled={currentPage >= totalPages}
-            onClick={() => onPageChange(Math.min(totalPages, currentPage + 1))}
+            disabled={!hasNextPage}
+            onClick={() => onPageChange(currentPage + 1)}
           >
             <ChevronRight size={18} />
           </button>

@@ -27,6 +27,7 @@ export function useDashboardActions({
     addOrMergeNote,
     refreshNotes: refreshWorkspaceNotes,
     refreshNote,
+    refreshFolderCounts,
     toggleNoteStar: toggleWorkspaceNoteStar
   } = workspace;
   const {
@@ -135,6 +136,7 @@ export function useDashboardActions({
         body: JSON.stringify({ folder_id: folderId })
       });
       addOrMergeNote({ ...updatedNote, folder_id: updatedNote.folder?.id ?? folderId });
+      await refreshFolderCounts();
       await refreshNotes();
       return { ok: true };
     } catch (err) {
@@ -142,7 +144,7 @@ export function useDashboardActions({
       setError(message);
       return { ok: false, error: message };
     }
-  }, [addOrMergeNote, refreshNotes, setError]);
+  }, [addOrMergeNote, refreshFolderCounts, refreshNotes, setError]);
 
   const openNote = useCallback(async (note: NoteRecord, startInEdit = false) => {
     const previousScreen = navigationSnapshot();

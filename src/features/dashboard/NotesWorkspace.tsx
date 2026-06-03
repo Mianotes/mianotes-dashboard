@@ -12,11 +12,12 @@ type NotesWorkspaceProps = {
   currentUser: UserRecord;
   noteIdToEditOnOpen: string | null;
   paginatedNotes: NoteRecord[];
-  filteredCount: number;
+  filteredCount: number | null;
   clampedPage: number;
-  totalPages: number;
   visibleStart: number;
   visibleEnd: number;
+  hasPreviousPage: boolean;
+  hasNextPage: boolean;
   onDismissError: () => void;
   onDismissSuccess: () => void;
   onBack: () => void;
@@ -45,9 +46,10 @@ export function NotesWorkspace({
   paginatedNotes,
   filteredCount,
   clampedPage,
-  totalPages,
   visibleStart,
   visibleEnd,
+  hasPreviousPage,
+  hasNextPage,
   onDismissError,
   onDismissSuccess,
   onBack,
@@ -105,9 +107,10 @@ export function NotesWorkspace({
             currentUser={currentUser}
             filteredCount={filteredCount}
             currentPage={clampedPage}
-            totalPages={totalPages}
             visibleStart={visibleStart}
             visibleEnd={visibleEnd}
+            hasPreviousPage={hasPreviousPage}
+            hasNextPage={hasNextPage}
             onAdd={onAdd}
             onOpenNote={onOpenNote}
             onMoveNote={onMoveNote}

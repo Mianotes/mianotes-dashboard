@@ -53,7 +53,7 @@ export function useDashboardLifecycle({
     setNoteIdToEditOnOpen,
     setPendingFolderRoute
   } = navigation;
-  const { totalPages, clampedPage, openedNote, hasPendingNotes } = notesView;
+  const { clampedPage, openedNote, hasPendingNotes } = notesView;
   const notePageCursorsRef = useRef<(string | null)[]>([null]);
   const noteFilters = {
     selectedView,
@@ -68,12 +68,6 @@ export function useDashboardLifecycle({
   useEffect(() => {
     void bootstrap();
   }, [bootstrap]);
-
-  useEffect(() => {
-    if (currentPage > totalPages) {
-      setCurrentPage(totalPages);
-    }
-  }, [currentPage, setCurrentPage, totalPages]);
 
   useEffect(() => {
     if (!currentUser || !isWorkspaceLoaded) return;

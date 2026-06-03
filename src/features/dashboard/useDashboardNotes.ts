@@ -8,7 +8,8 @@ export type DashboardView = "recent" | "starred";
 type UseDashboardNotesArgs = {
   notes: NoteRecord[];
   openedNote: NoteRecord | null;
-  notesTotal: number;
+  notesTotal: number | null;
+  nextNotesCursor: string | null;
   folderNoteCounts: Record<string, number>;
   folders: FolderRecord[];
   tags: TagRecord[];
@@ -25,6 +26,7 @@ export function useDashboardNotes({
   notes,
   openedNote,
   notesTotal,
+  nextNotesCursor,
   folderNoteCounts,
   folders,
   tags,
@@ -77,12 +79,14 @@ export function useDashboardNotes({
   }, [notes, searchQuery, selectedFolderId, selectedTag, selectedUserId, selectedView]);
 
   const filteredNotes = notes;
-  const totalPages = Math.max(1, Math.ceil(notesTotal / notesPerPage));
-  const clampedPage = Math.min(currentPage, totalPages);
+  const clampedPage = Math.max(1, currentPage);
   const pageStartIndex = (clampedPage - 1) * notesPerPage;
   const paginatedNotes = notes;
-  const visibleStart = notesTotal === 0 ? 0 : pageStartIndex + 1;
-  const visibleEnd = Math.min(pageStartIndex + paginatedNotes.length, notesTotal);
+  const knownTotal = notesTotal ?? null;
+  const visibleStart = paginatedNotes.length === 0 ? 0 : pageStartIndex + 1;
+  const visibleEnd = pageStartIndex + paginatedNotes.length;
+  const hasPreviousPage = clampedPage > 1;
+  const hasNextPage = nextNotesCursor !== null;
   const hasPendingNotes = useMemo(
     () => notes.some((note) => ["pending_parse", "parsing"].includes(note.status)),
     [notes]
@@ -96,11 +100,13 @@ export function useDashboardNotes({
     breadcrumbItems,
     tagSuggestions,
     filteredNotes,
-    totalPages,
     clampedPage,
     paginatedNotes,
+    knownTotal,
     visibleStart,
     visibleEnd,
+    hasPreviousPage,
+    hasNextPage,
     openedNote,
     hasPendingNotes
   };

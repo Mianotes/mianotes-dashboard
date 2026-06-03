@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { apiFetch, setApiWorkspaceId } from "../../api/client";
 import type {
+  FolderNoteCountsRecord,
   FolderRecord,
   NoteListPageRecord,
   NoteRecord,
@@ -52,7 +53,7 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
   const [folders, setFolders] = useState<FolderRecord[]>([]);
   const [tags, setTags] = useState<TagRecord[]>([]);
   const [notes, setNotes] = useState<NoteRecord[]>([]);
-  const [notesTotal, setNotesTotal] = useState(0);
+  const [notesTotal, setNotesTotal] = useState<number | null>(null);
   const [nextNotesCursor, setNextNotesCursor] = useState<string | null>(null);
   const [folderNoteCounts, setFolderNoteCounts] = useState<Record<string, number>>({});
   const [openedNote, setOpenedNote] = useState<NoteRecord | null>(null);
@@ -95,7 +96,6 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
     setNotes(hydrateNotes(page.items, nextUsers, nextFolders));
     setNotesTotal(page.total);
     setNextNotesCursor(page.next_cursor);
-    setFolderNoteCounts(page.counts?.folders ?? {});
   }, []);
 
   const loadNotesPage = useCallback(async (
@@ -113,6 +113,12 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
     return summaries;
   }, []);
 
+  const refreshFolderCounts = useCallback(async () => {
+    const counts = await apiFetch<FolderNoteCountsRecord>("/api/folders/counts");
+    setFolderNoteCounts(counts.folders);
+    return counts;
+  }, []);
+
   const loadWorkspace = useCallback(async (workspaceId: string | null = activeWorkspaceIdRef.current) => {
     setApiWorkspaceId(workspaceId);
     const [
@@ -121,14 +127,16 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
       nextTags,
       nextProfileSummaries,
       nextStorageCapacity,
-      nextStorageSettings
+      nextStorageSettings,
+      nextFolderCounts
     ] = await Promise.all([
       apiFetch<UserRecord[]>("/api/users"),
       apiFetch<FolderRecord[]>("/api/folders"),
       apiFetch<TagRecord[]>("/api/tags"),
       apiFetch<UserProfileSummaryRecord[]>("/api/users/profile-summaries"),
       apiFetch<StorageCapacityRecord>("/api/storage").catch(() => null),
-      apiFetch<StorageSettingsRecord>("/api/settings/storage").catch(() => null)
+      apiFetch<StorageSettingsRecord>("/api/settings/storage").catch(() => null),
+      apiFetch<FolderNoteCountsRecord>("/api/folders/counts").catch(() => ({ folders: {} }))
     ]);
 
     const activeFolders = nextFolders.filter((folder) => !folder.archived_at);
@@ -147,6 +155,7 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
     setProfileSummaries(nextProfileSummaries);
     setStorageCapacity(nextStorageCapacity);
     setStorageSettings(nextStorageSettings);
+    setFolderNoteCounts(nextFolderCounts.folders);
     setIsWorkspaceLoaded(true);
   }, []);
 
@@ -182,7 +191,6 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
       );
       setNotesTotal(page.total);
       setNextNotesCursor(page.next_cursor);
-      setFolderNoteCounts(page.counts?.folders ?? {});
       options.onMissingOpenedNote?.(availableNoteIds);
       return page;
     },
@@ -314,7 +322,7 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
     setFolders([]);
     setTags([]);
     setNotes([]);
-    setNotesTotal(0);
+    setNotesTotal(null);
     setNextNotesCursor(null);
     setFolderNoteCounts({});
     setOpenedNote(null);
@@ -328,7 +336,7 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
     async (locationId: string) => {
       setIsWorkspaceLoaded(false);
       setNotes([]);
-      setNotesTotal(0);
+      setNotesTotal(null);
       setNextNotesCursor(null);
       setFolderNoteCounts({});
       setOpenedNote(null);
@@ -374,6 +382,7 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
     refreshNote,
     clearOpenedNote,
     refreshProfileSummaries,
+    refreshFolderCounts,
     addOrMergeNote,
     toggleNoteStar,
     updateUserInWorkspace,

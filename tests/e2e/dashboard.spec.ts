@@ -148,19 +148,23 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
   }
 
   function noteListPage(items = activeNotes()) {
-    const counts = items.reduce<Record<string, number>>((acc, item) => {
+    return {
+      items,
+      total: null,
+      limit: 10,
+      next_cursor: null,
+      counts: null
+    };
+  }
+
+  function folderNoteCounts(items = activeNotes()) {
+    const folders = items.reduce<Record<string, number>>((acc, item) => {
       if (typeof item.folder_id === "string") {
         acc[item.folder_id] = (acc[item.folder_id] ?? 0) + 1;
       }
       return acc;
     }, {});
-    return {
-      items,
-      total: items.length,
-      limit: 10,
-      next_cursor: null,
-      counts: { folders: counts }
-    };
+    return { folders };
   }
 
   function profileSummaries() {
@@ -302,6 +306,11 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
 
     if (path === "/api/folders" && method === "GET") {
       await fulfill(route, activeFolders());
+      return;
+    }
+
+    if (path === "/api/folders/counts" && method === "GET") {
+      await fulfill(route, folderNoteCounts());
       return;
     }
 

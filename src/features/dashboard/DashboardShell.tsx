@@ -66,7 +66,6 @@ export function DashboardShell({
     folders,
     tags,
     notes,
-    notesTotal,
     profileSummaries,
     storageCapacity,
     storageSettings,
@@ -74,6 +73,7 @@ export function DashboardShell({
     loadWorkspace,
     switchWorkspace,
     refreshNote,
+    refreshFolderCounts,
     addOrMergeNote,
     updateUserInWorkspace,
     addUserToWorkspace,
@@ -87,11 +87,13 @@ export function DashboardShell({
     selectedUser,
     breadcrumbItems,
     tagSuggestions,
-    totalPages,
     clampedPage,
     paginatedNotes,
+    knownTotal,
     visibleStart,
     visibleEnd,
+    hasPreviousPage,
+    hasNextPage,
     openedNote
   } = notesView;
   const activeMovingNote = movingNote
@@ -356,11 +358,12 @@ export function DashboardShell({
               currentUser={currentUser}
               noteIdToEditOnOpen={navigation.noteIdToEditOnOpen}
               paginatedNotes={paginatedNotes}
-              filteredCount={notesTotal}
+              filteredCount={knownTotal}
               clampedPage={clampedPage}
-              totalPages={totalPages}
               visibleStart={visibleStart}
               visibleEnd={visibleEnd}
+              hasPreviousPage={hasPreviousPage}
+              hasNextPage={hasNextPage}
               onDismissError={() => setError(null)}
               onDismissSuccess={() => setShareSuccessMessage(null)}
               onBack={navigation.goBack}
@@ -374,6 +377,7 @@ export function DashboardShell({
               }}
               onOpenedNoteDeleted={async () => {
                 navigation.setOpenedNoteId(null);
+                await refreshFolderCounts();
                 await actions.refreshNotes();
               }}
               onAdd={navigation.openAddNote}
@@ -382,7 +386,10 @@ export function DashboardShell({
               onShareNote={(note) => void shareNote(note)}
               onExportNotePdf={(note) => exportNotePdf(note)}
               onToggleStar={(note) => void actions.toggleNoteStar(note)}
-              onNotesDeleted={actions.refreshNotes}
+              onNotesDeleted={async () => {
+                await refreshFolderCounts();
+                await actions.refreshNotes();
+              }}
               onError={setError}
               onPageChange={navigation.changePage}
             />
@@ -414,6 +421,7 @@ export function DashboardShell({
           navigation.setOpenedNoteId(note.id);
           navigation.setNoteIdToEditOnOpen(shouldEdit ? note.id : null);
           navigation.setIsAddOpen(false);
+          await refreshFolderCounts();
           await actions.refreshNotes();
         }}
         onNoteError={setError}
