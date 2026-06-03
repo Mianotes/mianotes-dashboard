@@ -1,13 +1,12 @@
 import { Edit3, KeyRound, MoreVertical, ShieldCheck, ShieldOff, Trash2 } from "lucide-react";
 import { useRef, useState } from "react";
-import type { FolderRecord, NoteRecord, UserRecord } from "../../api/types";
+import type { UserProfileSummaryRecord, UserRecord } from "../../api/types";
 import { useOutsideAndEscape } from "../../hooks/useOutsideAndEscape";
 import { ProfileSummaryCard } from "./ProfileSummaryCard";
 
 export function AllProfilesView({
   users,
-  notes,
-  folders,
+  profileSummaries,
   currentUser,
   onEditUser,
   onRequestPasswordUpdate,
@@ -16,8 +15,7 @@ export function AllProfilesView({
   onSelectUser
 }: {
   users: UserRecord[];
-  notes: NoteRecord[];
-  folders: FolderRecord[];
+  profileSummaries: UserProfileSummaryRecord[];
   currentUser: UserRecord;
   onEditUser: (userId: string) => void;
   onRequestPasswordUpdate: (user: UserRecord) => void;
@@ -28,6 +26,7 @@ export function AllProfilesView({
   const [openMenuUserId, setOpenMenuUserId] = useState<string | null>(null);
   const openMenuRef = useRef<HTMLDivElement | null>(null);
   const adminCount = users.filter((user) => user.is_admin).length;
+  const summariesByUserId = new Map(profileSummaries.map((summary) => [summary.user_id, summary]));
   useOutsideAndEscape(Boolean(openMenuUserId), openMenuRef, () => setOpenMenuUserId(null));
 
   return (
@@ -130,7 +129,7 @@ export function AllProfilesView({
               </div>
             )}
             <button className="profile-card-button" type="button" onClick={() => onSelectUser(user.id)}>
-              <ProfileSummaryCard user={user} notes={notes} folders={folders} compact />
+              <ProfileSummaryCard user={user} summary={summariesByUserId.get(user.id)} compact />
             </button>
           </article>
         );

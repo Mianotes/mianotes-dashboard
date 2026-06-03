@@ -67,6 +67,7 @@ export function DashboardShell({
     tags,
     notes,
     notesTotal,
+    profileSummaries,
     storageCapacity,
     storageSettings,
     activeWorkspace,
@@ -322,8 +323,7 @@ export function DashboardShell({
           ) : navigation.workspaceView === "profile" ? (
             <ProfileScreen
               users={users}
-              notes={notes}
-              folders={folders}
+              profileSummaries={profileSummaries}
               currentUser={currentUser}
               workspaceName={workspaceName}
               storageSettings={storageSettings}

@@ -27,6 +27,14 @@ export type TagRecord = {
   slug: string;
 };
 
+export type UserProfileSummaryRecord = {
+  user_id: string;
+  notes_count: number;
+  tags_count: number;
+  folders_count: number;
+  tags: TagRecord[];
+};
+
 export type SourceFileRecord = {
   id: string;
   original_filename: string;

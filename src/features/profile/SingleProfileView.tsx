@@ -1,14 +1,13 @@
 import { Edit3, MoreVertical } from "lucide-react";
 import { useRef, useState } from "react";
-import type { FolderRecord, NoteRecord, ProfileDraft, UserRecord } from "../../api/types";
+import type { ProfileDraft, UserProfileSummaryRecord, UserRecord } from "../../api/types";
 import { useOutsideAndEscape } from "../../hooks/useOutsideAndEscape";
 import { ProfileSummaryCard } from "./ProfileSummaryCard";
-import { profileTags, userDisplayRole } from "./profileUtils";
+import { userDisplayRole } from "./profileUtils";
 
 export function SingleProfileView({
   user,
-  notes,
-  folders,
+  profileSummary,
   isEditing,
   draft,
   onDraftChange,
@@ -20,8 +19,7 @@ export function SingleProfileView({
   onSelectTag
 }: {
   user: UserRecord;
-  notes: NoteRecord[];
-  folders: FolderRecord[];
+  profileSummary?: UserProfileSummaryRecord;
   isEditing: boolean;
   draft: ProfileDraft;
   onDraftChange: (draft: ProfileDraft) => void;
@@ -32,7 +30,7 @@ export function SingleProfileView({
   onEditProfile: () => void;
   onSelectTag: (userId: string, tagSlug: string) => void;
 }) {
-  const tags = profileTags(user, notes, folders);
+  const tags = profileSummary?.tags ?? [];
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
   useOutsideAndEscape(isMenuOpen, menuRef, () => setIsMenuOpen(false));
@@ -78,8 +76,7 @@ export function SingleProfileView({
     <div className="profile-layout">
       <ProfileSummaryCard
         user={user}
-        notes={notes}
-        folders={folders}
+        summary={profileSummary}
         canUploadPhoto={canUploadPhoto}
         isUploadingPhoto={isUploadingPhoto}
         menu={menu}

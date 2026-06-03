@@ -27,7 +27,9 @@ export function useDashboardLifecycle({
     bootstrap,
     loadNotesPage,
     refreshNotes: refreshWorkspaceNotes,
-    refreshNote
+    refreshNote,
+    clearOpenedNote,
+    refreshProfileSummaries
   } = workspace;
   const {
     selectedView,
@@ -157,6 +159,29 @@ export function useDashboardLifecycle({
     pendingFolderRoute,
     setCurrentPage
   ]);
+
+  useEffect(() => {
+    if (!currentUser || !isWorkspaceLoaded || pendingFolderRoute) return;
+    if (!openedNoteId) {
+      clearOpenedNote();
+      return;
+    }
+    if (openedNote?.id === openedNoteId) return;
+    void refreshNote(openedNoteId).catch(() => undefined);
+  }, [
+    clearOpenedNote,
+    currentUser,
+    isWorkspaceLoaded,
+    openedNote?.id,
+    openedNoteId,
+    pendingFolderRoute,
+    refreshNote
+  ]);
+
+  useEffect(() => {
+    if (!currentUser || !isWorkspaceLoaded || workspaceView !== "profile") return;
+    void refreshProfileSummaries().catch(() => undefined);
+  }, [currentUser, isWorkspaceLoaded, refreshProfileSummaries, workspaceView]);
 
   useEffect(() => {
     if (!currentUser || !isWorkspaceLoaded || !hasPendingNotes) return;

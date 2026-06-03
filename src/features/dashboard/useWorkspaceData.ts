@@ -7,6 +7,7 @@ import type {
   StorageCapacityRecord,
   StorageSettingsRecord,
   TagRecord,
+  UserProfileSummaryRecord,
   UserRecord
 } from "../../api/types";
 import { notesPerPage } from "../../utils/dashboardState";
@@ -54,6 +55,8 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
   const [notesTotal, setNotesTotal] = useState(0);
   const [nextNotesCursor, setNextNotesCursor] = useState<string | null>(null);
   const [folderNoteCounts, setFolderNoteCounts] = useState<Record<string, number>>({});
+  const [openedNote, setOpenedNote] = useState<NoteRecord | null>(null);
+  const [profileSummaries, setProfileSummaries] = useState<UserProfileSummaryRecord[]>([]);
   const [storageCapacity, setStorageCapacity] =
     useState<StorageCapacityRecord | null>(null);
   const [storageSettings, setStorageSettings] =
@@ -104,18 +107,26 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
     return page;
   }, [applyNotePage]);
 
+  const refreshProfileSummaries = useCallback(async () => {
+    const summaries = await apiFetch<UserProfileSummaryRecord[]>("/api/users/profile-summaries");
+    setProfileSummaries(summaries);
+    return summaries;
+  }, []);
+
   const loadWorkspace = useCallback(async (workspaceId: string | null = activeWorkspaceIdRef.current) => {
     setApiWorkspaceId(workspaceId);
     const [
       nextUsers,
       nextFolders,
       nextTags,
+      nextProfileSummaries,
       nextStorageCapacity,
       nextStorageSettings
     ] = await Promise.all([
       apiFetch<UserRecord[]>("/api/users"),
       apiFetch<FolderRecord[]>("/api/folders"),
       apiFetch<TagRecord[]>("/api/tags"),
+      apiFetch<UserProfileSummaryRecord[]>("/api/users/profile-summaries"),
       apiFetch<StorageCapacityRecord>("/api/storage").catch(() => null),
       apiFetch<StorageSettingsRecord>("/api/settings/storage").catch(() => null)
     ]);
@@ -133,6 +144,7 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
     usersRef.current = nextUsers;
     foldersRef.current = activeFolders;
     setTags(nextTags);
+    setProfileSummaries(nextProfileSummaries);
     setStorageCapacity(nextStorageCapacity);
     setStorageSettings(nextStorageSettings);
     setIsWorkspaceLoaded(true);
@@ -181,19 +193,27 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
     const fullNote = await apiFetch<NoteRecord>(`/api/notes/${noteId}`);
     const hydratedNote = hydrateNotes([fullNote], usersRef.current, foldersRef.current)[0]
       ?? fullNote;
+    setOpenedNote(hydratedNote);
     setNotes((items) =>
       items.some((item) => item.id === noteId)
         ? items.map((item) =>
             item.id === noteId ? mergeNoteRecord(item, hydratedNote) : item
           )
-        : [hydratedNote, ...items]
+        : items
     );
-    return fullNote;
+    return hydratedNote;
+  }, []);
+
+  const clearOpenedNote = useCallback(() => {
+    setOpenedNote(null);
   }, []);
 
   const addOrMergeNote = useCallback(
     (note: NoteRecord) => {
       const hydratedNote = hydrateNotes([note], usersRef.current, foldersRef.current)[0] ?? note;
+      setOpenedNote((current) =>
+        current?.id === note.id ? mergeNoteRecord(current, hydratedNote) : current
+      );
       setNotes((items) =>
         items.some((item) => item.id === note.id)
           ? items.map((item) =>
@@ -218,6 +238,9 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
         method: "PATCH",
         body: JSON.stringify({ is_starred: nextStarred })
       });
+      setOpenedNote((current) =>
+        current?.id === note.id ? mergeNoteRecord(current, updated) : current
+      );
       setNotes((items) =>
         items.map((item) =>
           item.id === note.id ? mergeNoteRecord(item, updated) : item
@@ -244,11 +267,26 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
           : note
       )
     );
+    setOpenedNote((note) =>
+      note?.user?.id === updatedUser.id || note?.user_id === updatedUser.id
+        ? { ...note, user: updatedUser }
+        : note
+    );
     setCurrentUser((user) => (user?.id === updatedUser.id ? updatedUser : user));
   }, []);
 
   const addUserToWorkspace = useCallback((createdUser: UserRecord) => {
     setUsers((items) => [createdUser, ...items]);
+    setProfileSummaries((items) => [
+      {
+        user_id: createdUser.id,
+        notes_count: 0,
+        tags_count: 0,
+        folders_count: 0,
+        tags: []
+      },
+      ...items
+    ]);
   }, []);
 
   const removeUserFromWorkspace = useCallback((userId: string) => {
@@ -264,6 +302,10 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
         && (!note.folder_id || !deletedFolderIds.has(note.folder_id))
       )
     );
+    setOpenedNote((note) => (
+      note?.user_id === userId || note?.user?.id === userId ? null : note
+    ));
+    setProfileSummaries((items) => items.filter((summary) => summary.user_id !== userId));
   }, [folders]);
 
   const resetWorkspaceData = useCallback(() => {
@@ -275,6 +317,8 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
     setNotesTotal(0);
     setNextNotesCursor(null);
     setFolderNoteCounts({});
+    setOpenedNote(null);
+    setProfileSummaries([]);
     setStorageCapacity(null);
     setStorageSettings(null);
     setIsWorkspaceLoaded(false);
@@ -287,6 +331,8 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
       setNotesTotal(0);
       setNextNotesCursor(null);
       setFolderNoteCounts({});
+      setOpenedNote(null);
+      setProfileSummaries([]);
       activeWorkspaceIdRef.current = locationId;
       setActiveWorkspaceId(locationId);
       setApiWorkspaceId(locationId);
@@ -314,6 +360,8 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
     notesTotal,
     nextNotesCursor,
     folderNoteCounts,
+    openedNote,
+    profileSummaries,
     storageCapacity,
     storageSettings,
     activeWorkspace,
@@ -324,6 +372,8 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
     loadNotesPage,
     refreshNotes,
     refreshNote,
+    clearOpenedNote,
+    refreshProfileSummaries,
     addOrMergeNote,
     toggleNoteStar,
     updateUserInWorkspace,

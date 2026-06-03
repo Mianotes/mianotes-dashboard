@@ -7,6 +7,7 @@ export type DashboardView = "recent" | "starred";
 
 type UseDashboardNotesArgs = {
   notes: NoteRecord[];
+  openedNote: NoteRecord | null;
   notesTotal: number;
   folderNoteCounts: Record<string, number>;
   folders: FolderRecord[];
@@ -18,11 +19,11 @@ type UseDashboardNotesArgs = {
   selectedTag: string | "all";
   searchQuery: string;
   currentPage: number;
-  openedNoteId: string | null;
 };
 
 export function useDashboardNotes({
   notes,
+  openedNote,
   notesTotal,
   folderNoteCounts,
   folders,
@@ -33,8 +34,7 @@ export function useDashboardNotes({
   selectedFolderId,
   selectedTag,
   searchQuery,
-  currentPage,
-  openedNoteId
+  currentPage
 }: UseDashboardNotesArgs) {
   const notesByFolder = useMemo(
     () => folderNoteCounts,
@@ -83,7 +83,6 @@ export function useDashboardNotes({
   const paginatedNotes = notes;
   const visibleStart = notesTotal === 0 ? 0 : pageStartIndex + 1;
   const visibleEnd = Math.min(pageStartIndex + paginatedNotes.length, notesTotal);
-  const openedNote = notes.find((note) => note.id === openedNoteId) ?? null;
   const hasPendingNotes = useMemo(
     () => notes.some((note) => ["pending_parse", "parsing"].includes(note.status)),
     [notes]

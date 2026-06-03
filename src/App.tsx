@@ -40,6 +40,7 @@ function AuthenticatedApp() {
     folders,
     tags,
     notes,
+    openedNote,
     notesTotal,
     folderNoteCounts,
     isLoading,
@@ -56,7 +57,6 @@ function AuthenticatedApp() {
     selectedUserId,
     selectedFolderId,
     selectedTag,
-    openedNoteId,
     searchQuery,
     currentPage,
     isAccountOpen,
@@ -100,6 +100,7 @@ function AuthenticatedApp() {
 
   const notesView = useDashboardNotes({
     notes,
+    openedNote,
     notesTotal,
     folderNoteCounts,
     folders,
@@ -110,8 +111,7 @@ function AuthenticatedApp() {
     selectedFolderId,
     selectedTag,
     searchQuery,
-    currentPage,
-    openedNoteId
+    currentPage
   });
 
   const actions = useDashboardActions({

@@ -1,12 +1,11 @@
 import { Loader2, ShieldCheck, Trash2, X } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { apiFetch, versionedMediaPath } from "../../api/client";
 import type {
-  FolderRecord,
-  NoteRecord,
   ProfileDraft,
   StorageSettingsRecord,
+  UserProfileSummaryRecord,
   UserRecord
 } from "../../api/types";
 import { randomAvatarTone } from "../../components/ui/UserAvatar";
@@ -19,8 +18,7 @@ import { emptyProfileDraft } from "./profileUtils";
 
 export function ProfileScreen({
   users,
-  notes,
-  folders,
+  profileSummaries,
   currentUser,
   workspaceName,
   storageSettings,
@@ -36,8 +34,7 @@ export function ProfileScreen({
   onSwitchWorkspace
 }: {
   users: UserRecord[];
-  notes: NoteRecord[];
-  folders: FolderRecord[];
+  profileSummaries: UserProfileSummaryRecord[];
   currentUser: UserRecord;
   workspaceName: string;
   storageSettings: StorageSettingsRecord | null;
@@ -55,6 +52,10 @@ export function ProfileScreen({
   const selectedUser = selectedUserId === "all"
     ? null
     : users.find((user) => user.id === selectedUserId) ?? currentUser;
+  const profileSummariesByUserId = useMemo(
+    () => new Map(profileSummaries.map((summary) => [summary.user_id, summary])),
+    [profileSummaries]
+  );
   const [isAddingUser, setIsAddingUser] = useState(false);
   const toolbarName = isAddingUser ? "New user" : selectedUser?.name ?? "All users";
   const canEditSelectedUser = Boolean(selectedUser && (currentUser.is_admin || selectedUser.id === currentUser.id));
@@ -319,8 +320,7 @@ export function ProfileScreen({
         ) : selectedUser ? (
           <SingleProfileView
             user={selectedUser}
-            notes={notes}
-            folders={folders}
+            profileSummary={profileSummariesByUserId.get(selectedUser.id)}
             isEditing={isEditing}
             draft={draft}
             onDraftChange={setDraft}
@@ -334,8 +334,7 @@ export function ProfileScreen({
         ) : (
           <AllProfilesView
             users={users}
-            notes={notes}
-            folders={folders}
+            profileSummaries={profileSummaries}
             currentUser={currentUser}
             onSelectUser={(userId) => onSelectUser(userId)}
             onEditUser={selectUserForEditing}
