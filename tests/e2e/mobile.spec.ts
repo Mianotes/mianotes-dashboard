@@ -76,8 +76,6 @@ async function mockLoadedDashboard(page: Page) {
           summary: "Sidebar should not move the page.",
           text: "# Mobile layout\n\nSidebar should not move the page.",
           note_url: "/markdown/demo/mobile-layout-note-demo.md",
-          comments_count: 0,
-          comments_url: "/api/notes/note-demo/comments",
           source_files: [],
           tags: []
         }

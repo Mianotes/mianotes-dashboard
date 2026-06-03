@@ -59,8 +59,6 @@ export type NoteRecord = {
   summary?: string;
   text?: string;
   note_url?: string;
-  comments_count?: number;
-  comments_url?: string;
   source_files?: SourceFileRecord[];
   tags?: TagRecord[];
   shared_at?: string | null;

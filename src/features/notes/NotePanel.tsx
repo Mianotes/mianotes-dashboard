@@ -102,17 +102,17 @@ export function NotePanel({
   }
 
   const {
-    commentBody,
+    promptText,
     miaResponse,
     miaError,
     isLoading,
     isApplyingMia,
     miaLoadingMessage,
     isMiaDisabled,
-    setCommentBody,
+    setPromptText,
     setMiaError,
     submitMiaPrompt,
-    addComment,
+    askMia,
     copyMiaResponse,
     applyMiaResponse
   } = useMiaPrompt({
@@ -286,7 +286,7 @@ export function NotePanel({
       <div className="note-section-divider" />
       <AskMiaPanel
         noteId={note.id}
-        commentBody={commentBody}
+        promptText={promptText}
         miaResponse={miaResponse}
         miaError={miaError}
         isLoading={isLoading}
@@ -296,9 +296,9 @@ export function NotePanel({
         canChangeNote={canEditNote}
         cannotChangeNoteMessage={cannotEditNoteMessage}
         miaLoadingMessage={miaLoadingMessage}
-        onCommentBodyChange={setCommentBody}
+        onPromptTextChange={setPromptText}
         onClearEmptyPromptError={() => setMiaError(null)}
-        onSubmit={addComment}
+        onSubmit={askMia}
         onSubmitPrompt={submitMiaPrompt}
         onCopyResponse={copyMiaResponse}
         onApplyResponse={applyMiaResponse}

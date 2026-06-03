@@ -13,7 +13,7 @@ const miaQuickActions = [
 
 type AskMiaPanelProps = {
   noteId: string;
-  commentBody: string;
+  promptText: string;
   miaResponse: string | null;
   miaError: string | null;
   isLoading: boolean;
@@ -23,7 +23,7 @@ type AskMiaPanelProps = {
   canChangeNote: boolean;
   cannotChangeNoteMessage: string;
   miaLoadingMessage: string;
-  onCommentBodyChange: (value: string) => void;
+  onPromptTextChange: (value: string) => void;
   onClearEmptyPromptError: () => void;
   onSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onSubmitPrompt: (prompt: string) => void | Promise<void>;
@@ -33,7 +33,7 @@ type AskMiaPanelProps = {
 
 export function AskMiaPanel({
   noteId,
-  commentBody,
+  promptText,
   miaResponse,
   miaError,
   isLoading,
@@ -43,7 +43,7 @@ export function AskMiaPanel({
   canChangeNote,
   cannotChangeNoteMessage,
   miaLoadingMessage,
-  onCommentBodyChange,
+  onPromptTextChange,
   onClearEmptyPromptError,
   onSubmit,
   onSubmitPrompt,
@@ -51,7 +51,7 @@ export function AskMiaPanel({
   onApplyResponse
 }: AskMiaPanelProps) {
   return (
-    <section className="comments-box">
+    <section className="mia-prompt-box">
       <h3>Prompt</h3>
       {isIndexingNote && (
         <p className="mia-disabled-note">
@@ -99,12 +99,12 @@ export function AskMiaPanel({
           )}
         </div>
       )}
-      <form onSubmit={onSubmit} className="comment-form">
+      <form onSubmit={onSubmit} className="mia-prompt-form">
         <textarea
-          value={commentBody}
+          value={promptText}
           disabled={isMiaDisabled}
           onChange={(event) => {
-            onCommentBodyChange(event.target.value);
+            onPromptTextChange(event.target.value);
             if (miaError === "Please provide instructions for Mia.") {
               onClearEmptyPromptError();
             }

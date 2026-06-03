@@ -105,8 +105,7 @@ export function mergeNoteRecord(current: NoteRecord, update: NoteRecord) {
     user: update.user ?? current.user,
     folder: update.folder ?? current.folder,
     source_files: update.source_files ?? current.source_files,
-    tags: update.tags ?? current.tags,
-    comments_count: update.comments_count ?? current.comments_count
+    tags: update.tags ?? current.tags
   };
 }
 

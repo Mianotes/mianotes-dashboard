@@ -54,7 +54,7 @@ export function useMiaPrompt({
   onDraftTextChange,
   onRefresh
 }: UseMiaPromptArgs) {
-  const [commentBody, setCommentBody] = useState("");
+  const [promptText, setPromptText] = useState("");
   const [miaResponse, setMiaResponse] = useState<string | null>(null);
   const [miaResponseHeading, setMiaResponseHeading] = useState<string | null>(null);
   const [miaError, setMiaError] = useState<string | null>(null);
@@ -83,7 +83,7 @@ export function useMiaPrompt({
 
   useEffect(() => {
     clearMiaLoadingTimers();
-    setCommentBody("");
+    setPromptText("");
     setMiaResponse(null);
     setMiaResponseHeading(null);
     setMiaError(null);
@@ -107,10 +107,6 @@ export function useMiaPrompt({
       return;
     }
 
-    const body = trimmedInstructions.toLowerCase().startsWith("@mia")
-      ? trimmedInstructions
-      : `@mia ${trimmedInstructions}`;
-
     setIsLoading(true);
     startMiaLoadingMessages();
     setMiaResponse(null);
@@ -119,25 +115,25 @@ export function useMiaPrompt({
 
     const markdown = isEditing ? currentEditorMarkdown() : undefined;
     try {
-      const result = await apiFetch<MiaPromptRecord>(`/api/notes/${note.id}/comments`, {
+      const result = await apiFetch<MiaPromptRecord>(`/api/notes/${note.id}/prompt`, {
         method: "POST",
-        body: JSON.stringify({ body, markdown })
+        body: JSON.stringify({ prompt: trimmedInstructions, markdown })
       });
       setMiaResponse(result.text);
       setMiaResponseHeading(miaHeadingForPrompt(trimmedInstructions));
-      if (clearInput) setCommentBody("");
+      if (clearInput) setPromptText("");
       await onRefresh();
     } catch (err) {
-      setMiaError(err instanceof Error ? err.message : "Could not send comment");
+      setMiaError(err instanceof Error ? err.message : "Could not ask Mia");
     } finally {
       clearMiaLoadingTimers();
       setIsLoading(false);
     }
   }
 
-  async function addComment(event: FormEvent<HTMLFormElement>) {
+  async function askMia(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    await submitMiaPrompt(commentBody, true);
+    await submitMiaPrompt(promptText, true);
   }
 
   async function copyMiaResponse() {
@@ -182,17 +178,17 @@ export function useMiaPrompt({
   }
 
   return {
-    commentBody,
+    promptText,
     miaResponse,
     miaError,
     isLoading,
     isApplyingMia,
     miaLoadingMessage,
     isMiaDisabled: isLoading || isIndexingNote,
-    setCommentBody,
+    setPromptText,
     setMiaError,
     submitMiaPrompt,
-    addComment,
+    askMia,
     copyMiaResponse,
     applyMiaResponse
   };

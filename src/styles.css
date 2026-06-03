@@ -2508,7 +2508,7 @@ button {
   opacity: 0.55;
 }
 
-.comments-box {
+.mia-prompt-box {
   padding: 24px 24px;
   border: 1px solid #eee;
   border-radius: 14px;
@@ -2516,7 +2516,7 @@ button {
   background: linear-gradient(180deg, #fafafa 0%, #f4f5f7 45%, #eceef2 100%);
 }
 
-.comments-box h3 {
+.mia-prompt-box h3 {
   margin: 0 0 24px;
   font-size: 1.08rem;
 }
@@ -2532,7 +2532,7 @@ button {
   font-size: 1.08rem;
 }
 
-.comment-form {
+.mia-prompt-form {
   display: grid;
   gap: 10px;
 }
@@ -2684,29 +2684,23 @@ button {
   cursor: not-allowed;
 }
 
-.comment-form textarea,
+.mia-prompt-form textarea,
 .modal textarea {
   min-height: 86px;
   resize: vertical;
 }
 
-.comment-form textarea:disabled {
+.mia-prompt-form textarea:disabled {
   cursor: not-allowed;
   color: #8c8e98;
   background: #f7f7f9;
 }
 
-.comment,
 .notice {
   margin-top: 12px;
   padding: 11px 13px;
   border-radius: 8px;
   background: #f5f5f7;
-}
-
-.comment p {
-  margin: 6px 0 0;
-  color: #60626d;
 }
 
 .empty-state {
@@ -4474,12 +4468,12 @@ textarea:focus {
     line-height: 27px;
   }
 
-  .comments-box h3,
+  .mia-prompt-box h3,
   .note-tags-section h3 {
     font-size: 18px;
   }
 
-  .comment-form textarea {
+  .mia-prompt-form textarea {
     min-height: 92px;
   }
 

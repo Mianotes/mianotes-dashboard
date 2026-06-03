@@ -74,8 +74,6 @@ function note(overrides: Record<string, unknown> = {}) {
     summary: "Welcome to Mianotes.",
     text: "# Getting started\n\nWelcome to Mianotes.",
     note_url: "/markdown/demo/getting-started-note-demo.md",
-    comments_count: 0,
-    comments_url: "/api/notes/note-demo/comments",
     source_files: [],
     tags: [demoTag],
     ...overrides
