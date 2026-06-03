@@ -1,12 +1,14 @@
 import { useMemo } from "react";
 import type { FolderRecord, NoteRecord, TagRecord, UserRecord } from "../../api/types";
 import { notesPerPage } from "../../utils/dashboardState";
-import { countBy, noteSearchText } from "../../utils/notes";
+import { noteSearchText } from "../../utils/notes";
 
 export type DashboardView = "recent" | "starred";
 
 type UseDashboardNotesArgs = {
   notes: NoteRecord[];
+  notesTotal: number;
+  folderNoteCounts: Record<string, number>;
   folders: FolderRecord[];
   tags: TagRecord[];
   users: UserRecord[];
@@ -21,6 +23,8 @@ type UseDashboardNotesArgs = {
 
 export function useDashboardNotes({
   notes,
+  notesTotal,
+  folderNoteCounts,
   folders,
   tags,
   users,
@@ -33,8 +37,8 @@ export function useDashboardNotes({
   openedNoteId
 }: UseDashboardNotesArgs) {
   const notesByFolder = useMemo(
-    () => countBy(notes, (note) => note.folder?.id ?? note.folder_id ?? ""),
-    [notes]
+    () => folderNoteCounts,
+    [folderNoteCounts]
   );
 
   const selectedFolder = selectedFolderId === "all"
@@ -72,26 +76,13 @@ export function useDashboardNotes({
       .slice(0, 6);
   }, [notes, searchQuery, selectedFolderId, selectedTag, selectedUserId, selectedView]);
 
-  const filteredNotes = useMemo(() => {
-    const query = searchQuery.trim().toLowerCase();
-
-    return notes.filter((note) => {
-      if (selectedView === "starred" && !note.is_starred) return false;
-      if (selectedUserId !== "all" && note.user_id !== selectedUserId) return false;
-      if (selectedFolderId !== "all" && note.folder_id !== selectedFolderId) return false;
-      if (selectedTag !== "all" && !note.tags?.some((tag) => tag.slug === selectedTag)) return false;
-      if (!query) return true;
-
-      return noteSearchText(note).includes(query);
-    });
-  }, [notes, searchQuery, selectedFolderId, selectedTag, selectedUserId, selectedView]);
-
-  const totalPages = Math.max(1, Math.ceil(filteredNotes.length / notesPerPage));
+  const filteredNotes = notes;
+  const totalPages = Math.max(1, Math.ceil(notesTotal / notesPerPage));
   const clampedPage = Math.min(currentPage, totalPages);
   const pageStartIndex = (clampedPage - 1) * notesPerPage;
-  const paginatedNotes = filteredNotes.slice(pageStartIndex, pageStartIndex + notesPerPage);
-  const visibleStart = filteredNotes.length === 0 ? 0 : pageStartIndex + 1;
-  const visibleEnd = Math.min(pageStartIndex + paginatedNotes.length, filteredNotes.length);
+  const paginatedNotes = notes;
+  const visibleStart = notesTotal === 0 ? 0 : pageStartIndex + 1;
+  const visibleEnd = Math.min(pageStartIndex + paginatedNotes.length, notesTotal);
   const openedNote = notes.find((note) => note.id === openedNoteId) ?? null;
   const hasPendingNotes = useMemo(
     () => notes.some((note) => ["pending_parse", "parsing"].includes(note.status)),

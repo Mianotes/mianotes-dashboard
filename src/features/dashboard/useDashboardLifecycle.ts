@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { writeDashboardUiState } from "../../utils/dashboardState";
 import { findFolderForRoute, routePathForState } from "../../utils/internalRoutes";
 import { hasUsableNoteContent } from "../../utils/notes";
@@ -22,10 +22,10 @@ export function useDashboardLifecycle({
     users,
     folders,
     tags,
-    notes,
     activeWorkspace,
     isWorkspaceLoaded,
     bootstrap,
+    loadNotesPage,
     refreshNotes: refreshWorkspaceNotes,
     refreshNote
   } = workspace;
@@ -52,6 +52,16 @@ export function useDashboardLifecycle({
     setPendingFolderRoute
   } = navigation;
   const { totalPages, clampedPage, openedNote, hasPendingNotes } = notesView;
+  const notePageCursorsRef = useRef<(string | null)[]>([null]);
+  const noteFilters = {
+    selectedView,
+    selectedUserId,
+    selectedFolderId,
+    selectedTag,
+    searchQuery
+  };
+  const noteFiltersKey = JSON.stringify(noteFilters);
+  const lastNoteFiltersKeyRef = useRef<string | null>(null);
 
   useEffect(() => {
     void bootstrap();
@@ -92,14 +102,11 @@ export function useDashboardLifecycle({
     setSelectedTag((current) => (
       current === "all" || tags.some((tag) => tag.slug === current) ? current : "all"
     ));
-    setOpenedNoteId((current) => (
-      current === null || notes.some((note) => note.id === current) ? current : null
-    ));
+    setOpenedNoteId((current) => current);
   }, [
     currentUser,
     folders,
     isWorkspaceLoaded,
-    notes,
     pendingFolderRoute,
     setCurrentPage,
     setNoteIdToEditOnOpen,
@@ -115,13 +122,53 @@ export function useDashboardLifecycle({
   ]);
 
   useEffect(() => {
+    if (!currentUser || !isWorkspaceLoaded || pendingFolderRoute) return undefined;
+
+    let cancelled = false;
+    const filtersChanged = lastNoteFiltersKeyRef.current !== noteFiltersKey;
+    if (filtersChanged) {
+      notePageCursorsRef.current = [null];
+      lastNoteFiltersKeyRef.current = noteFiltersKey;
+      if (currentPage !== 1) {
+        setCurrentPage(1);
+        return undefined;
+      }
+    }
+
+    const cursor = notePageCursorsRef.current[currentPage - 1] ?? null;
+    void loadNotesPage(noteFilters, cursor).then((page) => {
+      if (cancelled) return;
+      if (page.next_cursor) {
+        notePageCursorsRef.current[currentPage] = page.next_cursor;
+      } else {
+        notePageCursorsRef.current = notePageCursorsRef.current.slice(0, currentPage);
+      }
+    }).catch(() => undefined);
+
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    currentPage,
+    currentUser,
+    isWorkspaceLoaded,
+    loadNotesPage,
+    noteFiltersKey,
+    pendingFolderRoute,
+    setCurrentPage
+  ]);
+
+  useEffect(() => {
     if (!currentUser || !isWorkspaceLoaded || !hasPendingNotes) return;
 
     let cancelled = false;
 
     async function pollPendingNotes() {
       try {
-        await refreshWorkspaceNotes();
+        await refreshWorkspaceNotes({
+          filters: noteFilters,
+          cursor: notePageCursorsRef.current[currentPage - 1] ?? null
+        });
         if (cancelled) return;
 
         if (openedNoteId) {
@@ -143,8 +190,10 @@ export function useDashboardLifecycle({
     };
   }, [
     currentUser,
+    currentPage,
     hasPendingNotes,
     isWorkspaceLoaded,
+    noteFiltersKey,
     openedNoteId,
     refreshNote,
     refreshWorkspaceNotes

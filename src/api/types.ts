@@ -61,6 +61,16 @@ export type NoteRecord = {
   job_status?: string | null;
 };
 
+export type NoteListPageRecord = {
+  items: NoteRecord[];
+  total: number;
+  limit: number;
+  next_cursor: string | null;
+  counts: {
+    folders: Record<string, number>;
+  };
+};
+
 export type MiaPromptRecord = {
   type: "prompt";
   text: string;

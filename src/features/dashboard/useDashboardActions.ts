@@ -31,6 +31,10 @@ export function useDashboardActions({
   } = workspace;
   const {
     setOpenFolderMenuId,
+    selectedView,
+    selectedUserId,
+    selectedTag,
+    searchQuery,
     setSelectedFolderId,
     setOpenedNoteId,
     setNoteIdToEditOnOpen,
@@ -93,13 +97,22 @@ export function useDashboardActions({
 
   const refreshNotes = useCallback(async () => {
     await refreshWorkspaceNotes({
-      onMissingOpenedNote: (availableNoteIds) => {
-        setOpenedNoteId((current) => (
-          current && availableNoteIds.has(current) ? current : null
-        ));
+      filters: {
+        selectedView,
+        selectedUserId,
+        selectedFolderId,
+        selectedTag,
+        searchQuery
       }
     });
-  }, [refreshWorkspaceNotes, setOpenedNoteId]);
+  }, [
+    refreshWorkspaceNotes,
+    searchQuery,
+    selectedFolderId,
+    selectedTag,
+    selectedUserId,
+    selectedView
+  ]);
 
   const toggleNoteStar = useCallback(async (note: NoteRecord) => {
     try {

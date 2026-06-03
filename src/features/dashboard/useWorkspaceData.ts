@@ -2,17 +2,47 @@ import { useCallback, useState } from "react";
 import { apiFetch, setApiWorkspaceId } from "../../api/client";
 import type {
   FolderRecord,
+  NoteListPageRecord,
   NoteRecord,
   StorageCapacityRecord,
   StorageSettingsRecord,
   TagRecord,
   UserRecord
 } from "../../api/types";
+import { notesPerPage } from "../../utils/dashboardState";
 import { hydrateNotes, mergeNoteRecord } from "../../utils/notes";
+
+export type NotePageFilters = {
+  selectedView?: "recent" | "starred";
+  selectedUserId?: string | "all";
+  selectedFolderId?: string | "all";
+  selectedTag?: string | "all";
+  searchQuery?: string;
+};
 
 type RefreshNotesOptions = {
   onMissingOpenedNote?: (availableNoteIds: Set<string>) => void;
+  filters?: NotePageFilters;
+  cursor?: string | null;
 };
+
+function noteListUrl(filters: NotePageFilters = {}, cursor: string | null = null) {
+  const params = new URLSearchParams({ limit: String(notesPerPage) });
+  if (filters.selectedView === "starred") params.set("starred", "true");
+  if (filters.selectedUserId && filters.selectedUserId !== "all") {
+    params.set("user_id", filters.selectedUserId);
+  }
+  if (filters.selectedFolderId && filters.selectedFolderId !== "all") {
+    params.set("folder_id", filters.selectedFolderId);
+  }
+  if (filters.selectedTag && filters.selectedTag !== "all") {
+    params.set("tag", filters.selectedTag);
+  }
+  const query = filters.searchQuery?.trim();
+  if (query) params.set("query", query);
+  if (cursor) params.set("cursor", cursor);
+  return `/api/notes?${params.toString()}`;
+}
 
 export function useWorkspaceData(initialWorkspaceId: string | null = null) {
   const [activeWorkspaceId, setActiveWorkspaceId] = useState<string | null>(initialWorkspaceId);
@@ -21,6 +51,9 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
   const [folders, setFolders] = useState<FolderRecord[]>([]);
   const [tags, setTags] = useState<TagRecord[]>([]);
   const [notes, setNotes] = useState<NoteRecord[]>([]);
+  const [notesTotal, setNotesTotal] = useState(0);
+  const [nextNotesCursor, setNextNotesCursor] = useState<string | null>(null);
+  const [folderNoteCounts, setFolderNoteCounts] = useState<Record<string, number>>({});
   const [storageCapacity, setStorageCapacity] =
     useState<StorageCapacityRecord | null>(null);
   const [storageSettings, setStorageSettings] =
@@ -36,6 +69,26 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
     });
   }, []);
 
+  const applyNotePage = useCallback((
+    page: NoteListPageRecord,
+    nextUsers = users,
+    nextFolders = folders
+  ) => {
+    setNotes(hydrateNotes(page.items, nextUsers, nextFolders));
+    setNotesTotal(page.total);
+    setNextNotesCursor(page.next_cursor);
+    setFolderNoteCounts(page.counts?.folders ?? {});
+  }, [folders, users]);
+
+  const loadNotesPage = useCallback(async (
+    filters: NotePageFilters = {},
+    cursor: string | null = null
+  ) => {
+    const page = await apiFetch<NoteListPageRecord>(noteListUrl(filters, cursor));
+    applyNotePage(page);
+    return page;
+  }, [applyNotePage]);
+
   const loadWorkspace = useCallback(async (workspaceId = activeWorkspaceId) => {
     setApiWorkspaceId(workspaceId);
     const [
@@ -49,7 +102,7 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
       apiFetch<UserRecord[]>("/api/users"),
       apiFetch<FolderRecord[]>("/api/folders"),
       apiFetch<TagRecord[]>("/api/tags"),
-      apiFetch<NoteRecord[]>("/api/notes"),
+      apiFetch<NoteListPageRecord>(noteListUrl()),
       apiFetch<StorageCapacityRecord>("/api/storage").catch(() => null),
       apiFetch<StorageSettingsRecord>("/api/settings/storage").catch(() => null)
     ]);
@@ -64,11 +117,11 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
     setUsers(nextUsers);
     setFolders(activeFolders);
     setTags(nextTags);
-    setNotes(hydrateNotes(nextNotes, nextUsers, activeFolders));
+    applyNotePage(nextNotes, nextUsers, activeFolders);
     setStorageCapacity(nextStorageCapacity);
     setStorageSettings(nextStorageSettings);
     setIsWorkspaceLoaded(true);
-  }, [activeWorkspaceId]);
+  }, [activeWorkspaceId, applyNotePage]);
 
   const bootstrap = useCallback(async () => {
     setIsLoading(true);
@@ -90,8 +143,10 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
 
   const refreshNotes = useCallback(
     async (options: RefreshNotesOptions = {}) => {
-      const nextNotes = await apiFetch<NoteRecord[]>("/api/notes");
-      const hydrated = hydrateNotes(nextNotes, users, folders);
+      const page = await apiFetch<NoteListPageRecord>(
+        noteListUrl(options.filters, options.cursor ?? null)
+      );
+      const hydrated = hydrateNotes(page.items, users, folders);
       const availableNoteIds = new Set(hydrated.map((note) => note.id));
 
       setNotes((items) =>
@@ -100,20 +155,27 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
           return current ? mergeNoteRecord(current, note) : note;
         })
       );
+      setNotesTotal(page.total);
+      setNextNotesCursor(page.next_cursor);
+      setFolderNoteCounts(page.counts?.folders ?? {});
       options.onMissingOpenedNote?.(availableNoteIds);
+      return page;
     },
     [folders, users]
   );
 
   const refreshNote = useCallback(async (noteId: string) => {
     const fullNote = await apiFetch<NoteRecord>(`/api/notes/${noteId}`);
+    const hydratedNote = hydrateNotes([fullNote], users, folders)[0] ?? fullNote;
     setNotes((items) =>
-      items.map((item) =>
-        item.id === noteId ? mergeNoteRecord(item, fullNote) : item
-      )
+      items.some((item) => item.id === noteId)
+        ? items.map((item) =>
+            item.id === noteId ? mergeNoteRecord(item, hydratedNote) : item
+          )
+        : [hydratedNote, ...items]
     );
     return fullNote;
-  }, []);
+  }, [folders, users]);
 
   const addOrMergeNote = useCallback(
     (note: NoteRecord) => {
@@ -196,6 +258,9 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
     setFolders([]);
     setTags([]);
     setNotes([]);
+    setNotesTotal(0);
+    setNextNotesCursor(null);
+    setFolderNoteCounts({});
     setStorageCapacity(null);
     setStorageSettings(null);
     setIsWorkspaceLoaded(false);
@@ -225,6 +290,9 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
     folders,
     tags,
     notes,
+    notesTotal,
+    nextNotesCursor,
+    folderNoteCounts,
     storageCapacity,
     storageSettings,
     activeWorkspace,
@@ -232,6 +300,7 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
     isWorkspaceLoaded,
     bootstrap,
     loadWorkspace,
+    loadNotesPage,
     refreshNotes,
     refreshNote,
     addOrMergeNote,

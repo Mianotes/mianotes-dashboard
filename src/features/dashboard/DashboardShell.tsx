@@ -66,6 +66,7 @@ export function DashboardShell({
     folders,
     tags,
     notes,
+    notesTotal,
     storageCapacity,
     storageSettings,
     activeWorkspace,
@@ -85,7 +86,6 @@ export function DashboardShell({
     selectedUser,
     breadcrumbItems,
     tagSuggestions,
-    filteredNotes,
     totalPages,
     clampedPage,
     paginatedNotes,
@@ -356,7 +356,7 @@ export function DashboardShell({
               currentUser={currentUser}
               noteIdToEditOnOpen={navigation.noteIdToEditOnOpen}
               paginatedNotes={paginatedNotes}
-              filteredCount={filteredNotes.length}
+              filteredCount={notesTotal}
               clampedPage={clampedPage}
               totalPages={totalPages}
               visibleStart={visibleStart}

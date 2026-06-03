@@ -40,6 +40,8 @@ function AuthenticatedApp() {
     folders,
     tags,
     notes,
+    notesTotal,
+    folderNoteCounts,
     isLoading,
     bootstrap,
     resetWorkspaceData
@@ -98,6 +100,8 @@ function AuthenticatedApp() {
 
   const notesView = useDashboardNotes({
     notes,
+    notesTotal,
+    folderNoteCounts,
     folders,
     tags,
     users,
