@@ -60,8 +60,13 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
     useState<StorageSettingsRecord | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isWorkspaceLoaded, setIsWorkspaceLoaded] = useState(false);
+  const activeWorkspaceIdRef = useRef<string | null>(initialWorkspaceId);
   const usersRef = useRef<UserRecord[]>([]);
   const foldersRef = useRef<FolderRecord[]>([]);
+
+  useEffect(() => {
+    activeWorkspaceIdRef.current = activeWorkspaceId;
+  }, [activeWorkspaceId]);
 
   useEffect(() => {
     usersRef.current = users;
@@ -99,20 +104,22 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
     return page;
   }, [applyNotePage]);
 
-  const loadWorkspace = useCallback(async (workspaceId = activeWorkspaceId) => {
+  const loadWorkspace = useCallback(async (workspaceId: string | null = activeWorkspaceIdRef.current) => {
     setApiWorkspaceId(workspaceId);
+    setNotes([]);
+    setNotesTotal(0);
+    setNextNotesCursor(null);
+    setFolderNoteCounts({});
     const [
       nextUsers,
       nextFolders,
       nextTags,
-      nextNotes,
       nextStorageCapacity,
       nextStorageSettings
     ] = await Promise.all([
       apiFetch<UserRecord[]>("/api/users"),
       apiFetch<FolderRecord[]>("/api/folders"),
       apiFetch<TagRecord[]>("/api/tags"),
-      apiFetch<NoteListPageRecord>(noteListUrl()),
       apiFetch<StorageCapacityRecord>("/api/storage").catch(() => null),
       apiFetch<StorageSettingsRecord>("/api/settings/storage").catch(() => null)
     ]);
@@ -122,6 +129,7 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
       ?? nextStorageSettings?.active_location
       ?? nextStorageSettings?.locations[0]?.id
       ?? null;
+    activeWorkspaceIdRef.current = resolvedWorkspaceId;
     setActiveWorkspaceId(resolvedWorkspaceId);
     setApiWorkspaceId(resolvedWorkspaceId);
     setUsers(nextUsers);
@@ -129,29 +137,26 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
     usersRef.current = nextUsers;
     foldersRef.current = activeFolders;
     setTags(nextTags);
-    applyNotePage(nextNotes, nextUsers, activeFolders);
     setStorageCapacity(nextStorageCapacity);
     setStorageSettings(nextStorageSettings);
     setIsWorkspaceLoaded(true);
-  }, [activeWorkspaceId, applyNotePage]);
+  }, []);
 
   const bootstrap = useCallback(async () => {
     setIsLoading(true);
     setIsWorkspaceLoaded(false);
-    setApiWorkspaceId(activeWorkspaceId);
+    const workspaceId = activeWorkspaceIdRef.current;
+    setApiWorkspaceId(workspaceId);
     try {
       const session = await apiFetch<{ user: UserRecord }>("/api/auth/session");
       setCurrentUser(session.user);
-      if (activeWorkspaceId) {
-        await activateWorkspaceSession(activeWorkspaceId);
-      }
-      await loadWorkspace(activeWorkspaceId);
+      await loadWorkspace(workspaceId);
     } catch {
       setCurrentUser(null);
     } finally {
       setIsLoading(false);
     }
-  }, [activateWorkspaceSession, activeWorkspaceId, loadWorkspace]);
+  }, [loadWorkspace]);
 
   const refreshNotes = useCallback(
     async (options: RefreshNotesOptions = {}) => {
@@ -282,6 +287,7 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
   const switchWorkspace = useCallback(
     async (locationId: string) => {
       setIsWorkspaceLoaded(false);
+      activeWorkspaceIdRef.current = locationId;
       setActiveWorkspaceId(locationId);
       setApiWorkspaceId(locationId);
       await activateWorkspaceSession(locationId);
@@ -290,7 +296,9 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
     [activateWorkspaceSession, loadWorkspace]
   );
 
-  const activeWorkspace = storageSettings?.locations.find((location) => location.is_active) ?? null;
+  const activeWorkspace = storageSettings?.locations.find(
+    (location) => location.id === activeWorkspaceId
+  ) ?? storageSettings?.locations.find((location) => location.is_active) ?? null;
 
   const signOut = useCallback(async () => {
     await apiFetch("/api/auth/logout", { method: "POST" });
