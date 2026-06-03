@@ -106,10 +106,6 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
 
   const loadWorkspace = useCallback(async (workspaceId: string | null = activeWorkspaceIdRef.current) => {
     setApiWorkspaceId(workspaceId);
-    setNotes([]);
-    setNotesTotal(0);
-    setNextNotesCursor(null);
-    setFolderNoteCounts({});
     const [
       nextUsers,
       nextFolders,
@@ -287,6 +283,10 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
   const switchWorkspace = useCallback(
     async (locationId: string) => {
       setIsWorkspaceLoaded(false);
+      setNotes([]);
+      setNotesTotal(0);
+      setNextNotesCursor(null);
+      setFolderNoteCounts({});
       activeWorkspaceIdRef.current = locationId;
       setActiveWorkspaceId(locationId);
       setApiWorkspaceId(locationId);

@@ -42,6 +42,25 @@ export function useDashboardActions({
     pushNavigationSnapshot
   } = navigation;
 
+  const refreshNotes = useCallback(async () => {
+    await refreshWorkspaceNotes({
+      filters: {
+        selectedView,
+        selectedUserId,
+        selectedFolderId,
+        selectedTag,
+        searchQuery
+      }
+    });
+  }, [
+    refreshWorkspaceNotes,
+    searchQuery,
+    selectedFolderId,
+    selectedTag,
+    selectedUserId,
+    selectedView
+  ]);
+
   const updateFolder = useCallback(async (
     folder: FolderRecord,
     update: Partial<Pick<FolderRecord, "name" | "is_pinned">>
@@ -54,13 +73,14 @@ export function useDashboardActions({
       });
       setOpenFolderMenuId(null);
       await loadWorkspace();
+      await refreshNotes();
       return { ok: true };
     } catch (err) {
       const message = folderActionErrorMessage(err, update.name ? "rename" : "change");
       setError(message);
       return { ok: false, error: message };
     }
-  }, [loadWorkspace, setError, setOpenFolderMenuId]);
+  }, [loadWorkspace, refreshNotes, setError, setOpenFolderMenuId]);
 
   const reorderFolders = useCallback(async (folderIds: string[]) => {
     setError(null);
@@ -71,10 +91,11 @@ export function useDashboardActions({
       });
       setOpenFolderMenuId(null);
       await loadWorkspace();
+      await refreshNotes();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not sort folders.");
     }
-  }, [loadWorkspace, setError, setOpenFolderMenuId]);
+  }, [loadWorkspace, refreshNotes, setError, setOpenFolderMenuId]);
 
   const deleteFolder = useCallback(async (folder: FolderRecord) => {
     const confirmed = window.confirm(
@@ -94,25 +115,6 @@ export function useDashboardActions({
       setError(folderActionErrorMessage(err, "delete"));
     }
   }, [loadWorkspace, selectedFolderId, setError, setOpenFolderMenuId, setSelectedFolderId]);
-
-  const refreshNotes = useCallback(async () => {
-    await refreshWorkspaceNotes({
-      filters: {
-        selectedView,
-        selectedUserId,
-        selectedFolderId,
-        selectedTag,
-        searchQuery
-      }
-    });
-  }, [
-    refreshWorkspaceNotes,
-    searchQuery,
-    selectedFolderId,
-    selectedTag,
-    selectedUserId,
-    selectedView
-  ]);
 
   const toggleNoteStar = useCallback(async (note: NoteRecord) => {
     try {
