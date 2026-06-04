@@ -33,6 +33,53 @@ function originalSourceUrl(note: NoteRecord): string | null {
   }
 }
 
+type SourceViewTarget =
+  | { kind: "external"; url: string }
+  | { kind: "file"; url: string; title: string }
+  | { kind: "text"; url: string; title: string };
+
+function isTextSource(note: NoteRecord) {
+  return note.source_type === "text" || note.source_type === "markdown";
+}
+
+function sourceViewTarget(note: NoteRecord): SourceViewTarget | null {
+  if (isTextSource(note)) {
+    return note.note_url ? { kind: "text", url: note.note_url, title: `${note.title}.md` } : null;
+  }
+
+  const sourceUrl = originalSourceUrl(note);
+  if (sourceUrl) {
+    return { kind: "external", url: sourceUrl };
+  }
+
+  const sourceFile = note.source_files?.[0];
+  return sourceFile?.url
+    ? { kind: "file", url: sourceFile.url, title: sourceFile.original_filename }
+    : null;
+}
+
+function renderRawText(viewer: Window, title: string, text: string) {
+  viewer.document.title = title;
+  viewer.document.body.innerHTML = "";
+  viewer.document.body.style.margin = "0";
+  viewer.document.body.style.background = "#ffffff";
+
+  const source = viewer.document.createElement("pre");
+  source.textContent = text;
+  source.style.boxSizing = "border-box";
+  source.style.margin = "0";
+  source.style.minHeight = "100vh";
+  source.style.padding = "24px";
+  source.style.whiteSpace = "pre-wrap";
+  source.style.overflowWrap = "anywhere";
+  source.style.fontFamily = "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace";
+  source.style.fontSize = "14px";
+  source.style.lineHeight = "1.55";
+  source.style.color = "#111827";
+
+  viewer.document.body.append(source);
+}
+
 export function NoteActionsMenu({
   note,
   canChangeNote,
@@ -49,6 +96,7 @@ export function NoteActionsMenu({
   const [isOpen, setIsOpen] = useState(false);
   const [isOpeningSource, setIsOpeningSource] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
+  const viewSourceTarget = sourceViewTarget(note);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -87,15 +135,13 @@ export function NoteActionsMenu({
   }
 
   async function openSourceFile() {
-    const sourceFile = note.source_files?.[0];
-    if ((!sourceFile?.url && !originalSourceUrl(note)) || isOpeningSource) {
+    if (!viewSourceTarget || isOpeningSource) {
       return;
     }
 
     setIsOpeningSource(true);
-    const sourceUrl = originalSourceUrl(note);
-    if (sourceUrl) {
-      const viewer = window.open(sourceUrl, "_blank", "noopener,noreferrer");
+    if (viewSourceTarget.kind === "external") {
+      const viewer = window.open(viewSourceTarget.url, "_blank", "noopener,noreferrer");
       if (viewer) {
         viewer.opener = null;
       }
@@ -103,21 +149,33 @@ export function NoteActionsMenu({
       setIsOpen(false);
       return;
     }
-    if (!sourceFile?.url) {
-      setIsOpeningSource(false);
-      return;
-    }
 
     const viewer = window.open("about:blank", "_blank");
     if (viewer) {
       viewer.opener = null;
-      viewer.document.title = sourceFile.original_filename;
+      viewer.document.title = viewSourceTarget.title;
       viewer.document.body.textContent = "Opening source file...";
     }
     try {
-      const response = await fetch(mediaPath(sourceFile.url), { credentials: "include" });
+      const response = await fetch(mediaPath(viewSourceTarget.url), { credentials: "include" });
       if (!response.ok) {
         throw new Error("Could not open the source file.");
+      }
+      if (viewSourceTarget.kind === "text") {
+        const sourceText = await response.text();
+        if (viewer) {
+          renderRawText(viewer, viewSourceTarget.title, sourceText);
+        } else {
+          const blobUrl = URL.createObjectURL(new Blob([sourceText], { type: "text/plain;charset=utf-8" }));
+          const link = document.createElement("a");
+          link.href = blobUrl;
+          link.target = "_blank";
+          link.rel = "noreferrer";
+          link.click();
+          window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
+        }
+        setIsOpen(false);
+        return;
       }
       const blobUrl = URL.createObjectURL(await response.blob());
       if (viewer) {
@@ -180,7 +238,7 @@ export function NoteActionsMenu({
             <Download size={15} />
             Export as PDF
           </button>
-          {note.source_files?.[0]?.url ? (
+          {viewSourceTarget ? (
             <button
               type="button"
               role="menuitem"
