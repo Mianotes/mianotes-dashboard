@@ -5,6 +5,7 @@ import { NoteRow } from "./NoteRow";
 
 type NoteListProps = {
   notes: NoteRecord[];
+  workspaceId: string;
   currentUser: UserRecord;
   filteredCount: number | null;
   currentPage: number;
@@ -25,6 +26,7 @@ type NoteListProps = {
 
 export function NoteList({
   notes,
+  workspaceId,
   currentUser,
   filteredCount,
   currentPage,
@@ -52,6 +54,7 @@ export function NoteList({
             <NoteRow
               key={note.id}
               note={note}
+              workspaceId={workspaceId}
               currentUser={currentUser}
               onToggleStar={() => onToggleStar(note)}
               onClick={() => onOpenNote(note)}

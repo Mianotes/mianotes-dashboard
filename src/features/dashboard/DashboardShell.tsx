@@ -103,6 +103,7 @@ export function DashboardShell({
     ? notes.find((note) => note.id === shareBlockedNote.id) ?? shareBlockedNote
     : null;
   const workspaceName = activeWorkspace?.name ?? "Workspace";
+  const workspaceId = activeWorkspace?.id ?? "default";
 
   async function switchWorkspaceAndReset(locationId: string) {
     await switchWorkspace(locationId);
@@ -352,6 +353,7 @@ export function DashboardShell({
             <NotesWorkspace
               error={error}
               successMessage={shareSuccessMessage}
+              workspaceId={workspaceId}
               workspaceName={workspaceName}
               openedNote={openedNote}
               selectedFolder={selectedFolder}

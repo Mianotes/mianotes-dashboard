@@ -7,6 +7,7 @@ import { MoveNoteIcon } from "../../components/icons/MoveNoteIcon";
 
 type NoteActionsMenuProps = {
   note: NoteRecord;
+  workspaceId: string;
   canChangeNote: boolean;
   cannotChangeNoteMessage: string;
   canEditNote: boolean;
@@ -36,15 +37,18 @@ function originalSourceUrl(note: NoteRecord): string | null {
 type SourceViewTarget =
   | { kind: "external"; url: string }
   | { kind: "file"; url: string; title: string }
-  | { kind: "text"; url: string; title: string };
+  | { kind: "markdown"; url: string };
 
 function isTextSource(note: NoteRecord) {
   return note.source_type === "text" || note.source_type === "markdown";
 }
 
-function sourceViewTarget(note: NoteRecord): SourceViewTarget | null {
+function sourceViewTarget(note: NoteRecord, workspaceId: string): SourceViewTarget | null {
   if (isTextSource(note)) {
-    return note.note_url ? { kind: "text", url: note.note_url, title: `${note.title}.md` } : null;
+    return {
+      kind: "markdown",
+      url: `/api/workspaces/${encodeURIComponent(workspaceId)}/markdown/${encodeURIComponent(note.id)}`
+    };
   }
 
   const sourceUrl = originalSourceUrl(note);
@@ -58,30 +62,9 @@ function sourceViewTarget(note: NoteRecord): SourceViewTarget | null {
     : null;
 }
 
-function renderRawText(viewer: Window, title: string, text: string) {
-  viewer.document.title = title;
-  viewer.document.body.innerHTML = "";
-  viewer.document.body.style.margin = "0";
-  viewer.document.body.style.background = "#ffffff";
-
-  const source = viewer.document.createElement("pre");
-  source.textContent = text;
-  source.style.boxSizing = "border-box";
-  source.style.margin = "0";
-  source.style.minHeight = "100vh";
-  source.style.padding = "24px";
-  source.style.whiteSpace = "pre-wrap";
-  source.style.overflowWrap = "anywhere";
-  source.style.fontFamily = "ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace";
-  source.style.fontSize = "14px";
-  source.style.lineHeight = "1.55";
-  source.style.color = "#111827";
-
-  viewer.document.body.append(source);
-}
-
 export function NoteActionsMenu({
   note,
+  workspaceId,
   canChangeNote,
   cannotChangeNoteMessage,
   canEditNote,
@@ -96,7 +79,7 @@ export function NoteActionsMenu({
   const [isOpen, setIsOpen] = useState(false);
   const [isOpeningSource, setIsOpeningSource] = useState(false);
   const menuRef = useRef<HTMLDivElement | null>(null);
-  const viewSourceTarget = sourceViewTarget(note);
+  const viewSourceTarget = sourceViewTarget(note, workspaceId);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -149,6 +132,15 @@ export function NoteActionsMenu({
       setIsOpen(false);
       return;
     }
+    if (viewSourceTarget.kind === "markdown") {
+      const viewer = window.open(mediaPath(viewSourceTarget.url), "_blank", "noopener,noreferrer");
+      if (viewer) {
+        viewer.opener = null;
+      }
+      setIsOpeningSource(false);
+      setIsOpen(false);
+      return;
+    }
 
     const viewer = window.open("about:blank", "_blank");
     if (viewer) {
@@ -160,22 +152,6 @@ export function NoteActionsMenu({
       const response = await fetch(mediaPath(viewSourceTarget.url), { credentials: "include" });
       if (!response.ok) {
         throw new Error("Could not open the source file.");
-      }
-      if (viewSourceTarget.kind === "text") {
-        const sourceText = await response.text();
-        if (viewer) {
-          renderRawText(viewer, viewSourceTarget.title, sourceText);
-        } else {
-          const blobUrl = URL.createObjectURL(new Blob([sourceText], { type: "text/plain;charset=utf-8" }));
-          const link = document.createElement("a");
-          link.href = blobUrl;
-          link.target = "_blank";
-          link.rel = "noreferrer";
-          link.click();
-          window.setTimeout(() => URL.revokeObjectURL(blobUrl), 60_000);
-        }
-        setIsOpen(false);
-        return;
       }
       const blobUrl = URL.createObjectURL(await response.blob());
       if (viewer) {

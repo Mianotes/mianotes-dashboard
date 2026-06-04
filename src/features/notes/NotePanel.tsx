@@ -14,6 +14,7 @@ import { useNoteTitle } from "./useNoteTitle";
 
 export function NotePanel({
   note,
+  workspaceId,
   workspaceName,
   folderLabel,
   currentUser,
@@ -27,6 +28,7 @@ export function NotePanel({
   onDeleted
 }: {
   note: NoteRecord;
+  workspaceId: string;
   workspaceName: string;
   folderLabel: string;
   currentUser: UserRecord;
@@ -231,6 +233,7 @@ export function NotePanel({
     <section className={`note-panel ${isEditing ? "editing" : ""}`}>
       <NoteDocumentHeader
         note={note}
+        workspaceId={workspaceId}
         workspaceName={workspaceName}
         folderLabel={folderLabel}
         isEditing={isEditing}

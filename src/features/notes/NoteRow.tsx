@@ -9,6 +9,7 @@ import { NoteActionsMenu } from "./NoteActionsMenu";
 
 type NoteRowProps = {
   note: NoteRecord;
+  workspaceId: string;
   currentUser: UserRecord;
   onClick: () => void;
   onToggleStar: () => void;
@@ -22,6 +23,7 @@ type NoteRowProps = {
 
 export function NoteRow({
   note,
+  workspaceId,
   currentUser,
   onClick,
   onToggleStar,
@@ -114,6 +116,7 @@ export function NoteRow({
       <div className="note-row-actions">
         <NoteActionsMenu
           note={note}
+          workspaceId={workspaceId}
           canChangeNote={canChangeNote}
           cannotChangeNoteMessage={cannotChangeNoteMessage}
           canEditNote={canEditNote}

@@ -5,6 +5,7 @@ import { NoteActionsMenu } from "./NoteActionsMenu";
 
 type NoteDocumentHeaderProps = {
   note: NoteRecord;
+  workspaceId: string;
   workspaceName: string;
   folderLabel: string;
   isEditing: boolean;
@@ -26,6 +27,7 @@ type NoteDocumentHeaderProps = {
 
 export function NoteDocumentHeader({
   note,
+  workspaceId,
   workspaceName,
   folderLabel,
   isEditing,
@@ -81,6 +83,7 @@ export function NoteDocumentHeader({
             </button>
             <NoteActionsMenu
               note={note}
+              workspaceId={workspaceId}
               canChangeNote={canChangeNote}
               cannotChangeNoteMessage={cannotChangeNoteMessage}
               canEditNote={canEditNote}

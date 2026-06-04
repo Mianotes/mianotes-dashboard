@@ -6,6 +6,7 @@ import { NotePanel } from "../notes/NotePanel";
 type NotesWorkspaceProps = {
   error: string | null;
   successMessage: string | null;
+  workspaceId: string;
   workspaceName: string;
   openedNote: NoteRecord | null;
   selectedFolder: FolderRecord | null;
@@ -38,6 +39,7 @@ type NotesWorkspaceProps = {
 export function NotesWorkspace({
   error,
   successMessage,
+  workspaceId,
   workspaceName,
   openedNote,
   selectedFolder,
@@ -89,6 +91,7 @@ export function NotesWorkspace({
         {openedNote ? (
           <NotePanel
             note={openedNote}
+            workspaceId={workspaceId}
             workspaceName={workspaceName}
             folderLabel={openedNote.folder?.name ?? selectedFolder?.name ?? "All folders"}
             currentUser={currentUser}
@@ -104,6 +107,7 @@ export function NotesWorkspace({
         ) : (
           <NoteList
             notes={paginatedNotes}
+            workspaceId={workspaceId}
             currentUser={currentUser}
             filteredCount={filteredCount}
             currentPage={clampedPage}
