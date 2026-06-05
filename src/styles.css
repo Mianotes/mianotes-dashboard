@@ -4694,9 +4694,9 @@ textarea:focus {
 
 .settings-api-panel {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1fr) max-content;
   align-items: start;
-  gap: 0;
+  gap: 18px;
   padding: 24px 34px;
 }
 
@@ -4719,7 +4719,6 @@ textarea:focus {
 .settings-api-field {
   display: grid;
   gap: 12px;
-  margin-right: 18px;
   min-width: 0;
 }
 
@@ -4738,6 +4737,7 @@ textarea:focus {
 
 .settings-api-field input {
   width: 100%;
+  min-width: 0;
   min-height: 34px;
   padding: 0 12px;
   border: 0;
@@ -4772,6 +4772,7 @@ textarea:focus {
   align-items: center;
   justify-content: center;
   gap: 8px;
+  max-width: 100%;
   min-height: 42px;
   padding: 0 24px;
   border: 1px solid #17181d;
@@ -4802,7 +4803,6 @@ textarea:focus {
 }
 
 .settings-api-created {
-  max-width: 780px;
   padding: 10px 34px 36px;
 }
 
@@ -4835,13 +4835,16 @@ textarea:focus {
   margin: 0;
   padding: 28px 118px 28px 28px;
   overflow-x: auto;
+  color: #f3f4f6;
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   font-size: 14px;
   line-height: 1.7;
   white-space: pre;
+  scrollbar-color: #525866 #111214;
 }
 
 .settings-api-code-block code {
+  color: inherit;
   white-space: pre;
 }
 

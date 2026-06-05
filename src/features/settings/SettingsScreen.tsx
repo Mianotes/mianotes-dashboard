@@ -368,9 +368,10 @@ export function SettingsScreen({
           {currentUser.is_admin && (
             <section className="settings-card settings-api-card" aria-labelledby="settings-api-title">
               <div className="settings-card-intro">
-                <h2 id="settings-api-title">Connect AI tools</h2>
+                <h2 id="settings-api-title">Connect Claude Code and Codex</h2>
                 <p>
-                  Install Mianotes API credentials and agent instructions for Codex, Claude Code, and compatible tools.
+                  Install Mianotes API credentials and agent instructions on this machine. Other compatible AI tools
+                  can use the same settings.
                 </p>
               </div>
               <div className="settings-api-panel">
