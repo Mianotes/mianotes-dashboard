@@ -205,7 +205,7 @@ export function SettingsScreen({
     }
   }
 
-  async function createApiToken() {
+  async function createInstallScript() {
     setIsCreatingApiToken(true);
     setSettingsError(null);
     setSettingsMessage(null);
@@ -228,7 +228,7 @@ export function SettingsScreen({
     }
   }
 
-  async function copyApiEnvironment() {
+  async function copyInstallCommand() {
     if (!skillInstallCommand) {
       return;
     }
@@ -368,14 +368,14 @@ export function SettingsScreen({
           {currentUser.is_admin && (
             <section className="settings-card settings-api-card" aria-labelledby="settings-api-title">
               <div className="settings-card-intro">
-                <h2 id="settings-api-title">Install agent skill</h2>
+                <h2 id="settings-api-title">Connect AI tools</h2>
                 <p>
-                  Use this command to connect Codex, Claude, Cursor, or other local tools to your Mianotes account.
+                  Install Mianotes API credentials and agent instructions for Codex, Claude Code, and compatible tools.
                 </p>
               </div>
               <div className="settings-api-panel">
                 <label className="settings-api-field">
-                  <span className="sr-only">Install command</span>
+                  <span className="sr-only">Install script command</span>
                   <span className="settings-api-input-shell">
                     <span className="settings-api-icon-shell">
                       <ApiKeyLockIcon />
@@ -385,7 +385,7 @@ export function SettingsScreen({
                       aria-disabled="true"
                       type="text"
                       value={skillInstallCommand}
-                      placeholder="Install command"
+                      placeholder="Install script command"
                       onFocus={(event) => event.currentTarget.select()}
                     />
                   </span>
@@ -394,29 +394,30 @@ export function SettingsScreen({
                   className="settings-api-action"
                   type="button"
                   disabled={isCreatingApiToken}
-                  onClick={() => void createApiToken()}
+                  onClick={() => void createInstallScript()}
                 >
-                  Create install command
+                  Create install script
                 </button>
               </div>
               {skillInstallCommand ? (
                 <div className="settings-api-created">
-                  <h3>Install command ready</h3>
+                  <h3>Install script ready</h3>
                   <p>
-                    Run this command on the computer where you use your coding agent. It expires
+                    Run this command on the computer where you use your AI tool. It expires
                     {skillInstallExpiryLabel ? ` at ${skillInstallExpiryLabel}` : " in one hour"}.
                   </p>
                   <div className="settings-api-code-block">
                     <pre aria-label={skillInstallCommand}>
                       <code>{skillInstallCommand}</code>
                     </pre>
-                    <button type="button" onClick={() => void copyApiEnvironment()}>
+                    <button type="button" onClick={() => void copyInstallCommand()}>
                       <Copy size={16} />
                       Copy
                     </button>
                   </div>
                   <p className="settings-api-private-note">
-                    The link can be used once. Keep it private.
+                    The link can be used once. It installs connection settings and instructions without displaying
+                    your API key.
                   </p>
                 </div>
               ) : null}
