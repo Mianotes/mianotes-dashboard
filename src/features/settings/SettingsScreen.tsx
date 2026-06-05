@@ -92,8 +92,8 @@ export function SettingsScreen({
   const [restoringFolderId, setRestoringFolderId] = useState<string | null>(null);
   const [settingsError, setSettingsError] = useState<string | null>(null);
   const [settingsMessage, setSettingsMessage] = useState<string | null>(null);
+  const [skillInstallUrl, setSkillInstallUrl] = useState("");
   const [skillInstallCommand, setSkillInstallCommand] = useState("");
-  const [skillInstallExpiresAt, setSkillInstallExpiresAt] = useState("");
   const [isCreatingApiToken, setIsCreatingApiToken] = useState(false);
   const [workspaceUrl, setWorkspaceUrl] = useState("");
   const [isLoadingShareSettings, setIsLoadingShareSettings] = useState(true);
@@ -205,12 +205,12 @@ export function SettingsScreen({
     }
   }
 
-  async function createInstallScript() {
+  async function generateInstallUrl() {
     setIsCreatingApiToken(true);
     setSettingsError(null);
     setSettingsMessage(null);
+    setSkillInstallUrl("");
     setSkillInstallCommand("");
-    setSkillInstallExpiresAt("");
     try {
       const installer = await apiFetch<SkillInstallRecord>("/api/install/skill", {
         method: "POST",
@@ -219,10 +219,10 @@ export function SettingsScreen({
           client_name: "Codex"
         })
       });
+      setSkillInstallUrl(installer.install_url);
       setSkillInstallCommand(installer.command);
-      setSkillInstallExpiresAt(installer.expires_at);
     } catch (error) {
-      setSettingsError(error instanceof Error ? error.message : "Could not create the install command.");
+      setSettingsError(error instanceof Error ? error.message : "Could not generate the install URL.");
     } finally {
       setIsCreatingApiToken(false);
     }
@@ -242,9 +242,6 @@ export function SettingsScreen({
     ?? currentFolderPath;
   const currentFolderDescription = `Current workspace: ${compactFolderPath(currentFolderPath)}`;
   const adminUsers = users.filter((user) => user.is_admin);
-  const skillInstallExpiryLabel = skillInstallExpiresAt
-    ? formatSettingsDate(skillInstallExpiresAt)
-    : "";
 
   return (
     <>
@@ -376,7 +373,7 @@ export function SettingsScreen({
               </div>
               <div className="settings-api-panel">
                 <label className="settings-api-field">
-                  <span className="sr-only">Install script command</span>
+                  <span className="sr-only">Install script URL</span>
                   <span className="settings-api-input-shell">
                     <span className="settings-api-icon-shell">
                       <ApiKeyLockIcon />
@@ -385,8 +382,8 @@ export function SettingsScreen({
                       readOnly
                       aria-disabled="true"
                       type="text"
-                      value={skillInstallCommand}
-                      placeholder="Install script command"
+                      value={skillInstallUrl}
+                      placeholder="Install URL"
                       onFocus={(event) => event.currentTarget.select()}
                     />
                   </span>
@@ -395,31 +392,31 @@ export function SettingsScreen({
                   className="settings-api-action"
                   type="button"
                   disabled={isCreatingApiToken}
-                  onClick={() => void createInstallScript()}
+                  onClick={() => void generateInstallUrl()}
                 >
-                  Create install script
+                  Generate URL
                 </button>
               </div>
               {skillInstallCommand ? (
                 <div className="settings-api-created">
                   <h3>Install script ready</h3>
                   <p>
-                    Run this command on the computer where you use your AI tool. It expires
-                    {skillInstallExpiryLabel ? ` at ${skillInstallExpiryLabel}` : " in one hour"}.
+                    Run this command on the computer where you use your AI tool. The link expires in 24 hours and can
+                    be used once. It installs env variables and SKILL.md without displaying your API key.
                   </p>
                   <div className="settings-api-code-block">
                     <pre aria-label={skillInstallCommand}>
                       <code>{skillInstallCommand}</code>
                     </pre>
-                    <button type="button" onClick={() => void copyInstallCommand()}>
-                      <Copy size={16} />
-                      Copy
+                    <button
+                      type="button"
+                      aria-label="Copy install command"
+                      title="Copy install command"
+                      onClick={() => void copyInstallCommand()}
+                    >
+                      <Copy size={18} />
                     </button>
                   </div>
-                  <p className="settings-api-private-note">
-                    The link can be used once. It installs connection settings and instructions without displaying
-                    your API key.
-                  </p>
                 </div>
               ) : null}
             </section>

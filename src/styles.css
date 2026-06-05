@@ -4833,7 +4833,7 @@ textarea:focus {
 
 .settings-api-code-block pre {
   margin: 0;
-  padding: 28px 118px 28px 28px;
+  padding: 28px 82px 28px 28px;
   overflow-x: auto;
   color: #f3f4f6;
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
@@ -4866,15 +4866,14 @@ textarea:focus {
   right: 10px;
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  min-height: 32px;
-  padding: 0 14px;
+  justify-content: center;
+  width: 44px;
+  min-height: 44px;
+  padding: 0;
   border: 1px solid #555964;
   border-radius: 8px;
   color: #ffffff;
   background: #1a1b20;
-  font-size: 12px;
-  font-weight: 600;
   transition:
     border-color 0.15s ease,
     background 0.15s ease,
@@ -4889,10 +4888,6 @@ textarea:focus {
   border-color: #8c91a0;
   background: #24262d;
   transform: translateY(1px);
-}
-
-.settings-api-private-note {
-  color: #6c717d;
 }
 
 .settings-restore-card {
