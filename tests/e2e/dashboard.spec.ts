@@ -948,7 +948,7 @@ test("settings opens on workspaces and generates an API install URL from the API
   await settingsNav.getByRole("button", { name: "API Key" }).click();
   await page.getByRole("button", { name: "Generate URL" }).click();
 
-  await expect(page.getByText("Install script ready")).toBeVisible();
+  await expect(page.getByText("Install script")).toBeVisible();
   await expect(page.getByText("curl -fsSL http://127.0.0.1:8200/api/install/skill/test-token | bash")).toBeVisible();
   const appOrigin = await page.evaluate(() => window.location.origin);
   expect(requests.skillInstall?.[0]).toMatchObject({

@@ -437,7 +437,7 @@ export function SettingsScreen({
                   </div>
                   {skillInstallCommand ? (
                     <div className="settings-api-created">
-                      <h3>Install script ready</h3>
+                      <h3>Install script</h3>
                       <p>
                         Run this command on the computer where you use your AI tool. The link expires in 24 hours and can
                         be used once. It installs env variables and SKILL.md without displaying your API key.
