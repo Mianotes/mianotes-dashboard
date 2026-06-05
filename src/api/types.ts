@@ -127,6 +127,12 @@ export type ServiceApiKeyRecord = {
   api_url: string;
 };
 
+export type SkillInstallRecord = {
+  install_url: string;
+  command: string;
+  expires_at: string;
+};
+
 export type ShareSettingsRecord = {
   workspace_url: string | null;
 };

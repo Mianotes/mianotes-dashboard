@@ -3,8 +3,8 @@ import { useEffect, useState } from "react";
 import { apiBase, apiFetch } from "../../api/client";
 import type {
   FolderRecord,
-  ServiceApiKeyRecord,
   ShareSettingsRecord,
+  SkillInstallRecord,
   StorageCapacityRecord,
   StorageSettingsRecord,
   UserRecord
@@ -92,8 +92,8 @@ export function SettingsScreen({
   const [restoringFolderId, setRestoringFolderId] = useState<string | null>(null);
   const [settingsError, setSettingsError] = useState<string | null>(null);
   const [settingsMessage, setSettingsMessage] = useState<string | null>(null);
-  const [apiToken, setApiToken] = useState("");
-  const [apiTokenUrl, setApiTokenUrl] = useState("");
+  const [skillInstallCommand, setSkillInstallCommand] = useState("");
+  const [skillInstallExpiresAt, setSkillInstallExpiresAt] = useState("");
   const [isCreatingApiToken, setIsCreatingApiToken] = useState(false);
   const [workspaceUrl, setWorkspaceUrl] = useState("");
   const [isLoadingShareSettings, setIsLoadingShareSettings] = useState(true);
@@ -209,27 +209,30 @@ export function SettingsScreen({
     setIsCreatingApiToken(true);
     setSettingsError(null);
     setSettingsMessage(null);
-    setApiToken("");
-    setApiTokenUrl("");
+    setSkillInstallCommand("");
+    setSkillInstallExpiresAt("");
     try {
-      const createdToken = await apiFetch<ServiceApiKeyRecord>("/api/settings/api-key", {
+      const installer = await apiFetch<SkillInstallRecord>("/api/install/skill", {
         method: "POST",
-        body: JSON.stringify({})
+        body: JSON.stringify({
+          api_url: apiEnvironmentUrl(),
+          client_name: "Codex"
+        })
       });
-      setApiToken(createdToken.token);
-      setApiTokenUrl(createdToken.api_url);
+      setSkillInstallCommand(installer.command);
+      setSkillInstallExpiresAt(installer.expires_at);
     } catch (error) {
-      setSettingsError(error instanceof Error ? error.message : "Could not create an API key.");
+      setSettingsError(error instanceof Error ? error.message : "Could not create the install command.");
     } finally {
       setIsCreatingApiToken(false);
     }
   }
 
   async function copyApiEnvironment() {
-    if (!apiToken) {
+    if (!skillInstallCommand) {
       return;
     }
-    await navigator.clipboard?.writeText(apiEnvironmentSnippet);
+    await navigator.clipboard?.writeText(skillInstallCommand);
   }
 
   const currentFolderPath = storageSettings?.data_dir ?? storageCapacity?.data_dir ?? "data";
@@ -239,11 +242,9 @@ export function SettingsScreen({
     ?? currentFolderPath;
   const currentFolderDescription = `Current workspace: ${compactFolderPath(currentFolderPath)}`;
   const adminUsers = users.filter((user) => user.is_admin);
-  const apiEnvironmentUrlValue = apiTokenUrl || apiEnvironmentUrl();
-  const apiEnvironmentSnippet = [
-    `MIANOTES_API_URL="${apiEnvironmentUrlValue}"`,
-    `MIANOTES_API_KEY="${apiToken}"`
-  ].join("\n");
+  const skillInstallExpiryLabel = skillInstallExpiresAt
+    ? formatSettingsDate(skillInstallExpiresAt)
+    : "";
 
   return (
     <>
@@ -367,15 +368,14 @@ export function SettingsScreen({
           {currentUser.is_admin && (
             <section className="settings-card settings-api-card" aria-labelledby="settings-api-title">
               <div className="settings-card-intro">
-                <h2 id="settings-api-title">Create API Key</h2>
+                <h2 id="settings-api-title">Install agent skill</h2>
                 <p>
-                  Generate a secure API key so your agents, apps, and external tools can connect to Mia. This key works
-                  across all your Mianotes workspaces.
+                  Use this command to connect Codex, Claude, Cursor, or other local tools to your Mianotes account.
                 </p>
               </div>
               <div className="settings-api-panel">
                 <label className="settings-api-field">
-                  <span className="sr-only">API key</span>
+                  <span className="sr-only">Install command</span>
                   <span className="settings-api-input-shell">
                     <span className="settings-api-icon-shell">
                       <ApiKeyLockIcon />
@@ -384,8 +384,8 @@ export function SettingsScreen({
                       readOnly
                       aria-disabled="true"
                       type="text"
-                      value={apiToken}
-                      placeholder="API key"
+                      value={skillInstallCommand}
+                      placeholder="Install command"
                       onFocus={(event) => event.currentTarget.select()}
                     />
                   </span>
@@ -396,25 +396,19 @@ export function SettingsScreen({
                   disabled={isCreatingApiToken}
                   onClick={() => void createApiToken()}
                 >
-                  Create API Key
+                  Create install command
                 </button>
               </div>
-              {apiToken ? (
+              {skillInstallCommand ? (
                 <div className="settings-api-created">
-                  <h3>API key created</h3>
+                  <h3>Install command ready</h3>
                   <p>
-                    These variables were added to the <code>.env</code> file so other agents and tools can use
-                    Mianotes.
+                    Run this command on the computer where you use your coding agent. It expires
+                    {skillInstallExpiryLabel ? ` at ${skillInstallExpiryLabel}` : " in one hour"}.
                   </p>
                   <div className="settings-api-code-block">
-                    <pre aria-label={apiEnvironmentSnippet}>
-                      <code>
-                        <span className="shell-variable">MIANOTES_API_URL</span>=
-                        <span className="shell-value">"{apiEnvironmentUrlValue}"</span>
-                        {"\n"}
-                        <span className="shell-variable">MIANOTES_API_KEY</span>=
-                        <span className="shell-value">"{apiToken}"</span>
-                      </code>
+                    <pre aria-label={skillInstallCommand}>
+                      <code>{skillInstallCommand}</code>
                     </pre>
                     <button type="button" onClick={() => void copyApiEnvironment()}>
                       <Copy size={16} />
@@ -422,7 +416,7 @@ export function SettingsScreen({
                     </button>
                   </div>
                   <p className="settings-api-private-note">
-                    Keep this token private. You will not be able to see it again.
+                    The link can be used once. Keep it private.
                   </p>
                 </div>
               ) : null}
