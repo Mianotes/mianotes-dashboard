@@ -190,6 +190,12 @@ export function DashboardShell({
     };
   }, [navigation.isSidebarOpen]);
 
+  const shellClassName = [
+    "shell",
+    openedNote ? "note-open" : "",
+    navigation.workspaceView === "settings" ? "settings-open" : ""
+  ].filter(Boolean).join(" ");
+
   return (
     <main className="screen">
       <button
@@ -200,39 +206,41 @@ export function DashboardShell({
         onClick={() => navigation.setIsSidebarOpen(false)}
       />
       <section
-        className={`shell ${openedNote ? "note-open" : ""}`}
+        className={shellClassName}
         aria-label="Mianotes dashboard"
       >
-        <Sidebar
-          isOpen={navigation.isSidebarOpen}
-          workspaceName={workspaceName}
-          workspaceView={navigation.workspaceView}
-          selectedFolderId={navigation.selectedFolderId}
-          folders={folders}
-          notesByFolder={notesByFolder}
-          currentUser={currentUser}
-          openFolderMenuId={navigation.openFolderMenuId}
-          folderActionsMenuRef={setFolderActionsMenuRef}
-          storageCapacity={storageCapacity}
-          onAddNote={navigation.openAddNote}
-          onSelectDashboard={navigation.selectDashboard}
-          onAddFolder={navigation.openAddFolder}
-          onSelectFolder={navigation.selectFolder}
-          onToggleFolderMenu={(folderId) =>
-            navigation.setOpenFolderMenuId((current) =>
-              current === folderId ? null : folderId
-            )
-          }
-          onRenameFolder={(folder) => {
-            navigation.setOpenFolderMenuId(null);
-            navigation.setRenamingFolder(folder);
-          }}
-          onUpdateFolder={(folder, update) => void actions.updateFolder(folder, update)}
-          onReorderFolders={(folderIds) => void actions.reorderFolders(folderIds)}
-          onDeleteFolder={(folder) => void actions.deleteFolder(folder)}
-          onJobs={navigation.openJobs}
-          onPublish={navigation.openPublish}
-        />
+        {navigation.workspaceView !== "settings" && (
+          <Sidebar
+            isOpen={navigation.isSidebarOpen}
+            workspaceName={workspaceName}
+            workspaceView={navigation.workspaceView}
+            selectedFolderId={navigation.selectedFolderId}
+            folders={folders}
+            notesByFolder={notesByFolder}
+            currentUser={currentUser}
+            openFolderMenuId={navigation.openFolderMenuId}
+            folderActionsMenuRef={setFolderActionsMenuRef}
+            storageCapacity={storageCapacity}
+            onAddNote={navigation.openAddNote}
+            onSelectDashboard={navigation.selectDashboard}
+            onAddFolder={navigation.openAddFolder}
+            onSelectFolder={navigation.selectFolder}
+            onToggleFolderMenu={(folderId) =>
+              navigation.setOpenFolderMenuId((current) =>
+                current === folderId ? null : folderId
+              )
+            }
+            onRenameFolder={(folder) => {
+              navigation.setOpenFolderMenuId(null);
+              navigation.setRenamingFolder(folder);
+            }}
+            onUpdateFolder={(folder, update) => void actions.updateFolder(folder, update)}
+            onReorderFolders={(folderIds) => void actions.reorderFolders(folderIds)}
+            onDeleteFolder={(folder) => void actions.deleteFolder(folder)}
+            onJobs={navigation.openJobs}
+            onPublish={navigation.openPublish}
+          />
+        )}
 
         <section className="workspace">
           {navigation.workspaceView === "notes" && !openedNote && (

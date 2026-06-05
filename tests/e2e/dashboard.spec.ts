@@ -400,13 +400,36 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
     }
 
     if (path === "/api/jobs" && method === "GET") {
-      await fulfill(route, [{
+      await fulfill(route, {
+        items: [{
+          id: "job-demo",
+          user: adminUser,
+          note_id: "note-demo",
+          note_title: "Getting started",
+          job_type: "parse_url",
+          status: "succeeded",
+          client: null,
+          created_at: now,
+          updated_at: now,
+          started_at: now,
+          finished_at: now
+        }],
+        total: null,
+        limit: 50,
+        next_cursor: null
+      });
+      return;
+    }
+
+    if (path === "/api/jobs/job-demo" && method === "GET") {
+      await fulfill(route, {
         id: "job-demo",
         user: adminUser,
         note_id: "note-demo",
         note_title: "Getting started",
         job_type: "parse_url",
         status: "succeeded",
+        client: null,
         input: { url: "https://example.test" },
         result: {},
         log: [{
@@ -420,7 +443,7 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
         updated_at: now,
         started_at: now,
         finished_at: now
-      }]);
+      });
       return;
     }
 
@@ -623,6 +646,17 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
       remember("storageSwitch", payload);
       activeLocationId = String(payload.location_id);
       await fulfill(route, { storage: storageSettings(), session_ended: false });
+      return;
+    }
+
+    if (path === "/api/install/skill" && method === "POST") {
+      const payload = await readJson(route);
+      remember("skillInstall", payload);
+      await fulfill(route, {
+        install_url: "http://127.0.0.1:8200/api/install/skill/test-token",
+        command: "curl -fsSL http://127.0.0.1:8200/api/install/skill/test-token | bash",
+        expires_at: now
+      }, 201);
       return;
     }
 
@@ -900,20 +934,27 @@ test("validates publish configuration before publishing and hides the form after
   expect(requests.publish).toHaveLength(1);
 });
 
-test("creates an API key from settings and shows the generated environment variables", async ({ page }) => {
+test("settings opens on workspaces and generates an API install URL from the API Key section", async ({ page }) => {
   const requests = await mockMianotesApi(page);
 
   await page.goto("/");
   await page.locator(".account-avatar-button").click();
   await page.getByRole("menuitem", { name: "Settings" }).click();
-  await page.getByRole("button", { name: "Create API Key" }).click();
 
-  await expect(page.getByText("API key created")).toBeVisible();
-  await expect(page.getByText("These variables were added to the")).toBeVisible();
-  await expect(page.getByText("MIANOTES_API_URL")).toBeVisible();
-  await expect(page.getByText("MIANOTES_API_KEY")).toBeVisible();
-  await expect(page.locator('input[value="mia_test_key"]')).toBeVisible();
-  expect(requests.apiKey).toHaveLength(1);
+  const settingsNav = page.getByRole("navigation", { name: "Settings navigation" });
+  await expect(settingsNav.getByRole("button", { name: "Workspaces" })).toHaveClass(/active/);
+  await expect(page.getByRole("heading", { name: "Workspaces" })).toBeVisible();
+
+  await settingsNav.getByRole("button", { name: "API Key" }).click();
+  await page.getByRole("button", { name: "Generate URL" }).click();
+
+  await expect(page.getByText("Install script ready")).toBeVisible();
+  await expect(page.getByText("curl -fsSL http://127.0.0.1:8200/api/install/skill/test-token | bash")).toBeVisible();
+  const appOrigin = await page.evaluate(() => window.location.origin);
+  expect(requests.skillInstall?.[0]).toMatchObject({
+    api_url: appOrigin,
+    client_name: "Codex"
+  });
 });
 
 test("saves a workspace address from settings", async ({ page }) => {
@@ -922,6 +963,9 @@ test("saves a workspace address from settings", async ({ page }) => {
   await page.goto("/");
   await page.locator(".account-avatar-button").click();
   await page.getByRole("menuitem", { name: "Settings" }).click();
+  await page.getByRole("navigation", { name: "Settings navigation" })
+    .getByRole("button", { name: "Domain" })
+    .click();
   await page.getByPlaceholder("https://notes.yourdomain.com").fill("https://notes.example.test/");
   await page.getByRole("button", { name: "Save address" }).click();
 
@@ -976,10 +1020,13 @@ test("creates and switches workspaces from settings without ending the session",
     .getByRole("button", { name: "Change workspace", exact: true })
     .click();
 
-  await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeHidden();
   await expect(page.locator(".breadcrumb")).toContainText("Field notes");
-  await expect(page.locator(".breadcrumb-workspace-switcher")).toHaveCount(1);
+  await expect(
+    page.getByRole("navigation", { name: "Dashboard navigation" })
+      .getByRole("button", { name: "Field notes" })
+  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "No notes found" })).toBeVisible();
   expect(requests.storageLocation?.[0]).toMatchObject({
     name: "Field notes",
     folder_path: "/tmp/test-user/Field notes"
