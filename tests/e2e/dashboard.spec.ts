@@ -952,8 +952,7 @@ test("settings opens on workspaces and generates an API install URL from the API
   await expect(page.getByText("curl -fsSL http://127.0.0.1:8200/api/install/skill/test-token | bash")).toBeVisible();
   const appOrigin = await page.evaluate(() => window.location.origin);
   expect(requests.skillInstall?.[0]).toMatchObject({
-    api_url: appOrigin,
-    client_name: "Codex"
+    api_url: appOrigin
   });
 });
 

@@ -208,8 +208,7 @@ export function SettingsScreen({
       const installer = await apiFetch<SkillInstallRecord>("/api/install/skill", {
         method: "POST",
         body: JSON.stringify({
-          api_url: apiEnvironmentUrl(),
-          client_name: "Codex"
+          api_url: apiEnvironmentUrl()
         })
       });
       setSkillInstallCommand(installer.command);

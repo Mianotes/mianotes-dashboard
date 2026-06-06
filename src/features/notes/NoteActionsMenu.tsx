@@ -47,7 +47,7 @@ function sourceViewTarget(note: NoteRecord, workspaceId: string): SourceViewTarg
   if (isTextSource(note)) {
     return {
       kind: "markdown",
-      url: `/api/workspaces/${encodeURIComponent(workspaceId)}/markdown/${encodeURIComponent(note.id)}`
+      url: `/api/workspaces/${encodeURIComponent(workspaceId)}/notes/${encodeURIComponent(note.id)}/markdown`
     };
   }
 
