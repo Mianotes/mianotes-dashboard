@@ -1,4 +1,4 @@
-import { ArrowRight, Copy, Folder, HardDrive, History, Link, Loader2, Users, X } from "lucide-react";
+import { ArrowRight, Copy, Folder, HardDrive, History, Info, Link, Loader2, Users, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { apiBase, apiFetch } from "../../api/client";
 import type {
@@ -34,7 +34,7 @@ type SettingsSectionId = "workspaces" | "admin-users" | "api-key" | "restore-fol
 const SETTINGS_SECTIONS: Array<{ id: SettingsSectionId; label: string }> = [
   { id: "workspaces", label: "Workspaces" },
   { id: "admin-users", label: "Admin users" },
-  { id: "api-key", label: "AI tools" },
+  { id: "api-key", label: "Connect AI tools" },
   { id: "restore-folders", label: "Restore folders" },
   { id: "domain", label: "Custom Domain" },
   { id: "storage", label: "Storage" }
@@ -460,7 +460,6 @@ export function SettingsScreen({
                     >
                       Generate install link
                     </button>
-                    <small>This command uses a one-time link. It expires in 24 hours and can only be used once.</small>
                   </div>
                   {skillInstallCommand ? (
                     <div className="settings-api-created">
@@ -469,8 +468,9 @@ export function SettingsScreen({
                         Run this command on the computer where you use Codex, Claude Code, or another AI tool.
                       </p>
                       <p>
-                        It saves the Mianotes API key to <code>~/.mianotes/env</code> and installs the Mianotes skill
-                        files. The key is not displayed in the browser.
+                        This command uses a one-time link. It expires in 24 hours and can only be used once. It saves
+                        the Mianotes API key to <code>~/.mianotes/env</code> and installs the Mianotes skill files. The
+                        key is not displayed in the browser.
                       </p>
                       <div className="settings-api-code-block">
                         <pre aria-label={skillInstallCommand}>
@@ -488,7 +488,10 @@ export function SettingsScreen({
                     </div>
                   ) : null}
                   <div className="settings-api-callout">
-                    <h3>Why can't I see the key?</h3>
+                    <h3>
+                      <Info size={16} />
+                      Why can't I see the key?
+                    </h3>
                     <p>
                       API keys are secret. Showing them in the browser makes them easier to copy accidentally, share, or
                       leak. Mianotes installs the key directly into your local environment instead.

@@ -4919,15 +4919,7 @@ textarea:focus {
 .settings-api-install-panel {
   display: grid;
   justify-items: start;
-  gap: 12px;
   padding: 24px 34px 0;
-}
-
-.settings-api-install-panel small {
-  max-width: 720px;
-  color: #8b8d97;
-  font-size: 14px;
-  line-height: 1.45;
 }
 
 .settings-api-action {
@@ -5062,11 +5054,19 @@ textarea:focus {
 }
 
 .settings-api-callout h3 {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
   margin: 0 0 8px;
   color: var(--ink);
   font-size: 15px;
   line-height: 1.2;
   font-weight: 700;
+}
+
+.settings-api-callout h3 svg {
+  flex: 0 0 auto;
+  color: #7b7e89;
 }
 
 .settings-api-callout p {
