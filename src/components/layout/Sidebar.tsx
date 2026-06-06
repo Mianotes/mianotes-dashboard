@@ -2,13 +2,12 @@ import { Edit3, MoreVertical, Plus, Trash2, Upload } from "lucide-react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import type { CSSProperties, DragEvent, RefCallback } from "react";
-import type { FolderRecord, StorageCapacityRecord, UserRecord, WorkspaceView } from "../../api/types";
+import type { FolderRecord, UserRecord, WorkspaceView } from "../../api/types";
 import { ConsoleIcon } from "../icons/ConsoleIcon";
 import { DashboardIcon } from "../icons/DashboardIcon";
 import { FolderIcon } from "../icons/FolderIcon";
 import { PinIcon } from "../icons/PinIcon";
 import { folderPermissionMessage } from "../../utils/folders";
-import { formatStorageSize, mianotesStoragePercent } from "../../utils/format";
 import { SidebarSection } from "./SidebarSection";
 
 type SidebarProps = {
@@ -21,7 +20,6 @@ type SidebarProps = {
   currentUser: UserRecord;
   openFolderMenuId: string | null;
   folderActionsMenuRef: RefCallback<HTMLDivElement>;
-  storageCapacity?: StorageCapacityRecord | null;
   onAddNote: () => void;
   onSelectDashboard: () => void;
   onAddFolder: () => void;
@@ -45,7 +43,6 @@ export function Sidebar({
   currentUser,
   openFolderMenuId,
   folderActionsMenuRef,
-  storageCapacity,
   onAddNote,
   onSelectDashboard,
   onAddFolder,
@@ -264,19 +261,6 @@ export function Sidebar({
           );
         })}
       </SidebarSection>
-
-      <div className="storage-meter">
-        <div>
-          <span>Storage</span>
-          <strong>{storageCapacity ? `${formatStorageSize(storageCapacity.data_size_bytes ?? 0)} used` : "Checking..."}</strong>
-        </div>
-        <div className="meter-track">
-          <div
-            className="meter-fill"
-            style={{ width: `${Math.min(Math.max(mianotesStoragePercent(storageCapacity ?? null), 2), 100)}%` }}
-          />
-        </div>
-      </div>
 
       <div className="sidebar-publish">
         <button className="sidebar-publish-button" type="button" onClick={onPublish}>

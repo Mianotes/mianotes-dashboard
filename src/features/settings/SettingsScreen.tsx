@@ -1,4 +1,4 @@
-import { ArrowRight, Copy, Folder, History, Link, Loader2, Users, X } from "lucide-react";
+import { ArrowRight, Copy, Folder, HardDrive, History, Link, Loader2, Users, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { apiBase, apiFetch } from "../../api/client";
 import type {
@@ -10,7 +10,7 @@ import type {
   UserRecord
 } from "../../api/types";
 import { ScreenToolbar } from "../../components/layout/ScreenToolbar";
-import { formatSettingsDate } from "../../utils/format";
+import { formatSettingsDate, formatStorageSize, mianotesStoragePercent } from "../../utils/format";
 import { WorkspaceSwitchPanel } from "./WorkspaceSwitchPanel";
 
 function ApiKeyLockIcon() {
@@ -60,9 +60,23 @@ const SETTINGS_SECTIONS: Array<{ id: SettingsSectionId; label: string }> = [
   { id: "domain", label: "Custom Domain" }
 ];
 
+function formatStoragePercent(value: number) {
+  if (!Number.isFinite(value) || value <= 0) {
+    return "0%";
+  }
+  if (value < 0.1) {
+    return "<0.1%";
+  }
+  if (value < 10) {
+    return `${value.toFixed(1)}%`;
+  }
+  return `${Math.round(value)}%`;
+}
+
 export function SettingsScreen({
   users,
   currentUser,
+  storageCapacity,
   workspaceName,
   storageSettings: dashboardStorageSettings,
   onBack,
@@ -240,6 +254,10 @@ export function SettingsScreen({
   const visibleSettingsSections = currentUser.is_admin
     ? SETTINGS_SECTIONS
     : SETTINGS_SECTIONS.filter((section) => section.id === "workspaces" || section.id === "restore-folders");
+  const storageUsagePercent = mianotesStoragePercent(storageCapacity);
+  const storageProgressWidth = storageCapacity
+    ? Math.min(Math.max(storageUsagePercent, storageCapacity.data_size_bytes > 0 ? 1 : 0), 100)
+    : 0;
 
   useEffect(() => {
     if (currentUser.is_admin || activeSection === "workspaces" || activeSection === "restore-folders") {
@@ -348,46 +366,108 @@ export function SettingsScreen({
                 </section>
               )}
               {currentUser.is_admin && activeSection === "domain" && (
-                <section className="settings-card settings-share-card" aria-labelledby="settings-share-title">
-                  <div className="settings-card-intro">
-                    <h2 id="settings-share-title">Custom Domain</h2>
-                    <p>Mianotes uses this domain when it creates share links for notes.</p>
-                  </div>
-                  <div className="settings-api-panel settings-share-panel">
-                    <label className="settings-api-field">
-                      <span className="sr-only">Custom Domain</span>
-                      <span className="settings-api-input-shell">
-                        <span className="settings-api-icon-shell">
-                          <Link size={22} />
+                <>
+                  <section className="settings-card settings-share-card" aria-labelledby="settings-share-title">
+                    <div className="settings-card-intro">
+                      <h2 id="settings-share-title">Custom Domain</h2>
+                      <p>Mianotes uses this domain when it creates share links for notes.</p>
+                    </div>
+                    <div className="settings-api-panel settings-share-panel">
+                      <label className="settings-api-field">
+                        <span className="sr-only">Custom Domain</span>
+                        <span className="settings-api-input-shell">
+                          <span className="settings-api-icon-shell">
+                            <Link size={22} />
+                          </span>
+                          <input
+                            type="url"
+                            value={workspaceUrl}
+                            disabled={isLoadingShareSettings}
+                            placeholder="https://notes.yourdomain.com"
+                            onChange={(event) => setWorkspaceUrl(event.currentTarget.value)}
+                          />
                         </span>
-                        <input
-                          type="url"
-                          value={workspaceUrl}
-                          disabled={isLoadingShareSettings}
-                          placeholder="https://notes.yourdomain.com"
-                          onChange={(event) => setWorkspaceUrl(event.currentTarget.value)}
-                        />
-                      </span>
-                      <small>Use the domain your team and guests will use to view shared notes.</small>
-                    </label>
-                    <button
-                      className="settings-api-action"
-                      type="button"
-                      disabled={isSavingShareSettings || isLoadingShareSettings}
-                      onClick={() => void saveShareSettings()}
-                    >
-                      Save address
-                    </button>
-                  </div>
-                </section>
+                        <small>Use the domain your team and guests will use to view shared notes.</small>
+                      </label>
+                      <button
+                        className="settings-api-action"
+                        type="button"
+                        disabled={isSavingShareSettings || isLoadingShareSettings}
+                        onClick={() => void saveShareSettings()}
+                      >
+                        Save address
+                      </button>
+                    </div>
+                  </section>
+                  <section className="settings-card settings-storage-usage-card" aria-labelledby="settings-storage-usage-title">
+                    <div className="settings-card-intro">
+                      <h2 id="settings-storage-usage-title">Storage</h2>
+                      <p>
+                        Mianotes scans its data directory and compares that size with the disk space reported by the
+                        system.
+                      </p>
+                    </div>
+                    {storageCapacity ? (
+                      <div className="settings-storage-usage-body">
+                        <div className="settings-storage-summary">
+                          <div className="settings-storage-primary">
+                            <span className="settings-storage-icon">
+                              <HardDrive size={23} />
+                            </span>
+                            <span>
+                              <small>Mianotes data</small>
+                              <strong>{formatStorageSize(storageCapacity.data_size_bytes ?? 0)}</strong>
+                            </span>
+                          </div>
+                          <div className="settings-storage-secondary">
+                            <small>Disk space free</small>
+                            <strong>{formatStorageSize(storageCapacity.free_bytes ?? 0)}</strong>
+                          </div>
+                        </div>
+                        <div className="settings-storage-progress" aria-label="Mianotes storage usage">
+                          <div className="settings-storage-progress-track">
+                            <div
+                              className="settings-storage-progress-fill"
+                              style={{ width: `${storageProgressWidth}%` }}
+                            />
+                          </div>
+                          <span>{formatStoragePercent(storageUsagePercent)} of this disk is used by Mianotes data.</span>
+                        </div>
+                        <dl className="settings-storage-details">
+                          <div>
+                            <dt>Data directory</dt>
+                            <dd>{storageCapacity.data_dir}</dd>
+                          </div>
+                          <div>
+                            <dt>Included files</dt>
+                            <dd>Workspace databases, Markdown notes, source files, generated HTML, and cache data.</dd>
+                          </div>
+                          <div>
+                            <dt>Disk capacity</dt>
+                            <dd>{formatStorageSize(storageCapacity.total_bytes ?? 0)}</dd>
+                          </div>
+                          <div>
+                            <dt>Last checked</dt>
+                            <dd>{formatSettingsDate(storageCapacity.refreshed_at)}</dd>
+                          </div>
+                        </dl>
+                      </div>
+                    ) : (
+                      <div className="settings-empty-state settings-storage-loading">
+                        <Loader2 className="spin" size={24} />
+                        Checking storage...
+                      </div>
+                    )}
+                  </section>
+                </>
               )}
               {currentUser.is_admin && activeSection === "api-key" && (
                 <section className="settings-card settings-api-card" aria-labelledby="settings-api-title">
                   <div className="settings-card-intro">
                     <h2 id="settings-api-title">API Key</h2>
                     <p>
-                      Connect this computer to a Mianotes server by generating a one-time install URL and running it on
-                      the machine where you use Claude Code, Codex, or another AI tool.
+                      Connect your computer to this Mianotes instance by generating a one-time install URL and running it
+                      on the machine where you use Claude Code, Codex, or another AI tool.
                     </p>
                   </div>
                   <div className="settings-api-panel">

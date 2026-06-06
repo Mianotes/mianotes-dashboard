@@ -389,11 +389,6 @@ button {
   height: 15px;
 }
 
-.storage-meter {
-  padding: 22px 26px 28px;
-  border-top: 1px solid #e3e4e8;
-}
-
 .sidebar-publish {
   margin-top: auto;
   min-height: 96px;
@@ -431,35 +426,6 @@ button {
   color: #ffffff;
   border-color: #17181f;
   background: #17181f;
-}
-
-.storage-meter div:first-child {
-  display: flex;
-  justify-content: space-between;
-  margin-bottom: 12px;
-  color: #747581;
-}
-
-.storage-meter span {
-  font-weight: 750;
-}
-
-.storage-meter strong {
-  color: #747581;
-  font-weight: 500;
-}
-
-.meter-track {
-  height: 8px;
-  overflow: hidden;
-  border-radius: 999px;
-  background: #efeff1;
-}
-
-.meter-fill {
-  width: 44%;
-  height: 100%;
-  background: #17181d;
 }
 
 .workspace {
@@ -4638,6 +4604,129 @@ textarea:focus {
   min-height: 0;
 }
 
+.settings-storage-usage-card {
+  min-height: 0;
+}
+
+.settings-storage-usage-body {
+  padding: 4px 34px 34px;
+}
+
+.settings-storage-summary {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) max-content;
+  gap: 18px;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.settings-storage-primary {
+  display: inline-grid;
+  grid-template-columns: 46px minmax(0, 1fr);
+  gap: 16px;
+  align-items: center;
+  min-width: 0;
+}
+
+.settings-storage-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border: 1px solid #dedfe6;
+  border-radius: 12px;
+  color: #17181d;
+  background: #ffffff;
+}
+
+.settings-storage-primary small,
+.settings-storage-secondary small {
+  display: block;
+  margin-bottom: 4px;
+  color: #8c8e98;
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.settings-storage-primary strong,
+.settings-storage-secondary strong {
+  display: block;
+  color: var(--ink);
+  font-size: 22px;
+  line-height: 1.1;
+  font-weight: 700;
+}
+
+.settings-storage-secondary {
+  min-width: 160px;
+  padding: 14px 16px;
+  border: 1px solid #ececf1;
+  border-radius: 12px;
+  background: #fbfbfc;
+}
+
+.settings-storage-progress {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 22px;
+}
+
+.settings-storage-progress-track {
+  height: 13px;
+  overflow: hidden;
+  border: 1px solid #e1e2e8;
+  border-radius: 999px;
+  background: #f1f2f5;
+}
+
+.settings-storage-progress-fill {
+  min-width: 0;
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, #17181d 0%, #686b76 100%);
+}
+
+.settings-storage-progress span {
+  color: #81838d;
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.settings-storage-details {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0;
+}
+
+.settings-storage-details div {
+  min-width: 0;
+  padding: 15px 16px;
+  border: 1px solid #ececf1;
+  border-radius: 12px;
+  background: #fbfbfc;
+}
+
+.settings-storage-details dt {
+  margin-bottom: 6px;
+  color: #8c8e98;
+  font-size: 12px;
+  line-height: 1.2;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.settings-storage-details dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+  color: #3b3d47;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
 .settings-api-card {
   min-height: 250px;
 }
@@ -6438,6 +6527,19 @@ textarea:focus {
 
   .settings-team-help {
     margin: 18px 22px 34px;
+  }
+
+  .settings-storage-usage-body {
+    padding: 4px 22px 28px;
+  }
+
+  .settings-storage-summary,
+  .settings-storage-details {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .settings-storage-secondary {
+    min-width: 0;
   }
 
   .settings-api-panel {

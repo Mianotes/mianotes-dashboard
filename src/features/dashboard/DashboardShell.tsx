@@ -220,7 +220,6 @@ export function DashboardShell({
             currentUser={currentUser}
             openFolderMenuId={navigation.openFolderMenuId}
             folderActionsMenuRef={setFolderActionsMenuRef}
-            storageCapacity={storageCapacity}
             onAddNote={navigation.openAddNote}
             onSelectDashboard={navigation.selectDashboard}
             onAddFolder={navigation.openAddFolder}
