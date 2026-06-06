@@ -4916,6 +4916,20 @@ textarea:focus {
   line-height: 1.45;
 }
 
+.settings-api-install-panel {
+  display: grid;
+  justify-items: start;
+  gap: 12px;
+  padding: 24px 34px 0;
+}
+
+.settings-api-install-panel small {
+  max-width: 720px;
+  color: #8b8d97;
+  font-size: 14px;
+  line-height: 1.45;
+}
+
 .settings-api-action {
   display: inline-flex;
   align-items: center;
@@ -4952,7 +4966,7 @@ textarea:focus {
 }
 
 .settings-api-created {
-  padding: 10px 34px 36px;
+  padding: 34px 34px 0;
 }
 
 .settings-api-created h3 {
@@ -5037,6 +5051,30 @@ textarea:focus {
   border-color: #8c91a0;
   background: #24262d;
   transform: translateY(1px);
+}
+
+.settings-api-callout {
+  margin: 34px;
+  padding: 18px 20px;
+  border: 1px solid #ececf1;
+  border-radius: 12px;
+  background: #fbfbfc;
+}
+
+.settings-api-callout h3 {
+  margin: 0 0 8px;
+  color: var(--ink);
+  font-size: 15px;
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+.settings-api-callout p {
+  margin: 0;
+  max-width: 760px;
+  color: #686b76;
+  font-size: 14px;
+  line-height: 1.55;
 }
 
 .settings-restore-card {
@@ -6563,6 +6601,10 @@ textarea:focus {
     padding: 24px 34px;
   }
 
+  .settings-api-install-panel {
+    padding: 24px 22px 0;
+  }
+
   .settings-api-icon-shell > svg {
     width: 19px;
     height: 19px;
@@ -6574,6 +6616,14 @@ textarea:focus {
 
   .settings-api-action {
     width: 100%;
+  }
+
+  .settings-api-created {
+    padding: 30px 22px 0;
+  }
+
+  .settings-api-callout {
+    margin: 30px 22px 34px;
   }
 
   .settings-text-action {

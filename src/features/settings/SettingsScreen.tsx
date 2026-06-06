@@ -13,27 +13,6 @@ import { ScreenToolbar } from "../../components/layout/ScreenToolbar";
 import { formatSettingsDate, formatStorageSize, mianotesStoragePercent } from "../../utils/format";
 import { WorkspaceSwitchPanel } from "./WorkspaceSwitchPanel";
 
-function ApiKeyLockIcon() {
-  return (
-    <svg
-      aria-hidden="true"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        d="M17 10V8C17 5.23858 14.7614 3 12 3C9.23858 3 7 5.23858 7 8V10M12 14.5V16.5M8.8 21H15.2C16.8802 21 17.7202 21 18.362 20.673C18.9265 20.3854 19.3854 19.9265 19.673 19.362C20 18.7202 20 17.8802 20 16.2V14.8C20 13.1198 20 12.2798 19.673 11.638C19.3854 11.0735 18.9265 10.6146 18.362 10.327C17.7202 10 16.8802 10 15.2 10H8.8C7.11984 10 6.27976 10 5.63803 10.327C5.07354 10.6146 4.6146 11.0735 4.32698 11.638C4 12.2798 4 13.1198 4 14.8V16.2C4 17.8802 4 18.7202 4.32698 19.362C4.6146 19.9265 5.07354 20.3854 5.63803 20.673C6.27976 21 7.11984 21 8.8 21Z"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  );
-}
-
 function apiEnvironmentUrl() {
   if (apiBase) {
     if (typeof window === "undefined") {
@@ -55,7 +34,7 @@ type SettingsSectionId = "workspaces" | "admin-users" | "api-key" | "restore-fol
 const SETTINGS_SECTIONS: Array<{ id: SettingsSectionId; label: string }> = [
   { id: "workspaces", label: "Workspaces" },
   { id: "admin-users", label: "Admin users" },
-  { id: "api-key", label: "API Key" },
+  { id: "api-key", label: "AI tools" },
   { id: "restore-folders", label: "Restore folders" },
   { id: "domain", label: "Custom Domain" },
   { id: "storage", label: "Storage" }
@@ -108,7 +87,6 @@ export function SettingsScreen({
   const [restoringFolderId, setRestoringFolderId] = useState<string | null>(null);
   const [settingsError, setSettingsError] = useState<string | null>(null);
   const [settingsMessage, setSettingsMessage] = useState<string | null>(null);
-  const [skillInstallUrl, setSkillInstallUrl] = useState("");
   const [skillInstallCommand, setSkillInstallCommand] = useState("");
   const [isCreatingApiToken, setIsCreatingApiToken] = useState(false);
   const [workspaceUrl, setWorkspaceUrl] = useState("");
@@ -225,7 +203,6 @@ export function SettingsScreen({
     setIsCreatingApiToken(true);
     setSettingsError(null);
     setSettingsMessage(null);
-    setSkillInstallUrl("");
     setSkillInstallCommand("");
     try {
       const installer = await apiFetch<SkillInstallRecord>("/api/install/skill", {
@@ -235,7 +212,6 @@ export function SettingsScreen({
           client_name: "Codex"
         })
       });
-      setSkillInstallUrl(installer.install_url);
       setSkillInstallCommand(installer.command);
     } catch (error) {
       setSettingsError(error instanceof Error ? error.message : "Could not generate the install URL.");
@@ -465,45 +441,36 @@ export function SettingsScreen({
               {currentUser.is_admin && activeSection === "api-key" && (
                 <section className="settings-card settings-api-card" aria-labelledby="settings-api-title">
                   <div className="settings-card-intro">
-                    <h2 id="settings-api-title">API Key</h2>
+                    <h2 id="settings-api-title">Connect AI tools</h2>
                     <p>
-                      Connect your computer to this Mianotes instance by generating a one-time install URL and running it
-                      on the machine where you use Claude Code, Codex, or another AI tool.
+                      Mianotes uses an API key so tools like Codex and Claude Code can search and save notes.
+                    </p>
+                    <p>
+                      For security, Mianotes does not show the key in the browser. Instead, it creates a one-time
+                      install link. Run the install command on the computer where you use your AI tool, and Mianotes
+                      will save the key there automatically.
                     </p>
                   </div>
-                  <div className="settings-api-panel">
-                    <label className="settings-api-field">
-                      <span className="sr-only">Install script URL</span>
-                      <span className="settings-api-input-shell">
-                        <span className="settings-api-icon-shell">
-                          <ApiKeyLockIcon />
-                        </span>
-                        <input
-                          readOnly
-                          aria-disabled="true"
-                          type="text"
-                          value={skillInstallUrl}
-                          placeholder="Install URL"
-                          onFocus={(event) => event.currentTarget.select()}
-                        />
-                      </span>
-                    </label>
+                  <div className="settings-api-install-panel">
                     <button
                       className="settings-api-action"
                       type="button"
                       disabled={isCreatingApiToken}
                       onClick={() => void generateInstallUrl()}
                     >
-                      Generate URL
+                      Generate install link
                     </button>
+                    <small>This command uses a one-time link. It expires in 24 hours and can only be used once.</small>
                   </div>
                   {skillInstallCommand ? (
                     <div className="settings-api-created">
                       <h3>Install script</h3>
                       <p>
-                        Run this command on the computer where you use your AI tool. The link expires in 24 hours and can
-                        be used once. The script writes API environment variables to <code>~/.mianotes/env</code> and
-                        installs <code>SKILL.md</code> for Claude Code and Codex without displaying your API key.
+                        Run this command on the computer where you use Codex, Claude Code, or another AI tool.
+                      </p>
+                      <p>
+                        It saves the Mianotes API key to <code>~/.mianotes/env</code> and installs the Mianotes skill
+                        files. The key is not displayed in the browser.
                       </p>
                       <div className="settings-api-code-block">
                         <pre aria-label={skillInstallCommand}>
@@ -520,6 +487,13 @@ export function SettingsScreen({
                       </div>
                     </div>
                   ) : null}
+                  <div className="settings-api-callout">
+                    <h3>Why can't I see the key?</h3>
+                    <p>
+                      API keys are secret. Showing them in the browser makes them easier to copy accidentally, share, or
+                      leak. Mianotes installs the key directly into your local environment instead.
+                    </p>
+                  </div>
                 </section>
               )}
               {activeSection === "restore-folders" && (
