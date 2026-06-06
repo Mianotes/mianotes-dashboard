@@ -1,4 +1,4 @@
-import { ArrowRight, Copy, Folder, History, KeyRound, Link, Loader2, Server, Users, X } from "lucide-react";
+import { ArrowRight, Copy, Folder, History, Link, Loader2, Users, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { apiBase, apiFetch } from "../../api/client";
 import type {
@@ -57,15 +57,14 @@ function compactFolderPath(path: string) {
   return parts.length > 3 ? parts.slice(-3).join("/") : cleanPath || path;
 }
 
-type SettingsSectionId = "workspaces" | "admin-users" | "api-key" | "mcp-server" | "restore-folders" | "domain";
+type SettingsSectionId = "workspaces" | "admin-users" | "api-key" | "restore-folders" | "domain";
 
 const SETTINGS_SECTIONS: Array<{ id: SettingsSectionId; label: string }> = [
   { id: "workspaces", label: "Workspaces" },
   { id: "admin-users", label: "Admin users" },
   { id: "api-key", label: "API Key" },
-  { id: "mcp-server", label: "MCP Server" },
   { id: "restore-folders", label: "Restore folders" },
-  { id: "domain", label: "Domain" }
+  { id: "domain", label: "Custom Domain" }
 ];
 
 export function SettingsScreen({
@@ -369,12 +368,12 @@ export function SettingsScreen({
               {currentUser.is_admin && activeSection === "domain" && (
                 <section className="settings-card settings-share-card" aria-labelledby="settings-share-title">
                   <div className="settings-card-intro">
-                    <h2 id="settings-share-title">Domain</h2>
+                    <h2 id="settings-share-title">Custom Domain</h2>
                     <p>Mianotes uses this domain when it creates share links for notes.</p>
                   </div>
                   <div className="settings-api-panel settings-share-panel">
                     <label className="settings-api-field">
-                      <span className="sr-only">Domain</span>
+                      <span className="sr-only">Custom Domain</span>
                       <span className="settings-api-input-shell">
                         <span className="settings-api-icon-shell">
                           <Link size={22} />
@@ -458,33 +457,6 @@ export function SettingsScreen({
                       </div>
                     </div>
                   ) : null}
-                </section>
-              )}
-              {currentUser.is_admin && activeSection === "mcp-server" && (
-                <section className="settings-card settings-api-card" aria-labelledby="settings-mcp-title">
-                  <div className="settings-card-intro">
-                    <h2 id="settings-mcp-title">MCP Server</h2>
-                    <p>
-                      Use the Mianotes MCP server to let Codex, Claude Code, and other compatible tools search and save
-                      notes through Mianotes.
-                    </p>
-                  </div>
-                  <div className="settings-storage-panel settings-mcp-panel">
-                    <Server size={24} />
-                    <span>
-                      <strong>mianotes-mcp</strong>
-                      <small>
-                        Package installs can run this command directly. Source installs can use the virtualenv entrypoint.
-                      </small>
-                    </span>
-                  </div>
-                  <div className="settings-storage-panel settings-mcp-panel">
-                    <KeyRound size={24} />
-                    <span>
-                      <strong>Environment is loaded automatically</strong>
-                      <small>The MCP entrypoint reads the Mianotes environment before any tool runs.</small>
-                    </span>
-                  </div>
                 </section>
               )}
               {activeSection === "restore-folders" && (

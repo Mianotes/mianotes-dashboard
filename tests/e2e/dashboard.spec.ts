@@ -964,7 +964,7 @@ test("saves a workspace address from settings", async ({ page }) => {
   await page.locator(".account-avatar-button").click();
   await page.getByRole("menuitem", { name: "Settings" }).click();
   await page.getByRole("navigation", { name: "Settings navigation" })
-    .getByRole("button", { name: "Domain" })
+    .getByRole("button", { name: "Custom Domain" })
     .click();
   await page.getByPlaceholder("https://notes.yourdomain.com").fill("https://notes.example.test/");
   await page.getByRole("button", { name: "Save address" }).click();

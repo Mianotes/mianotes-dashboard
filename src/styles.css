@@ -4648,12 +4648,6 @@ textarea:focus {
   min-height: 250px;
 }
 
-.settings-mcp-panel {
-  min-height: 76px;
-  padding-top: 10px;
-  padding-bottom: 10px;
-}
-
 .settings-storage-panel {
   display: grid;
   grid-template-columns: 38px 1fr auto;
