@@ -3729,8 +3729,23 @@ textarea:focus {
 .workspace-create-toggle {
   justify-self: start;
   min-height: 42px;
-  margin-top: 6px;
-  padding: 0 18px;
+  margin-top: 14px;
+  padding: 0 20px;
+  border-color: #17181d;
+  color: #ffffff;
+  background: #17181d;
+}
+
+.workspace-create-toggle:hover {
+  border-color: #262831;
+  color: #ffffff;
+  background: #262831;
+}
+
+.workspace-create-toggle:active {
+  border-color: #444444;
+  color: #ffffff;
+  background: #444444;
 }
 
 .workspace-location-group h3 {
@@ -3932,8 +3947,8 @@ textarea:focus {
 
 .workspace-settings-actions {
   display: flex;
-  justify-content: flex-end;
-  padding: 22px 34px 34px;
+  justify-content: flex-start;
+  padding: 14px 34px 34px;
 }
 
 .spin {
@@ -6500,7 +6515,7 @@ textarea:focus {
   }
 
   .workspace-settings-actions {
-    padding: 20px 22px 28px;
+    padding: 14px 22px 28px;
   }
 
   .workspace-create-card {
