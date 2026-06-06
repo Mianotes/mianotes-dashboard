@@ -405,8 +405,8 @@ export function SettingsScreen({
                   <div className="settings-card-intro">
                     <h2 id="settings-api-title">API Key</h2>
                     <p>
-                      Install Mianotes API credentials and agent instructions on this machine. Other compatible AI tools
-                      can use the same settings.
+                      Connect this computer to a Mianotes server by generating a one-time install URL and running it on
+                      the machine where you use Claude Code, Codex, or another AI tool.
                     </p>
                   </div>
                   <div className="settings-api-panel">
@@ -440,7 +440,8 @@ export function SettingsScreen({
                       <h3>Install script</h3>
                       <p>
                         Run this command on the computer where you use your AI tool. The link expires in 24 hours and can
-                        be used once. It installs env variables and SKILL.md without displaying your API key.
+                        be used once. The script writes API environment variables to <code>~/.mianotes/env</code> and
+                        installs <code>SKILL.md</code> for Claude Code and Codex without displaying your API key.
                       </p>
                       <div className="settings-api-code-block">
                         <pre aria-label={skillInstallCommand}>
