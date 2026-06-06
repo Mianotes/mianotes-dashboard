@@ -1,4 +1,4 @@
-import { Loader2, Plus, X } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 import { useState } from "react";
 import type { ReactNode } from "react";
 import { apiFetch } from "../../api/client";
@@ -7,24 +7,21 @@ import type {
   StorageSettingsRecord
 } from "../../api/types";
 import { FolderIcon } from "../../components/icons/FolderIcon";
-import { Modal, ModalActions } from "../../components/ui/Modal";
 
 const COMPATIBLE_MARKDOWN_IMPORT_MESSAGE =
   "This folder contains compatible Markdown notes, but no workspace database was found. Import the notes and create a new Mianotes database for this workspace?";
 
-type DatabaseSwitchModalProps = {
+type WorkspaceSwitchPanelProps = {
   storageSettings: StorageSettingsRecord;
-  onClose: () => void;
   onSettingsChanged: (settings: StorageSettingsRecord) => void;
   onSwitchWorkspace: (locationId: string) => Promise<void>;
 };
 
-export function DatabaseSwitchModal({
+export function WorkspaceSwitchPanel({
   storageSettings,
-  onClose,
   onSettingsChanged,
   onSwitchWorkspace
-}: DatabaseSwitchModalProps) {
+}: WorkspaceSwitchPanelProps) {
   const [selectedLocationId, setSelectedLocationId] = useState("");
   const [folderName, setFolderName] = useState("");
   const [folderPath, setFolderPath] = useState("");
@@ -40,6 +37,13 @@ export function DatabaseSwitchModal({
   const canCreateWorkspace = Boolean(trimmedFolderName && trimmedFolderPath);
   const canSwitchWorkspace = Boolean(selectedLocation && !selectedLocation.is_active);
   const showSwitchAction = Boolean(selectedLocation && !isCreateFormOpen);
+
+  function closeCreateForm() {
+    setError(null);
+    setFolderName("");
+    setFolderPath("");
+    setIsCreateFormOpen(false);
+  }
 
   async function createWorkspaceLocation() {
     if (!canCreateWorkspace || isSubmitting) return;
@@ -106,61 +110,66 @@ export function DatabaseSwitchModal({
   }
 
   return (
-    <Modal className="folder-modal database-modal" labelledBy="database-switch-title" onClose={onClose}>
-        <div className="folder-modal-header database-modal-header">
-          <div>
-            <h2 id="database-switch-title">Change workspace</h2>
-            <p>
-              Each workspace has its own notes, folders, sources, publishing history, and console activity.
-            </p>
-          </div>
-          <button className="icon-button" type="button" aria-label="Close" onClick={onClose}>
-            <X size={18} />
-          </button>
-        </div>
-        <div className="folder-modal-body database-modal-body">
-          {error && <div className="modal-notice danger">{error}</div>}
-          <DatabaseLocationGroup title="Current workspace">
-            {activeLocation && (
-              <DatabaseLocationButton
-                location={activeLocation}
-                selected={false}
-                badge="Current workspace"
-              />
-            )}
-          </DatabaseLocationGroup>
-          {isCreateFormOpen ? (
-            <DatabaseLocationGroup title="Create workspace">
-              <div className={`database-create-card ${canCreateWorkspace ? "selected" : ""}`}>
-                <div className="database-create-icon">
-                  <FolderIcon size={22} />
-                </div>
-                <div className="database-create-fields">
-                  <label className="database-path-field">
-                    <span>Workspace name</span>
-                    <input
-                      value={folderName}
-                      onChange={(event) => {
-                        setFolderName(event.target.value);
-                        setSelectedLocationId("");
-                      }}
-                    />
-                  </label>
-                  <label className="database-path-field">
-                    <span>Workspace path</span>
-                    <input
-                      id="database-folder-path"
-                      value={folderPath}
-                      placeholder="/path/to/folder"
-                      onChange={(event) => {
-                        setFolderPath(event.target.value);
-                        setSelectedLocationId("");
-                      }}
-                    />
-                    <small>Mianotes will store this workspace's database in the app data folder.</small>
-                  </label>
+    <div className="workspace-settings-panel">
+      <div className="workspace-settings-body">
+        {error && <div className="modal-notice danger">{error}</div>}
+        <WorkspaceLocationGroup title="Current workspace">
+          {activeLocation && (
+            <WorkspaceLocationButton
+              location={activeLocation}
+              selected={false}
+              badge="Current workspace"
+            />
+          )}
+          {!isCreateFormOpen ? (
+            <button
+              className="secondary-action-button workspace-create-toggle"
+              type="button"
+              onClick={() => {
+                setError(null);
+                setSelectedLocationId("");
+                setFolderName("");
+                setFolderPath("");
+                setIsCreateFormOpen(true);
+              }}
+            >
+              <Plus size={15} />
+              Create a workspace
+            </button>
+          ) : null}
+        </WorkspaceLocationGroup>
+        {isCreateFormOpen ? (
+          <WorkspaceLocationGroup title="Create workspace">
+            <div className={`workspace-create-card ${canCreateWorkspace ? "selected" : ""}`}>
+              <div className="workspace-create-icon">
+                <FolderIcon size={22} />
+              </div>
+              <div className="workspace-create-fields">
+                <label className="workspace-path-field">
+                  <span>Workspace name</span>
+                  <input
+                    value={folderName}
+                    onChange={(event) => {
+                      setFolderName(event.target.value);
+                      setSelectedLocationId("");
+                    }}
+                  />
+                </label>
+                <label className="workspace-path-field">
+                  <span>Workspace path</span>
+                  <input
+                    id="workspace-folder-path"
+                    value={folderPath}
+                    placeholder="/path/to/folder"
+                    onChange={(event) => {
+                      setFolderPath(event.target.value);
+                      setSelectedLocationId("");
+                    }}
+                  />
+                </label>
+                <div className="workspace-create-actions">
                   <button
-                    className="primary-button database-create-button"
+                    className="primary-button workspace-create-button"
                     type="button"
                     disabled={!canCreateWorkspace || isSubmitting}
                     onClick={() => void createWorkspaceLocation()}
@@ -168,75 +177,72 @@ export function DatabaseSwitchModal({
                     {isSubmitting ? <Loader2 className="spin" size={16} /> : <FolderIcon size={16} />}
                     Create workspace
                   </button>
+                  <button
+                    className="text-button"
+                    type="button"
+                    disabled={isSubmitting}
+                    onClick={closeCreateForm}
+                  >
+                    Cancel
+                  </button>
                 </div>
               </div>
-            </DatabaseLocationGroup>
-          ) : (
-            <DatabaseLocationGroup title="Available workspaces">
-              {availableLocations.length > 0 ? (
-                <div className="database-location-scroll">
-                  {availableLocations.map((location) => (
-                    <DatabaseLocationButton
-                      key={location.id}
-                      location={location}
-                      selected={selectedLocationId === location.id}
-                      onSelect={() => {
-                        setFolderPath("");
-                        setFolderName("");
-                        setSelectedLocationId(location.id);
-                      }}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="database-empty-state">
-                  <FolderIcon size={38} />
-                  <strong>No other workspaces were found.</strong>
-                  <span>Create a workspace to add another knowledge area.</span>
-                </div>
-              )}
-              <button
-                className="database-create-link"
-                type="button"
-                onClick={() => {
-                  setError(null);
-                  setSelectedLocationId("");
-                  setFolderName("");
-                  setFolderPath("");
-                  setIsCreateFormOpen(true);
-                }}
-              >
-                <Plus size={14} />
-                Create a workspace
-              </button>
-            </DatabaseLocationGroup>
-          )}
+            </div>
+          </WorkspaceLocationGroup>
+        ) : (
+          <WorkspaceLocationGroup title="Available workspaces">
+            {availableLocations.length > 0 ? (
+              <div className="workspace-location-scroll">
+                {availableLocations.map((location) => (
+                  <WorkspaceLocationButton
+                    key={location.id}
+                    location={location}
+                    selected={selectedLocationId === location.id}
+                    onSelect={() => {
+                      setFolderPath("");
+                      setFolderName("");
+                      setSelectedLocationId(location.id);
+                    }}
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="workspace-empty-state">
+                <FolderIcon size={38} />
+                <strong>No other workspaces were found.</strong>
+                <span>Create a workspace to add another knowledge area.</span>
+              </div>
+            )}
+          </WorkspaceLocationGroup>
+        )}
+      </div>
+      {showSwitchAction ? (
+        <div className="workspace-settings-actions">
+          <button
+            className="primary-button workspace-switch-button"
+            type="button"
+            disabled={!canSwitchWorkspace || isSubmitting}
+            onClick={() => void switchSelectedWorkspace()}
+          >
+            {isSubmitting ? <Loader2 className="spin" size={16} /> : <FolderIcon size={16} />}
+            Change workspace
+          </button>
         </div>
-        <ModalActions
-          className="database-modal-actions"
-          onCancel={onClose}
-          onPrimary={showSwitchAction ? () => void switchSelectedWorkspace() : undefined}
-          primaryClassName="database-switch-button"
-          primaryDisabled={!canSwitchWorkspace || isSubmitting}
-          primaryIcon={showSwitchAction ? (
-            isSubmitting ? <Loader2 className="spin" size={16} /> : <FolderIcon size={16} />
-          ) : undefined}
-          primaryLabel={showSwitchAction ? "Change workspace" : undefined}
-        />
-    </Modal>
+      ) : null}
+    </div>
   );
 }
 
-function DatabaseLocationGroup({ title, children }: { title: string; children: ReactNode }) {
+function WorkspaceLocationGroup({ title, children }: { title: string; children: ReactNode }) {
   return (
-    <div className="database-location-group">
+    <div className="workspace-location-group">
       <h3>{title}</h3>
       {children}
     </div>
   );
 }
 
-function DatabaseLocationButton({
+function WorkspaceLocationButton({
   location,
   selected,
   badge,
@@ -251,26 +257,26 @@ function DatabaseLocationButton({
 
   return (
     <button
-      className={`database-location-row ${selected ? "selected" : ""} ${isInteractive ? "" : "read-only"}`}
+      className={`workspace-location-row ${selected ? "selected" : ""} ${isInteractive ? "" : "read-only"}`}
       type="button"
       disabled={!isInteractive}
       onClick={onSelect}
     >
       <span
-        className={`database-radio ${selected ? "selected" : ""} ${isInteractive ? "" : "database-radio-hidden"}`}
+        className={`workspace-radio ${selected ? "selected" : ""} ${isInteractive ? "" : "workspace-radio-hidden"}`}
         aria-hidden={!isInteractive}
       />
       <FolderIcon size={26} />
-      <span className="database-location-copy">
+      <span className="workspace-location-copy">
         <strong>{location.name}</strong>
         <small>{compactFolderPath(location.folder_path)}</small>
         {!location.database_exists ? (
           <small>Mianotes will create private data when selected.</small>
         ) : (
-          <small>{databaseStatsText(location)}</small>
+          <small>{workspaceStatsText(location)}</small>
         )}
       </span>
-      {badge ? <span className="database-current-badge">{badge}</span> : null}
+      {badge ? <span className="workspace-current-badge">{badge}</span> : null}
     </button>
   );
 }
@@ -280,7 +286,7 @@ function compactFolderPath(path: string) {
   return parts.length > 3 ? parts.slice(-3).join("/") : path;
 }
 
-function databaseStatsText(location: StorageLocationRecord) {
+function workspaceStatsText(location: StorageLocationRecord) {
   const bits = [];
   if (typeof location.notes_count === "number") {
     bits.push(`${location.notes_count} note${location.notes_count === 1 ? "" : "s"}`);

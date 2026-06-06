@@ -107,7 +107,7 @@ export function DashboardShell({
 
   async function switchWorkspaceAndReset(locationId: string) {
     await switchWorkspace(locationId);
-    navigation.handleDatabaseSwitched();
+    navigation.handleWorkspaceSwitched();
     setError(null);
     setShareSuccessMessage(null);
   }

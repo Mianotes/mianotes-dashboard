@@ -207,7 +207,7 @@ export function useDashboardNavigation({
     setIsFolderOpen(true);
   }, [clearSearch]);
 
-  const handleDatabaseSwitched = useCallback(() => {
+  const handleWorkspaceSwitched = useCallback(() => {
     window.localStorage.removeItem(dashboardUiStateKey);
     navigationStackRef.current = [];
     restoreNavigationSnapshot({
@@ -325,7 +325,7 @@ export function useDashboardNavigation({
     openSettings,
     openPublish,
     openJobs,
-    handleDatabaseSwitched,
+    handleWorkspaceSwitched,
     openProfileTag
   };
 }

@@ -10,9 +10,8 @@ import type {
   UserRecord
 } from "../../api/types";
 import { ScreenToolbar } from "../../components/layout/ScreenToolbar";
-import { FolderIcon } from "../../components/icons/FolderIcon";
 import { formatSettingsDate } from "../../utils/format";
-import { DatabaseSwitchModal } from "./DatabaseSwitchModal";
+import { WorkspaceSwitchPanel } from "./WorkspaceSwitchPanel";
 
 function ApiKeyLockIcon() {
   return (
@@ -51,12 +50,6 @@ function apiEnvironmentUrl() {
   return window.location.origin;
 }
 
-function compactFolderPath(path: string) {
-  const cleanPath = path.replace(/[\\/]+$/, "");
-  const parts = cleanPath.split(/[\\/]+/).filter(Boolean);
-  return parts.length > 3 ? parts.slice(-3).join("/") : cleanPath || path;
-}
-
 type SettingsSectionId = "workspaces" | "admin-users" | "api-key" | "restore-folders" | "domain";
 
 const SETTINGS_SECTIONS: Array<{ id: SettingsSectionId; label: string }> = [
@@ -70,7 +63,6 @@ const SETTINGS_SECTIONS: Array<{ id: SettingsSectionId; label: string }> = [
 export function SettingsScreen({
   users,
   currentUser,
-  storageCapacity,
   workspaceName,
   storageSettings: dashboardStorageSettings,
   onBack,
@@ -98,7 +90,6 @@ export function SettingsScreen({
   );
   const [isLoadingArchivedFolders, setIsLoadingArchivedFolders] = useState(true);
   const [isLoadingStorageSettings, setIsLoadingStorageSettings] = useState(true);
-  const [isDatabaseModalOpen, setIsDatabaseModalOpen] = useState(false);
   const [restoringFolderId, setRestoringFolderId] = useState<string | null>(null);
   const [settingsError, setSettingsError] = useState<string | null>(null);
   const [settingsMessage, setSettingsMessage] = useState<string | null>(null);
@@ -160,7 +151,6 @@ export function SettingsScreen({
   async function switchWorkspace(locationId: string) {
     await onSwitchWorkspace(locationId);
     await loadStorageSettings();
-    setIsDatabaseModalOpen(false);
   }
 
   async function loadShareSettings() {
@@ -246,12 +236,6 @@ export function SettingsScreen({
     await navigator.clipboard?.writeText(skillInstallCommand);
   }
 
-  const currentFolderPath = storageSettings?.data_dir ?? storageCapacity?.data_dir ?? "data";
-  const activeStorageLocation = storageSettings?.locations.find((location) => location.is_active);
-  const currentFolderLabel = activeStorageLocation?.name
-    ?? currentFolderPath.replace(/[\\/]+$/, "").split(/[\\/]+/).pop()
-    ?? currentFolderPath;
-  const currentFolderDescription = `Current workspace: ${compactFolderPath(currentFolderPath)}`;
   const adminUsers = users.filter((user) => user.is_admin);
   const visibleSettingsSections = currentUser.is_admin
     ? SETTINGS_SECTIONS
@@ -325,20 +309,18 @@ export function SettingsScreen({
                       Each workspace has its own notes, folders, sources, publishing history, and console activity.
                     </p>
                   </div>
-                  <div className="settings-storage-panel">
-                    <FolderIcon size={24} />
-                    <span>
-                      <strong>{isLoadingStorageSettings ? "Loading workspace..." : currentFolderLabel}</strong>
-                      <small>{isLoadingStorageSettings ? "Current workspace" : currentFolderDescription}</small>
-                    </span>
-                    <button
-                      className="settings-text-action"
-                      type="button"
-                      onClick={() => setIsDatabaseModalOpen(true)}
-                    >
-                      Change workspace
-                    </button>
-                  </div>
+                  {isLoadingStorageSettings || !storageSettings ? (
+                    <div className="settings-empty-state settings-storage-loading">
+                      <Loader2 className="spin" size={24} />
+                      Loading workspaces...
+                    </div>
+                  ) : (
+                    <WorkspaceSwitchPanel
+                      storageSettings={storageSettings}
+                      onSettingsChanged={setStorageSettings}
+                      onSwitchWorkspace={switchWorkspace}
+                    />
+                  )}
                 </section>
               )}
               {currentUser.is_admin && activeSection === "admin-users" && (
@@ -508,14 +490,6 @@ export function SettingsScreen({
           </section>
         </div>
       </div>
-      {isDatabaseModalOpen && storageSettings && (
-        <DatabaseSwitchModal
-          storageSettings={storageSettings}
-          onClose={() => setIsDatabaseModalOpen(false)}
-          onSettingsChanged={setStorageSettings}
-          onSwitchWorkspace={switchWorkspace}
-        />
-      )}
     </>
   );
 }

@@ -3739,28 +3739,35 @@ textarea:focus {
   background: #f7f7f8;
 }
 
-.database-modal {
-  width: min(560px, calc(100vw - 32px));
-}
-
-.database-modal-body {
+.workspace-settings-panel {
+  display: grid;
   gap: 22px;
 }
 
-.database-location-group {
+.workspace-settings-body {
+  display: grid;
+  gap: 42px;
+  padding: 28px 34px 0;
+}
+
+.workspace-location-group {
   display: grid;
   gap: 8px;
 }
 
-.database-location-scroll {
+.workspace-location-scroll {
   display: grid;
   gap: 8px;
-  max-height: 248px;
-  overflow: scroll;
-  padding-right: 2px;
 }
 
-.database-location-group h3 {
+.workspace-create-toggle {
+  justify-self: start;
+  min-height: 42px;
+  margin-top: 6px;
+  padding: 0 18px;
+}
+
+.workspace-location-group h3 {
   margin: 0 0 4px;
   color: #17181d;
   font-size: 13px;
@@ -3768,7 +3775,7 @@ textarea:focus {
   font-weight: 700;
 }
 
-.database-location-row {
+.workspace-location-row {
   display: grid;
   grid-template-columns: 18px 32px minmax(0, 1fr) auto;
   align-items: center;
@@ -3783,52 +3790,52 @@ textarea:focus {
   text-align: left;
 }
 
-.database-location-row:hover {
+.workspace-location-row:hover {
   border-color: #c2c4ce;
 }
 
-.database-location-row:disabled {
+.workspace-location-row:disabled {
   cursor: default;
   opacity: 1;
 }
 
-.database-location-row:disabled:hover {
+.workspace-location-row:disabled:hover {
   border-color: #dedfe5;
 }
 
-.database-location-row.selected {
+.workspace-location-row.selected {
   border-color: #bcd4ff;
   background: #f4f8ff;
 }
 
-.database-radio {
+.workspace-radio {
   width: 14px;
   height: 14px;
   border: 2px solid #a8abb5;
   border-radius: 999px;
 }
 
-.database-radio.selected {
+.workspace-radio.selected {
   border: 5px solid #2f77ff;
 }
 
-.database-radio-hidden {
+.workspace-radio-hidden {
   visibility: hidden;
 }
 
-.database-location-row > svg {
+.workspace-location-row > svg {
   width: 22px;
   height: 22px;
   color: #737681;
 }
 
-.database-location-copy {
+.workspace-location-copy {
   display: grid;
   gap: 3px;
   min-width: 0;
 }
 
-.database-location-copy strong {
+.workspace-location-copy strong {
   overflow: hidden;
   color: #17181d;
   font-size: 14px;
@@ -3838,7 +3845,7 @@ textarea:focus {
   white-space: nowrap;
 }
 
-.database-location-copy small {
+.workspace-location-copy small {
   overflow: hidden;
   color: #636672;
   font-size: 12px;
@@ -3847,7 +3854,7 @@ textarea:focus {
   white-space: nowrap;
 }
 
-.database-current-badge {
+.workspace-current-badge {
   padding: 5px 8px;
   border: 1px solid #cce0ff;
   border-radius: 6px;
@@ -3858,7 +3865,7 @@ textarea:focus {
   font-weight: 700;
 }
 
-.database-empty-state {
+.workspace-empty-state {
   display: grid;
   justify-items: center;
   gap: 8px;
@@ -3869,44 +3876,22 @@ textarea:focus {
   text-align: center;
 }
 
-.database-empty-state svg {
+.workspace-empty-state svg {
   color: #b7bac4;
 }
 
-.database-empty-state strong {
+.workspace-empty-state strong {
   color: #4c4e58;
   font-size: 13px;
 }
 
-.database-empty-state span {
+.workspace-empty-state span {
   max-width: 270px;
   font-size: 12px;
   line-height: 1.45;
 }
 
-.database-create-link {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  justify-self: start;
-  min-height: 32px;
-  margin-top: 2px;
-  padding: 0;
-  border: 0;
-  color: #2c2e37;
-  background: transparent;
-  font-size: 13px;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.database-create-link:hover {
-  color: #000000;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-}
-
-.database-create-card {
+.workspace-create-card {
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr);
   gap: 14px;
@@ -3917,12 +3902,12 @@ textarea:focus {
   background: #ffffff;
 }
 
-.database-create-card.selected {
+.workspace-create-card.selected {
   border-color: #bcd4ff;
   background: #f7fbff;
 }
 
-.database-create-icon {
+.workspace-create-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -3933,47 +3918,56 @@ textarea:focus {
   background: #edf4ff;
 }
 
-.database-create-fields {
+.workspace-create-fields {
   display: grid;
   gap: 16px;
   min-width: 0;
 }
 
-.database-path-field {
+.workspace-path-field {
   display: grid;
   gap: 8px;
   min-width: 0;
 }
 
-.database-path-field > span {
+.workspace-path-field > span {
   color: #2c2e37;
   font-size: 13px;
   font-weight: 700;
 }
 
-.database-path-field input {
+.workspace-path-field input {
   width: 100%;
   min-width: 0;
 }
 
-.database-path-field small {
+.workspace-path-field small {
   color: #666975;
   font-size: 12px;
   line-height: 1.35;
 }
 
-.database-create-button {
+.workspace-create-button {
   justify-self: end;
   min-width: 168px;
 }
 
-.database-modal-actions {
-  border-top: 1px solid #e0e1e7;
+.workspace-create-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 16px;
 }
 
-.database-modal-actions .database-switch-button {
+.workspace-settings-actions .workspace-switch-button {
   min-width: 176px;
   justify-content: center;
+}
+
+.workspace-settings-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 22px 34px 34px;
 }
 
 .spin {
@@ -4641,46 +4635,15 @@ textarea:focus {
 }
 
 .settings-storage-card {
-  min-height: 252px;
+  min-height: 0;
 }
 
 .settings-api-card {
   min-height: 250px;
 }
 
-.settings-storage-panel {
-  display: grid;
-  grid-template-columns: 38px 1fr auto;
-  align-items: center;
-  gap: 0;
-  min-height: 96px;
-  margin: 0;
-  padding: 24px 34px;
-  color: var(--slate-7);
-}
-
-.settings-storage-panel svg {
-  align-self: start;
-  width: 19px;
-  height: 19px;
-  margin-top: 5px;
-  color: #a0a2aa;
-}
-
-.settings-storage-panel strong {
-  display: block;
-  color: var(--ink);
-  font-size: 15px;
-  line-height: 1.2;
-  font-weight: 700;
-}
-
-.settings-storage-panel small {
-  display: block;
-  margin-top: 5px;
-  color: #8d8f98;
-  font-size: 13px;
-  line-height: 1.2;
+.settings-storage-loading {
+  margin: 28px 34px 34px;
 }
 
 .settings-team-list {
@@ -6443,10 +6406,26 @@ textarea:focus {
     padding: 26px 22px 18px;
   }
 
-  .settings-storage-panel {
-    grid-template-columns: 34px minmax(0, 1fr);
-    margin: 26px 22px 34px;
-    padding: 0;
+  .workspace-settings-body {
+    padding: 22px 22px 0;
+  }
+
+  .workspace-settings-actions {
+    padding: 20px 22px 28px;
+  }
+
+  .workspace-create-card {
+    grid-template-columns: 1fr;
+  }
+
+  .workspace-create-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .workspace-create-button {
+    justify-self: stretch;
+    width: 100%;
   }
 
   .settings-team-list {

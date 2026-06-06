@@ -1008,17 +1008,15 @@ test("creates and switches workspaces from settings without ending the session",
   await page.goto("/");
   await page.locator(".account-avatar-button").click();
   await page.getByRole("menuitem", { name: "Settings" }).click();
-  await page.getByRole("button", { name: "Change workspace" }).click();
 
-  await expect(page.locator("#database-switch-title")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Current workspace" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Available workspaces" })).toBeVisible();
   await page.getByRole("button", { name: "Create a workspace" }).click();
   await page.getByLabel("Workspace name").fill("Field notes");
   await page.getByLabel("Workspace path").fill("/tmp/test-user/Field notes");
   await page.getByRole("button", { name: "Create workspace" }).click();
   await page.getByRole("button", { name: /Field notes/ }).click();
-  await page.getByRole("dialog", { name: "Change workspace" })
-    .getByRole("button", { name: "Change workspace", exact: true })
-    .click();
+  await page.getByRole("button", { name: "Change workspace", exact: true }).click();
 
   await expect(page.getByRole("heading", { name: "Sign in" })).toBeHidden();
   await expect(page.locator(".breadcrumb")).toContainText("Field notes");
