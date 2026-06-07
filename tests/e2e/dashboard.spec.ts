@@ -640,7 +640,7 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
       return;
     }
 
-    if (path === "/api/settings/storage" && method === "GET") {
+    if ((path === "/api/workspaces" || path === "/api/settings/storage") && method === "GET") {
       await fulfill(route, storageSettings());
       return;
     }

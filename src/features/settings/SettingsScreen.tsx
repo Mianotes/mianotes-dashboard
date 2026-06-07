@@ -138,7 +138,7 @@ export function SettingsScreen({
   async function loadStorageSettings() {
     setIsLoadingStorageSettings(true);
     try {
-      const settings = await apiFetch<StorageSettingsRecord>("/api/settings/storage");
+      const settings = await apiFetch<StorageSettingsRecord>("/api/workspaces");
       setStorageSettings(settings);
     } catch (error) {
       setSettingsError(error instanceof Error ? error.message : "Could not load folder settings.");

@@ -171,7 +171,7 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
         workspaceId: requestWorkspaceId,
         signal: options.signal
       }),
-      apiFetch<StorageSettingsRecord>("/api/settings/storage", {
+      apiFetch<StorageSettingsRecord>("/api/workspaces", {
         workspaceId: requestWorkspaceId,
         signal: options.signal
       }).catch(() => null),
