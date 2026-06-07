@@ -1,13 +1,8 @@
 export const apiBase = import.meta.env.VITE_API_BASE_URL ?? "";
-let apiWorkspaceId: string | null = null;
 
 type ApiFetchOptions = RequestInit & {
   workspaceId?: string | null;
 };
-
-export function setApiWorkspaceId(workspaceId: string | null) {
-  apiWorkspaceId = workspaceId;
-}
 
 export function apiPath(path: string) {
   return `${apiBase}${path}`;
@@ -61,7 +56,7 @@ export function versionedMediaPath(path: string, version = Date.now()) {
 export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise<T> {
   const { workspaceId, ...requestOptions } = options;
   const headers = new Headers(options.headers);
-  const requestWorkspaceId = workspaceId ?? apiWorkspaceId;
+  const requestWorkspaceId = workspaceId ?? null;
   if (requestWorkspaceId && path.startsWith("/api/") && !headers.has("X-Mianotes-Workspace")) {
     headers.set("X-Mianotes-Workspace", requestWorkspaceId);
   }

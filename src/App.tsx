@@ -147,7 +147,7 @@ function AuthenticatedApp() {
   }
 
   if (isPrintNoteRoute && initialRoute.kind === "note") {
-    return <PrintableNoteScreen noteId={initialRoute.noteId} />;
+    return <PrintableNoteScreen noteId={initialRoute.noteId} workspaceId={initialRoute.workspaceId} />;
   }
 
   return (

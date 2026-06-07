@@ -98,6 +98,7 @@ export function PublishScreen({
   folders,
   tags,
   currentUser,
+  workspaceId,
   workspaceName,
   storageSettings,
   onBack,
@@ -109,6 +110,7 @@ export function PublishScreen({
   folders: FolderRecord[];
   tags: TagRecord[];
   currentUser: UserRecord;
+  workspaceId: string | null;
   workspaceName: string;
   storageSettings: StorageSettingsRecord | null;
   onBack: () => void;
@@ -157,8 +159,11 @@ export function PublishScreen({
     let cancelled = false;
 
     async function loadThemes() {
+      setIsLoadingThemes(true);
       try {
-        const items = await apiFetch<PublishThemeRecord[]>("/api/publish/themes");
+        const items = await apiFetch<PublishThemeRecord[]>("/api/publish/themes", {
+          workspaceId
+        });
         if (cancelled) return;
         setThemes(items);
         setTheme((current) => (
@@ -179,7 +184,7 @@ export function PublishScreen({
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [workspaceId]);
 
   useEffect(() => {
     if (result) {
@@ -242,7 +247,9 @@ export function PublishScreen({
       if (tagId !== "all") {
         params.set("tag_id", tagId);
       }
-      const draft = await apiFetch<PublishDraftRecord>(`/api/publish/draft?${params.toString()}`);
+      const draft = await apiFetch<PublishDraftRecord>(`/api/publish/draft?${params.toString()}`, {
+        workspaceId
+      });
       setSiteConfig(siteConfigurationFromRecord(draft.site_configuration));
       setNavigationGroups(draft.navigation);
       setUpdatedNotes(draft.updated_notes);
@@ -269,6 +276,7 @@ export function PublishScreen({
     try {
       const nextResult = await apiFetch<PublishResultRecord>("/api/publish", {
         method: "POST",
+        workspaceId,
         body: JSON.stringify(payload)
       });
       setResult(nextResult);

@@ -6,6 +6,7 @@ import { NoteTagsSection } from "./NoteTagsSection";
 
 type NoteTagsManagerProps = {
   note: NoteRecord;
+  workspaceId: string | null;
   canChangeNote: boolean;
   cannotChangeNoteMessage: string;
   onRefresh: () => Promise<void>;
@@ -13,6 +14,7 @@ type NoteTagsManagerProps = {
 
 export function NoteTagsManager({
   note,
+  workspaceId,
   canChangeNote,
   cannotChangeNoteMessage,
   onRefresh
@@ -36,6 +38,7 @@ export function NoteTagsManager({
     try {
       await apiFetch<NoteRecord>(`/api/notes/${note.id}/tags`, {
         method: "PUT",
+        workspaceId,
         body: JSON.stringify({ tags: nextTags })
       });
       await onRefresh();
@@ -57,6 +60,7 @@ export function NoteTagsManager({
     try {
       await apiFetch<NoteRecord>(`/api/notes/${note.id}/tags`, {
         method: "PUT",
+        workspaceId,
         body: JSON.stringify({ tags: nextTags })
       });
       await onRefresh();

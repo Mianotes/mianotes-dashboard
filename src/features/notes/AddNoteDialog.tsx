@@ -44,12 +44,14 @@ function TextNoteIcon({ size = 17 }: { size?: number }) {
 
 export function AddNoteDialog({
   folders,
+  workspaceId,
   selectedFolderId,
   onClose,
   onCreated,
   onError
 }: {
   folders: FolderRecord[];
+  workspaceId: string | null;
   selectedFolderId: string | "all";
   onClose: () => void;
   onCreated: (note: NoteRecord, shouldEdit: boolean) => Promise<void>;
@@ -118,12 +120,14 @@ export function AddNoteDialog({
       if (mode === "text") {
         createdNote = await apiFetch<NoteRecord>("/api/notes/from-text", {
           method: "POST",
+          workspaceId,
           body: JSON.stringify({ folder_id: folderId, title: cleanTitle, text: text.trim() || " " })
         });
         shouldEdit = true;
       } else if (mode === "link") {
         createdNote = await apiFetch<NoteRecord>("/api/notes/from-url", {
           method: "POST",
+          workspaceId,
           body: JSON.stringify({ folder_id: folderId, title: cleanTitle, url: cleanUrl })
         });
       } else if (file) {
@@ -131,7 +135,11 @@ export function AddNoteDialog({
         formData.set("folder_id", folderId);
         formData.set("title", cleanTitle);
         formData.set("file", file);
-        createdNote = await apiFetch<NoteRecord>("/api/notes/from-file", { method: "POST", body: formData });
+        createdNote = await apiFetch<NoteRecord>("/api/notes/from-file", {
+          method: "POST",
+          workspaceId,
+          body: formData
+        });
       } else {
         return;
       }

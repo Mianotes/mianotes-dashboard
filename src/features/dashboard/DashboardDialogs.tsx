@@ -7,6 +7,7 @@ type FolderUpdateResult = { ok: true } | { ok: false; error: string };
 type DashboardDialogsProps = {
   isAddOpen: boolean;
   folders: FolderRecord[];
+  workspaceId: string | null;
   selectedFolderId: string | "all";
   onCloseAdd: () => void;
   onNoteCreated: (note: NoteRecord, shouldEdit: boolean) => Promise<void>;
@@ -23,6 +24,7 @@ type DashboardDialogsProps = {
 export function DashboardDialogs({
   isAddOpen,
   folders,
+  workspaceId,
   selectedFolderId,
   onCloseAdd,
   onNoteCreated,
@@ -40,6 +42,7 @@ export function DashboardDialogs({
       {isAddOpen && (
         <AddNoteDialog
           folders={folders}
+          workspaceId={workspaceId}
           selectedFolderId={selectedFolderId}
           onClose={onCloseAdd}
           onCreated={onNoteCreated}
@@ -48,6 +51,7 @@ export function DashboardDialogs({
       )}
       {isFolderOpen && (
         <AddFolderDialog
+          workspaceId={workspaceId}
           onClose={onCloseFolder}
           onCreated={onFolderCreated}
           onError={onFolderError}

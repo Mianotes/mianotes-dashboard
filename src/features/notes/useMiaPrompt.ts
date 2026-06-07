@@ -6,6 +6,7 @@ import type { MiaPromptRecord, NoteRecord } from "../../api/types";
 
 type UseMiaPromptArgs = {
   note: NoteRecord;
+  workspaceId: string | null;
   isEditing: boolean;
   isIndexingNote: boolean;
   canChangeNote: boolean;
@@ -45,6 +46,7 @@ function withMiaHeading(markdown: string, heading: string | null): string {
 
 export function useMiaPrompt({
   note,
+  workspaceId,
   isEditing,
   isIndexingNote,
   canChangeNote,
@@ -117,6 +119,7 @@ export function useMiaPrompt({
     try {
       const result = await apiFetch<MiaPromptRecord>(`/api/notes/${note.id}/prompt`, {
         method: "POST",
+        workspaceId,
         body: JSON.stringify({ prompt: trimmedInstructions, markdown })
       });
       setMiaResponse(result.text);
@@ -161,6 +164,7 @@ export function useMiaPrompt({
     try {
       await apiFetch<NoteRecord>(`/api/notes/${note.id}`, {
         method: "PATCH",
+        workspaceId,
         body: JSON.stringify({ text: nextText })
       });
       onDraftTextChange(nextText);

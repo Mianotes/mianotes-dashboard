@@ -60,7 +60,7 @@ export function NoteRow({
     if (!confirmed) return;
     onError(null);
     try {
-      await apiFetch(`/api/notes/${note.id}`, { method: "DELETE" });
+      await apiFetch(`/api/notes/${note.id}`, { method: "DELETE", workspaceId });
       await onDeleted();
     } catch (err) {
       onError(err instanceof Error ? err.message : "Could not delete note");

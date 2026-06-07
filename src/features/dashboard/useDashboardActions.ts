@@ -23,6 +23,7 @@ export function useDashboardActions({
   setError
 }: UseDashboardActionsArgs) {
   const {
+    activeWorkspace,
     loadWorkspace,
     addOrMergeNote,
     refreshNotes: refreshWorkspaceNotes,
@@ -42,18 +43,23 @@ export function useDashboardActions({
     navigationSnapshot,
     pushNavigationSnapshot
   } = navigation;
+  const activeWorkspaceId = activeWorkspace?.id ?? null;
 
-  const refreshNotes = useCallback(async () => {
+  const refreshNotes = useCallback(async (
+    overrides: { selectedFolderId?: string | "all" } = {}
+  ) => {
     await refreshWorkspaceNotes({
+      workspaceId: activeWorkspaceId,
       filters: {
         selectedView,
         selectedUserId,
-        selectedFolderId,
+        selectedFolderId: overrides.selectedFolderId ?? selectedFolderId,
         selectedTag,
         searchQuery
       }
     });
   }, [
+    activeWorkspaceId,
     refreshWorkspaceNotes,
     searchQuery,
     selectedFolderId,
@@ -70,10 +76,11 @@ export function useDashboardActions({
     try {
       await apiFetch<FolderRecord>(`/api/folders/${folder.id}`, {
         method: "PATCH",
+        workspaceId: activeWorkspaceId,
         body: JSON.stringify(update)
       });
       setOpenFolderMenuId(null);
-      await loadWorkspace();
+      await loadWorkspace(activeWorkspaceId);
       await refreshNotes();
       return { ok: true };
     } catch (err) {
@@ -81,22 +88,23 @@ export function useDashboardActions({
       setError(message);
       return { ok: false, error: message };
     }
-  }, [loadWorkspace, refreshNotes, setError, setOpenFolderMenuId]);
+  }, [activeWorkspaceId, loadWorkspace, refreshNotes, setError, setOpenFolderMenuId]);
 
   const reorderFolders = useCallback(async (folderIds: string[]) => {
     setError(null);
     try {
       await apiFetch<FolderRecord[]>("/api/folders/order", {
         method: "PATCH",
+        workspaceId: activeWorkspaceId,
         body: JSON.stringify({ folder_ids: folderIds })
       });
       setOpenFolderMenuId(null);
-      await loadWorkspace();
+      await loadWorkspace(activeWorkspaceId);
       await refreshNotes();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not sort folders.");
     }
-  }, [loadWorkspace, refreshNotes, setError, setOpenFolderMenuId]);
+  }, [activeWorkspaceId, loadWorkspace, refreshNotes, setError, setOpenFolderMenuId]);
 
   const deleteFolder = useCallback(async (folder: FolderRecord) => {
     const confirmed = window.confirm(
@@ -106,16 +114,31 @@ export function useDashboardActions({
 
     setError(null);
     try {
-      await apiFetch(`/api/folders/${folder.id}`, { method: "DELETE" });
+      await apiFetch(`/api/folders/${folder.id}`, {
+        method: "DELETE",
+        workspaceId: activeWorkspaceId
+      });
       setOpenFolderMenuId(null);
       if (selectedFolderId === folder.id) {
         setSelectedFolderId("all");
+        await loadWorkspace(activeWorkspaceId);
+        await refreshNotes({ selectedFolderId: "all" });
+        return;
       }
-      await loadWorkspace();
+      await loadWorkspace(activeWorkspaceId);
+      await refreshNotes();
     } catch (err) {
       setError(folderActionErrorMessage(err, "delete"));
     }
-  }, [loadWorkspace, selectedFolderId, setError, setOpenFolderMenuId, setSelectedFolderId]);
+  }, [
+    activeWorkspaceId,
+    loadWorkspace,
+    refreshNotes,
+    selectedFolderId,
+    setError,
+    setOpenFolderMenuId,
+    setSelectedFolderId
+  ]);
 
   const toggleNoteStar = useCallback(async (note: NoteRecord) => {
     try {
@@ -133,10 +156,11 @@ export function useDashboardActions({
     try {
       const updatedNote = await apiFetch<NoteRecord>(`/api/notes/${note.id}`, {
         method: "PATCH",
+        workspaceId: activeWorkspaceId,
         body: JSON.stringify({ folder_id: folderId })
       });
       addOrMergeNote({ ...updatedNote, folder_id: updatedNote.folder?.id ?? folderId });
-      await refreshFolderCounts();
+      await refreshFolderCounts({ workspaceId: activeWorkspaceId });
       await refreshNotes();
       return { ok: true };
     } catch (err) {
@@ -144,12 +168,12 @@ export function useDashboardActions({
       setError(message);
       return { ok: false, error: message };
     }
-  }, [addOrMergeNote, refreshFolderCounts, refreshNotes, setError]);
+  }, [activeWorkspaceId, addOrMergeNote, refreshFolderCounts, refreshNotes, setError]);
 
   const openNote = useCallback(async (note: NoteRecord, startInEdit = false) => {
     const previousScreen = navigationSnapshot();
     try {
-      const openedNote = await refreshNote(note.id);
+      const openedNote = await refreshNote(note.id, { workspaceId: activeWorkspaceId });
       pushNavigationSnapshot(previousScreen);
       if (startInEdit && !isNoteJobActive(openedNote)) {
         setNoteIdToEditOnOpen(note.id);
@@ -162,6 +186,7 @@ export function useDashboardActions({
     navigationSnapshot,
     pushNavigationSnapshot,
     refreshNote,
+    activeWorkspaceId,
     setError,
     setNoteIdToEditOnOpen,
     setOpenedNoteId

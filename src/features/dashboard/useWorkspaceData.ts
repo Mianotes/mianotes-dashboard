@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { apiFetch, setApiWorkspaceId } from "../../api/client";
+import { apiFetch } from "../../api/client";
 import type {
   FolderNoteCountsRecord,
   FolderRecord,
@@ -26,6 +26,13 @@ type RefreshNotesOptions = {
   onMissingOpenedNote?: (availableNoteIds: Set<string>) => void;
   filters?: NotePageFilters;
   cursor?: string | null;
+  signal?: AbortSignal;
+  workspaceId?: string | null;
+};
+
+type WorkspaceRequestOptions = {
+  signal?: AbortSignal;
+  workspaceId?: string | null;
 };
 
 function noteListUrl(filters: NotePageFilters = {}, cursor: string | null = null) {
@@ -83,7 +90,6 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
   const activateWorkspaceSession = useCallback(async (workspaceId: string) => {
     await apiFetch<unknown>("/api/settings/storage/active", {
       method: "PATCH",
-      workspaceId,
       body: JSON.stringify({ location_id: workspaceId })
     });
   }, []);
@@ -98,29 +104,45 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
     setNextNotesCursor(page.next_cursor);
   }, []);
 
-  const loadNotesPage = useCallback(async (
+  const fetchNotesPage = useCallback(async (
     filters: NotePageFilters = {},
-    cursor: string | null = null
+    cursor: string | null = null,
+    options: WorkspaceRequestOptions = {}
   ) => {
-    const page = await apiFetch<NoteListPageRecord>(noteListUrl(filters, cursor));
-    applyNotePage(page, usersRef.current, foldersRef.current);
+    const page = await apiFetch<NoteListPageRecord>(noteListUrl(filters, cursor), {
+      workspaceId: options.workspaceId ?? activeWorkspaceIdRef.current,
+      signal: options.signal
+    });
     return page;
+  }, []);
+
+  const applyLoadedNotePage = useCallback((page: NoteListPageRecord) => {
+    applyNotePage(page, usersRef.current, foldersRef.current);
   }, [applyNotePage]);
 
-  const refreshProfileSummaries = useCallback(async () => {
-    const summaries = await apiFetch<UserProfileSummaryRecord[]>("/api/users/profile-summaries");
+  const refreshProfileSummaries = useCallback(async (options: WorkspaceRequestOptions = {}) => {
+    const summaries = await apiFetch<UserProfileSummaryRecord[]>("/api/users/profile-summaries", {
+      workspaceId: options.workspaceId ?? activeWorkspaceIdRef.current,
+      signal: options.signal
+    });
     setProfileSummaries(summaries);
     return summaries;
   }, []);
 
-  const refreshFolderCounts = useCallback(async () => {
-    const counts = await apiFetch<FolderNoteCountsRecord>("/api/folders/counts");
+  const refreshFolderCounts = useCallback(async (options: WorkspaceRequestOptions = {}) => {
+    const counts = await apiFetch<FolderNoteCountsRecord>("/api/folders/counts", {
+      workspaceId: options.workspaceId ?? activeWorkspaceIdRef.current,
+      signal: options.signal
+    });
     setFolderNoteCounts(counts.folders);
     return counts;
   }, []);
 
-  const loadWorkspace = useCallback(async (workspaceId: string | null = activeWorkspaceIdRef.current) => {
-    setApiWorkspaceId(workspaceId);
+  const loadWorkspace = useCallback(async (
+    workspaceId: string | null = activeWorkspaceIdRef.current,
+    options: Pick<WorkspaceRequestOptions, "signal"> = {}
+  ) => {
+    const requestWorkspaceId = workspaceId ?? activeWorkspaceIdRef.current;
     const [
       nextUsers,
       nextFolders,
@@ -130,13 +152,34 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
       nextStorageSettings,
       nextFolderCounts
     ] = await Promise.all([
-      apiFetch<UserRecord[]>("/api/users"),
-      apiFetch<FolderRecord[]>("/api/folders"),
-      apiFetch<TagRecord[]>("/api/tags"),
-      apiFetch<UserProfileSummaryRecord[]>("/api/users/profile-summaries"),
-      apiFetch<StorageCapacityRecord>("/api/storage").catch(() => null),
-      apiFetch<StorageSettingsRecord>("/api/settings/storage").catch(() => null),
-      apiFetch<FolderNoteCountsRecord>("/api/folders/counts").catch(() => ({ folders: {} }))
+      apiFetch<UserRecord[]>("/api/users", {
+        workspaceId: requestWorkspaceId,
+        signal: options.signal
+      }),
+      apiFetch<FolderRecord[]>("/api/folders", {
+        workspaceId: requestWorkspaceId,
+        signal: options.signal
+      }),
+      apiFetch<TagRecord[]>("/api/tags", {
+        workspaceId: requestWorkspaceId,
+        signal: options.signal
+      }),
+      apiFetch<UserProfileSummaryRecord[]>("/api/users/profile-summaries", {
+        workspaceId: requestWorkspaceId,
+        signal: options.signal
+      }),
+      apiFetch<StorageCapacityRecord>("/api/storage", {
+        workspaceId: requestWorkspaceId,
+        signal: options.signal
+      }).catch(() => null),
+      apiFetch<StorageSettingsRecord>("/api/settings/storage", {
+        workspaceId: requestWorkspaceId,
+        signal: options.signal
+      }).catch(() => null),
+      apiFetch<FolderNoteCountsRecord>("/api/folders/counts", {
+        workspaceId: requestWorkspaceId,
+        signal: options.signal
+      }).catch(() => ({ folders: {} }))
     ]);
 
     const activeFolders = nextFolders.filter((folder) => !folder.archived_at);
@@ -146,7 +189,6 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
       ?? null;
     activeWorkspaceIdRef.current = resolvedWorkspaceId;
     setActiveWorkspaceId(resolvedWorkspaceId);
-    setApiWorkspaceId(resolvedWorkspaceId);
     setUsers(nextUsers);
     setFolders(activeFolders);
     usersRef.current = nextUsers;
@@ -163,7 +205,6 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
     setIsLoading(true);
     setIsWorkspaceLoaded(false);
     const workspaceId = activeWorkspaceIdRef.current;
-    setApiWorkspaceId(workspaceId);
     try {
       const session = await apiFetch<{ user: UserRecord }>("/api/auth/session");
       setCurrentUser(session.user);
@@ -178,7 +219,11 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
   const refreshNotes = useCallback(
     async (options: RefreshNotesOptions = {}) => {
       const page = await apiFetch<NoteListPageRecord>(
-        noteListUrl(options.filters, options.cursor ?? null)
+        noteListUrl(options.filters, options.cursor ?? null),
+        {
+          workspaceId: options.workspaceId ?? activeWorkspaceIdRef.current,
+          signal: options.signal
+        }
       );
       const hydrated = hydrateNotes(page.items, usersRef.current, foldersRef.current);
       const availableNoteIds = new Set(hydrated.map((note) => note.id));
@@ -197,20 +242,38 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
     []
   );
 
-  const refreshNote = useCallback(async (noteId: string) => {
-    const fullNote = await apiFetch<NoteRecord>(`/api/notes/${noteId}`);
+  const fetchNote = useCallback(async (
+    noteId: string,
+    options: WorkspaceRequestOptions = {}
+  ) => {
+    const fullNote = await apiFetch<NoteRecord>(`/api/notes/${noteId}`, {
+      workspaceId: options.workspaceId ?? activeWorkspaceIdRef.current,
+      signal: options.signal
+    });
     const hydratedNote = hydrateNotes([fullNote], usersRef.current, foldersRef.current)[0]
       ?? fullNote;
+    return hydratedNote;
+  }, []);
+
+  const applyLoadedNote = useCallback((hydratedNote: NoteRecord) => {
     setOpenedNote(hydratedNote);
     setNotes((items) =>
-      items.some((item) => item.id === noteId)
+      items.some((item) => item.id === hydratedNote.id)
         ? items.map((item) =>
-            item.id === noteId ? mergeNoteRecord(item, hydratedNote) : item
+            item.id === hydratedNote.id ? mergeNoteRecord(item, hydratedNote) : item
           )
         : items
     );
-    return hydratedNote;
   }, []);
+
+  const refreshNote = useCallback(async (
+    noteId: string,
+    options: WorkspaceRequestOptions = {}
+  ) => {
+    const hydratedNote = await fetchNote(noteId, options);
+    applyLoadedNote(hydratedNote);
+    return hydratedNote;
+  }, [applyLoadedNote, fetchNote]);
 
   const clearOpenedNote = useCallback(() => {
     setOpenedNote(null);
@@ -244,6 +307,7 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
     try {
       const updated = await apiFetch<NoteRecord>(`/api/notes/${note.id}/star`, {
         method: "PATCH",
+        workspaceId: activeWorkspaceIdRef.current,
         body: JSON.stringify({ is_starred: nextStarred })
       });
       setOpenedNote((current) =>
@@ -334,6 +398,7 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
 
   const switchWorkspace = useCallback(
     async (locationId: string) => {
+      await activateWorkspaceSession(locationId);
       setIsWorkspaceLoaded(false);
       setNotes([]);
       setNotesTotal(null);
@@ -343,8 +408,6 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
       setProfileSummaries([]);
       activeWorkspaceIdRef.current = locationId;
       setActiveWorkspaceId(locationId);
-      setApiWorkspaceId(locationId);
-      await activateWorkspaceSession(locationId);
       await loadWorkspace(locationId);
     },
     [activateWorkspaceSession, loadWorkspace]
@@ -377,7 +440,10 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
     isWorkspaceLoaded,
     bootstrap,
     loadWorkspace,
-    loadNotesPage,
+    fetchNotesPage,
+    applyLoadedNotePage,
+    fetchNote,
+    applyLoadedNote,
     refreshNotes,
     refreshNote,
     clearOpenedNote,

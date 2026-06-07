@@ -82,6 +82,8 @@ function note(overrides: Record<string, unknown> = {}) {
 
 type MockAppOptions = {
   authenticated?: boolean;
+  denyWorkspaceSwitchId?: string | null;
+  runningJob?: boolean;
   workspaceUrl?: string | null;
 };
 
@@ -89,6 +91,7 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
   let authenticated = options.authenticated ?? true;
   let workspaceUrl = options.workspaceUrl ?? null;
   let activeLocationId = "storage-current";
+  let jobDetailCalls = 0;
   const requests: Record<string, unknown[]> = {};
   const notes = [note()];
   const users = [adminUser, memberUser];
@@ -155,6 +158,31 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
       next_cursor: null,
       counts: null
     };
+  }
+
+  function filteredNotes(url: URL) {
+    let items = activeNotes();
+    const folderId = url.searchParams.get("folder_id");
+    const userId = url.searchParams.get("user_id");
+    const starred = url.searchParams.get("starred");
+    const query = url.searchParams.get("query")?.trim().toLowerCase();
+
+    if (folderId) {
+      items = items.filter((item) => item.folder_id === folderId);
+    }
+    if (userId) {
+      items = items.filter((item) => item.user_id === userId);
+    }
+    if (starred === "true") {
+      items = items.filter((item) => item.is_starred);
+    }
+    if (query) {
+      items = items.filter((item) => {
+        const haystack = `${item.title} ${item.summary ?? ""} ${item.text ?? ""}`.toLowerCase();
+        return haystack.includes(query);
+      });
+    }
+    return items;
   }
 
   function folderNoteCounts(items = activeNotes()) {
@@ -358,7 +386,12 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
     }
 
     if (path === "/api/notes" && method === "GET") {
-      await fulfill(route, noteListPage());
+      remember("notesList", {
+        folder_id: url.searchParams.get("folder_id"),
+        query: url.searchParams.get("query"),
+        workspace: request.headers()["x-mianotes-workspace"] ?? null
+      });
+      await fulfill(route, noteListPage(filteredNotes(url)));
       return;
     }
 
@@ -400,6 +433,7 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
     }
 
     if (path === "/api/jobs" && method === "GET") {
+      const jobStatus = options.runningJob ? "running" : "succeeded";
       await fulfill(route, {
         items: [{
           id: "job-demo",
@@ -407,12 +441,12 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
           note_id: "note-demo",
           note_title: "Getting started",
           job_type: "parse_url",
-          status: "succeeded",
+          status: jobStatus,
           client: null,
           created_at: now,
           updated_at: now,
           started_at: now,
-          finished_at: now
+          finished_at: options.runningJob ? null : now
         }],
         total: null,
         limit: 50,
@@ -422,13 +456,15 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
     }
 
     if (path === "/api/jobs/job-demo" && method === "GET") {
+      jobDetailCalls += 1;
+      const jobStatus = options.runningJob ? "running" : "succeeded";
       await fulfill(route, {
         id: "job-demo",
         user: adminUser,
         note_id: "note-demo",
         note_title: "Getting started",
         job_type: "parse_url",
-        status: "succeeded",
+        status: jobStatus,
         client: null,
         input: { url: "https://example.test" },
         result: {},
@@ -436,13 +472,13 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
           timestamp: now,
           status: "info",
           command: "start parse_url",
-          response: "job is running"
+          response: jobDetailCalls > 1 ? "second log line" : "first log line"
         }],
         error: null,
         created_at: now,
         updated_at: now,
         started_at: now,
-        finished_at: now
+        finished_at: options.runningJob ? null : now
       });
       return;
     }
@@ -644,6 +680,12 @@ async function mockMianotesApi(page: Page, options: MockAppOptions = {}) {
     if (path === "/api/settings/storage/active" && method === "PATCH") {
       const payload = await readJson(route);
       remember("storageSwitch", payload);
+      if (payload.location_id === options.denyWorkspaceSwitchId) {
+        await fulfill(route, {
+          detail: "This is a protected workspace. Please contact Admin User to request access."
+        }, 403);
+        return;
+      }
       activeLocationId = String(payload.location_id);
       await fulfill(route, { storage: storageSettings(), session_ended: false });
       return;
@@ -697,7 +739,7 @@ test("creates text and link notes from the add note modal", async ({ page }) => 
   const requests = await mockMianotesApi(page);
 
   await page.goto("/");
-  await page.getByRole("button", { name: "Add Note" }).click();
+  await page.getByRole("complementary").getByRole("button", { name: "Add Note" }).click();
   let dialog = page.getByRole("dialog", { name: "Add note" });
   await dialog.locator("select").selectOption(demoFolder.id);
   await dialog.getByLabel("Title").fill("Meeting notes");
@@ -779,6 +821,28 @@ test("creates and renames folders from the sidebar", async ({ page }) => {
   await expect(dialog).toBeHidden();
   await expect(page.getByRole("button", { name: /Team docs/ })).toBeVisible();
   expect(requests.folderUpdate?.[0]).toMatchObject({ name: "Team docs" });
+});
+
+test("keeps a selected folder's notes visible after renaming the folder", async ({ page }) => {
+  const requests = await mockMianotesApi(page);
+
+  await page.goto("/folder/demo");
+  await expect(page.getByRole("heading", { name: "Getting started" })).toBeVisible();
+
+  const sidebar = page.locator(".sidebar");
+  await sidebar.getByRole("button", { name: "Demo 1" }).hover();
+  await page.getByLabel("Folder actions for Demo").click({ force: true });
+  await page.getByRole("menuitem", { name: "Rename" }).click();
+
+  const dialog = page.getByRole("dialog", { name: "Rename folder" });
+  await dialog.getByLabel("Folder name").fill("mianotes-web-service");
+  await dialog.getByRole("button", { name: "Save changes" }).click();
+
+  await expect(dialog).toBeHidden();
+  await expect(sidebar.getByRole("button", { name: "mianotes-web-service 1" })).toHaveClass(/active/);
+  await expect(page.getByRole("heading", { name: "Getting started" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "No notes found" })).toBeHidden();
+  expect(requests.folderUpdate?.[0]).toMatchObject({ name: "mianotes-web-service" });
 });
 
 test("moves a note to a different folder from the note actions menu", async ({ page }) => {
@@ -934,7 +998,7 @@ test("validates publish configuration before publishing and hides the form after
   expect(requests.publish).toHaveLength(1);
 });
 
-test("settings opens on workspaces and generates an API install URL from the API Key section", async ({ page }) => {
+test("settings opens on workspaces and generates an API install command from Connect tools", async ({ page }) => {
   const requests = await mockMianotesApi(page);
 
   await page.goto("/");
@@ -943,10 +1007,10 @@ test("settings opens on workspaces and generates an API install URL from the API
 
   const settingsNav = page.getByRole("navigation", { name: "Settings navigation" });
   await expect(settingsNav.getByRole("button", { name: "Workspaces" })).toHaveClass(/active/);
-  await expect(page.getByRole("heading", { name: "Workspaces" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Workspaces", exact: true })).toBeVisible();
 
-  await settingsNav.getByRole("button", { name: "API Key" }).click();
-  await page.getByRole("button", { name: "Generate URL" }).click();
+  await settingsNav.getByRole("button", { name: "Connect tools" }).click();
+  await page.getByRole("button", { name: "Generate install link" }).click();
 
   await expect(page.getByText("Install script")).toBeVisible();
   await expect(page.getByText("curl -fsSL http://127.0.0.1:8200/api/install/skill/test-token | bash")).toBeVisible();
@@ -999,6 +1063,25 @@ test("switches workspaces from the breadcrumb switcher without signing out", asy
   await page.locator(".note-row").first().click();
   await expect(page.locator(".note-document-breadcrumb")).toContainText("Research");
   await expect(page.getByRole("heading", { name: "Research brief" })).toBeVisible();
+});
+
+test("denied workspace switch keeps the current workspace visible", async ({ page }) => {
+  const requests = await mockMianotesApi(page, { denyWorkspaceSwitchId: "storage-archive" });
+
+  await page.goto("/");
+  await expect(page.locator(".breadcrumb")).toContainText("Mianotes");
+  await expect(page.getByRole("heading", { name: "Getting started" })).toBeVisible();
+
+  await page.getByRole("button", { name: /Change workspace from Mianotes/ }).click();
+  await page.getByRole("menuitemradio", { name: /Research/ }).click();
+
+  const dialog = page.getByRole("dialog", { name: "Protected workspace" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog).toContainText("protected workspace");
+  await expect(page.locator(".breadcrumb")).toContainText("Mianotes");
+  await expect(page.getByRole("heading", { name: "Getting started" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Research brief" })).toBeHidden();
+  expect(requests.storageSwitch?.[0]).toMatchObject({ location_id: "storage-archive" });
 });
 
 test("creates and switches workspaces from settings without ending the session", async ({ page }) => {
@@ -1056,6 +1139,12 @@ test("opens shareable internal URLs for notes, folders, users, console, publish,
   await expect(page.locator(".breadcrumb")).toHaveText("UsersMember User");
   await expect(page.locator(".breadcrumb-workspace-switcher")).toHaveCount(0);
 
+  await page.goto("/user/missing-user/profile");
+  await expect(page.getByRole("heading", { name: "User not found" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Admin User" })).toBeHidden();
+  await page.getByRole("button", { name: "View users" }).click();
+  await expect(page.getByRole("region", { name: "All user profiles" })).toBeVisible();
+
   await page.goto("/jobs");
   await expect(page.getByRole("heading", { level: 1, name: "Console" })).toBeVisible();
   await expect(page.locator(".breadcrumb")).toHaveText("Console");
@@ -1074,6 +1163,15 @@ test("opens shareable internal URLs for notes, folders, users, console, publish,
   await expect(page.getByRole("heading", { name: "Settings" })).toBeVisible();
   await expect(page.locator(".breadcrumb")).toHaveText("Settings");
   await expect(page.locator(".breadcrumb-workspace-switcher")).toHaveCount(0);
+});
+
+test("polls selected Console job details while jobs are active", async ({ page }) => {
+  await mockMianotesApi(page, { runningJob: true });
+
+  await page.goto("/jobs");
+
+  await expect(page.getByText("first log line")).toBeVisible();
+  await expect(page.getByText("second log line")).toBeVisible({ timeout: 5000 });
 });
 
 test("updates a team member password and makes them an admin", async ({ page }) => {

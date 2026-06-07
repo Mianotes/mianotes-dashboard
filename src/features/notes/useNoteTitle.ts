@@ -4,6 +4,7 @@ import type { NoteRecord } from "../../api/types";
 
 type UseNoteTitleArgs = {
   note: NoteRecord;
+  workspaceId: string | null;
   canChangeNote: boolean;
   cannotChangeNoteMessage: string;
   onError: (message: string | null) => void;
@@ -13,6 +14,7 @@ type UseNoteTitleArgs = {
 
 export function useNoteTitle({
   note,
+  workspaceId,
   canChangeNote,
   cannotChangeNoteMessage,
   onError,
@@ -68,6 +70,7 @@ export function useNoteTitle({
     try {
       await apiFetch<NoteRecord>(`/api/notes/${note.id}`, {
         method: "PATCH",
+        workspaceId,
         body: JSON.stringify({ title: nextTitle })
       });
       setIsEditingTitle(false);

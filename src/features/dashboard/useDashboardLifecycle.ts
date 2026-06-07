@@ -25,9 +25,10 @@ export function useDashboardLifecycle({
     activeWorkspace,
     isWorkspaceLoaded,
     bootstrap,
-    loadNotesPage,
-    refreshNotes: refreshWorkspaceNotes,
-    refreshNote,
+    fetchNotesPage,
+    applyLoadedNotePage,
+    fetchNote,
+    applyLoadedNote,
     clearOpenedNote,
     refreshProfileSummaries
   } = workspace;
@@ -64,6 +65,11 @@ export function useDashboardLifecycle({
   };
   const noteFiltersKey = JSON.stringify(noteFilters);
   const lastNoteFiltersKeyRef = useRef<string | null>(null);
+  const noteListRequestIdRef = useRef(0);
+  const openedNoteRequestIdRef = useRef(0);
+  const pendingNotesPollRequestIdRef = useRef(0);
+  const openedNoteContentRequestIdRef = useRef(0);
+  const openedNotePollRequestIdRef = useRef(0);
 
   useEffect(() => {
     void bootstrap();
@@ -84,11 +90,6 @@ export function useDashboardLifecycle({
       return;
     }
 
-    setProfileUserId((current) => (
-      current === "all" || users.some((user) => user.id === current)
-        ? current
-        : currentUser.id
-    ));
     setSelectedUserId((current) => (
       current === "all" || users.some((user) => user.id === current) ? current : "all"
     ));
@@ -120,7 +121,9 @@ export function useDashboardLifecycle({
   useEffect(() => {
     if (!currentUser || !isWorkspaceLoaded || pendingFolderRoute) return undefined;
 
-    let cancelled = false;
+    const requestWorkspaceId = activeWorkspace?.id ?? null;
+    const requestId = ++noteListRequestIdRef.current;
+    const controller = new AbortController();
     const filtersChanged = lastNoteFiltersKeyRef.current !== noteFiltersKey;
     if (filtersChanged) {
       notePageCursorsRef.current = [null];
@@ -132,23 +135,31 @@ export function useDashboardLifecycle({
     }
 
     const cursor = notePageCursorsRef.current[currentPage - 1] ?? null;
-    void loadNotesPage(noteFilters, cursor).then((page) => {
-      if (cancelled) return;
+    void fetchNotesPage(noteFilters, cursor, {
+      workspaceId: requestWorkspaceId,
+      signal: controller.signal
+    }).then((page) => {
+      if (controller.signal.aborted || requestId !== noteListRequestIdRef.current) return;
+      applyLoadedNotePage(page);
       if (page.next_cursor) {
         notePageCursorsRef.current[currentPage] = page.next_cursor;
       } else {
         notePageCursorsRef.current = notePageCursorsRef.current.slice(0, currentPage);
       }
-    }).catch(() => undefined);
+    }).catch((error) => {
+      if (controller.signal.aborted || (error instanceof DOMException && error.name === "AbortError")) return;
+    });
 
     return () => {
-      cancelled = true;
+      controller.abort();
     };
   }, [
+    activeWorkspace?.id,
+    applyLoadedNotePage,
     currentPage,
     currentUser,
+    fetchNotesPage,
     isWorkspaceLoaded,
-    loadNotesPage,
     noteFiltersKey,
     pendingFolderRoute,
     setCurrentPage
@@ -161,15 +172,31 @@ export function useDashboardLifecycle({
       return;
     }
     if (openedNote?.id === openedNoteId) return;
-    void refreshNote(openedNoteId).catch(() => undefined);
+    const requestWorkspaceId = activeWorkspace?.id ?? null;
+    const requestId = ++openedNoteRequestIdRef.current;
+    const controller = new AbortController();
+    void fetchNote(openedNoteId, {
+      workspaceId: requestWorkspaceId,
+      signal: controller.signal
+    }).then((note) => {
+      if (controller.signal.aborted || requestId !== openedNoteRequestIdRef.current) return;
+      applyLoadedNote(note);
+    }).catch((error) => {
+      if (controller.signal.aborted || (error instanceof DOMException && error.name === "AbortError")) return;
+    });
+    return () => {
+      controller.abort();
+    };
   }, [
+    activeWorkspace?.id,
+    applyLoadedNote,
     clearOpenedNote,
     currentUser,
+    fetchNote,
     isWorkspaceLoaded,
     openedNote?.id,
     openedNoteId,
-    pendingFolderRoute,
-    refreshNote
+    pendingFolderRoute
   ]);
 
   useEffect(() => {
@@ -181,19 +208,31 @@ export function useDashboardLifecycle({
     if (!currentUser || !isWorkspaceLoaded || !hasPendingNotes) return;
 
     let cancelled = false;
+    let controller: AbortController | null = null;
+    const requestWorkspaceId = activeWorkspace?.id ?? null;
 
     async function pollPendingNotes() {
+      controller?.abort();
+      controller = new AbortController();
+      const requestId = ++pendingNotesPollRequestIdRef.current;
       try {
-        await refreshWorkspaceNotes({
-          filters: noteFilters,
-          cursor: notePageCursorsRef.current[currentPage - 1] ?? null
+        const page = await fetchNotesPage(noteFilters, notePageCursorsRef.current[currentPage - 1] ?? null, {
+          workspaceId: requestWorkspaceId,
+          signal: controller.signal
         });
-        if (cancelled) return;
+        if (cancelled || controller.signal.aborted || requestId !== pendingNotesPollRequestIdRef.current) return;
+        applyLoadedNotePage(page);
 
         if (openedNoteId) {
-          await refreshNote(openedNoteId);
+          const note = await fetchNote(openedNoteId, {
+            workspaceId: requestWorkspaceId,
+            signal: controller.signal
+          });
+          if (cancelled || controller.signal.aborted || requestId !== pendingNotesPollRequestIdRef.current) return;
+          applyLoadedNote(note);
         }
-      } catch {
+      } catch (error) {
+        if (controller?.signal.aborted || (error instanceof DOMException && error.name === "AbortError")) return;
         // Keep the current draft visible; explicit user actions surface their own errors.
       }
     }
@@ -205,17 +244,21 @@ export function useDashboardLifecycle({
 
     return () => {
       cancelled = true;
+      controller?.abort();
       window.clearInterval(intervalId);
     };
   }, [
+    activeWorkspace?.id,
+    applyLoadedNote,
+    applyLoadedNotePage,
     currentUser,
     currentPage,
+    fetchNote,
+    fetchNotesPage,
     hasPendingNotes,
     isWorkspaceLoaded,
     noteFiltersKey,
-    openedNoteId,
-    refreshNote,
-    refreshWorkspaceNotes
+    openedNoteId
   ]);
 
   useEffect(() => {
@@ -283,20 +326,49 @@ export function useDashboardLifecycle({
   ]);
 
   useEffect(() => {
-    if (!openedNote || openedNote.text) return;
-    void refreshNote(openedNote.id).catch(() => undefined);
-  }, [openedNote?.id, openedNote?.text, refreshNote]);
+    if (!openedNote || openedNote.text) return undefined;
+
+    const requestWorkspaceId = activeWorkspace?.id ?? null;
+    const requestId = ++openedNoteContentRequestIdRef.current;
+    const controller = new AbortController();
+
+    void fetchNote(openedNote.id, {
+      workspaceId: requestWorkspaceId,
+      signal: controller.signal
+    }).then((note) => {
+      if (controller.signal.aborted || requestId !== openedNoteContentRequestIdRef.current) return;
+      applyLoadedNote(note);
+    }).catch((error) => {
+      if (controller.signal.aborted || (error instanceof DOMException && error.name === "AbortError")) return;
+    });
+
+    return () => {
+      controller.abort();
+    };
+  }, [activeWorkspace?.id, applyLoadedNote, fetchNote, openedNote?.id, openedNote?.text]);
 
   useEffect(() => {
     if (!openedNote || hasUsableNoteContent(openedNote) || openedNote.status === "failed") return;
     if (["text", "markdown"].includes(openedNote.source_type) && openedNote.is_published) return;
 
     const noteId = openedNote.id;
+    const requestWorkspaceId = activeWorkspace?.id ?? null;
+    let cancelled = false;
+    let controller: AbortController | null = null;
 
     async function refreshOpenedNote() {
+      controller?.abort();
+      controller = new AbortController();
+      const requestId = ++openedNotePollRequestIdRef.current;
       try {
-        await refreshNote(noteId);
-      } catch {
+        const note = await fetchNote(noteId, {
+          workspaceId: requestWorkspaceId,
+          signal: controller.signal
+        });
+        if (cancelled || controller.signal.aborted || requestId !== openedNotePollRequestIdRef.current) return;
+        applyLoadedNote(note);
+      } catch (error) {
+        if (controller?.signal.aborted || (error instanceof DOMException && error.name === "AbortError")) return;
         // Keep the current draft visible; opening or saving the note will surface errors.
       }
     }
@@ -307,16 +379,20 @@ export function useDashboardLifecycle({
     void refreshOpenedNote();
 
     return () => {
+      cancelled = true;
+      controller?.abort();
       window.clearInterval(intervalId);
     };
   }, [
+    activeWorkspace?.id,
+    applyLoadedNote,
+    fetchNote,
     openedNote?.id,
     openedNote?.is_published,
     openedNote?.source_type,
     openedNote?.status,
     openedNote?.summary,
-    openedNote?.text,
-    refreshNote
+    openedNote?.text
   ]);
 
   useEffect(() => {

@@ -56,6 +56,7 @@ function formatStoragePercent(value: number) {
 export function SettingsScreen({
   users,
   currentUser,
+  workspaceId,
   storageCapacity,
   workspaceName,
   storageSettings: dashboardStorageSettings,
@@ -68,6 +69,7 @@ export function SettingsScreen({
 }: {
   users: UserRecord[];
   currentUser: UserRecord;
+  workspaceId: string | null;
   storageCapacity: StorageCapacityRecord | null;
   workspaceName: string;
   storageSettings: StorageSettingsRecord | null;
@@ -98,7 +100,7 @@ export function SettingsScreen({
     void loadArchivedFolders();
     void loadStorageSettings();
     void loadShareSettings();
-  }, []);
+  }, [workspaceId]);
 
   useEffect(() => {
     if (dashboardStorageSettings) {
@@ -120,7 +122,9 @@ export function SettingsScreen({
     setIsLoadingArchivedFolders(true);
     setSettingsError(null);
     try {
-      const items = await apiFetch<FolderRecord[]>("/api/folders?include_archived=true");
+      const items = await apiFetch<FolderRecord[]>("/api/folders?include_archived=true", {
+        workspaceId
+      });
       setArchivedFolders(items.filter((folder) => Boolean(folder.archived_at)));
     } catch (error) {
       setSettingsError(error instanceof Error ? error.message : "Could not load archived folders.");
@@ -183,6 +187,7 @@ export function SettingsScreen({
     try {
       const restoredFolder = await apiFetch<FolderRecord>(`/api/folders/${folder.id}/restore`, {
         method: "POST",
+        workspaceId,
         body: JSON.stringify({})
       });
       setArchivedFolders((items) => items.filter((item) => item.id !== folder.id));

@@ -1,5 +1,5 @@
 import { Loader2, RefreshCw, X } from "lucide-react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
 import { apiFetch } from "../../api/client";
 import type {
@@ -56,6 +56,7 @@ function clientLogoSvg(job: JobListItemRecord | JobRecord) {
 export function JobsScreen({
   currentUser,
   workspaceName,
+  workspaceId,
   storageSettings,
   onBack,
   onSignOut,
@@ -65,6 +66,7 @@ export function JobsScreen({
 }: {
   currentUser: UserRecord;
   workspaceName: string;
+  workspaceId: string | null;
   storageSettings: StorageSettingsRecord | null;
   onBack: () => void;
   onSignOut: () => void;
@@ -79,29 +81,61 @@ export function JobsScreen({
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const selectedJobIdRef = useRef(selectedJobId);
+  const jobsRequestIdRef = useRef(0);
+  const selectedJobRequestIdRef = useRef(0);
 
-  const loadSelectedJob = useCallback(async (jobId: string) => {
-    setIsLoadingSelectedJob(true);
+  useEffect(() => {
+    selectedJobIdRef.current = selectedJobId;
+  }, [selectedJobId]);
+
+  const loadSelectedJob = useCallback(async (
+    jobId: string,
+    { silent = false, signal }: { silent?: boolean; signal?: AbortSignal } = {}
+  ) => {
+    const requestId = ++selectedJobRequestIdRef.current;
+    if (!silent) {
+      setIsLoadingSelectedJob(true);
+    }
     try {
-      const item = await apiFetch<JobRecord>(`/api/jobs/${encodeURIComponent(jobId)}`);
+      const item = await apiFetch<JobRecord>(`/api/jobs/${encodeURIComponent(jobId)}`, {
+        workspaceId,
+        signal
+      });
+      if (signal?.aborted || requestId !== selectedJobRequestIdRef.current || selectedJobIdRef.current !== jobId) {
+        return;
+      }
       setSelectedJobDetail(item);
       setError(null);
     } catch (caughtError) {
+      if (signal?.aborted || requestId !== selectedJobRequestIdRef.current || selectedJobIdRef.current !== jobId) {
+        return;
+      }
       setSelectedJobDetail(null);
       setError(caughtError instanceof Error ? caughtError.message : "Could not load job output.");
     } finally {
-      setIsLoadingSelectedJob(false);
+      if (!silent && requestId === selectedJobRequestIdRef.current && selectedJobIdRef.current === jobId) {
+        setIsLoadingSelectedJob(false);
+      }
     }
-  }, []);
+  }, [workspaceId]);
 
-  const loadJobs = useCallback(async ({ silent = false }: { silent?: boolean } = {}) => {
+  const loadJobs = useCallback(async ({
+    silent = false,
+    signal
+  }: { silent?: boolean; signal?: AbortSignal } = {}) => {
+    const requestId = ++jobsRequestIdRef.current;
     if (silent) {
       setIsRefreshing(true);
     } else {
       setIsLoading(true);
     }
     try {
-      const page = await apiFetch<JobListPageRecord>("/api/jobs");
+      const page = await apiFetch<JobListPageRecord>("/api/jobs", {
+        workspaceId,
+        signal
+      });
+      if (signal?.aborted || requestId !== jobsRequestIdRef.current) return;
       const items = page.items;
       setJobs(items);
       setError(null);
@@ -112,31 +146,31 @@ export function JobsScreen({
         return items[0]?.id ?? null;
       });
     } catch (caughtError) {
+      if (signal?.aborted || requestId !== jobsRequestIdRef.current) return;
       setError(caughtError instanceof Error ? caughtError.message : "Could not load jobs.");
     } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
+      if (requestId === jobsRequestIdRef.current) {
+        setIsLoading(false);
+        setIsRefreshing(false);
+      }
     }
-  }, []);
+  }, [workspaceId]);
 
-  useEffect(() => {
-    void loadJobs();
-  }, [loadJobs]);
-
-  useEffect(() => {
-    const interval = window.setInterval(() => {
-      void loadJobs({ silent: true });
-    }, 3000);
-    return () => window.clearInterval(interval);
-  }, [loadJobs]);
-
-  useEffect(() => {
-    if (!selectedJobId) {
-      setSelectedJobDetail(null);
-      return;
+  const refreshJobsAndSelection = useCallback(async ({ silent = false }: { silent?: boolean } = {}) => {
+    await loadJobs({ silent });
+    const selected = selectedJobIdRef.current;
+    if (selected) {
+      await loadSelectedJob(selected, { silent: true });
     }
-    void loadSelectedJob(selectedJobId);
-  }, [loadSelectedJob, selectedJobId]);
+  }, [loadJobs, loadSelectedJob]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    void loadJobs({ signal: controller.signal });
+    return () => {
+      controller.abort();
+    };
+  }, [loadJobs]);
 
   const selectedJobSummary = useMemo(
     () => jobs.find((job) => job.id === selectedJobId) ?? jobs[0] ?? null,
@@ -144,6 +178,28 @@ export function JobsScreen({
   );
   const selectedJob = selectedJobDetail?.id === selectedJobId ? selectedJobDetail : selectedJobSummary;
   const activeJobCount = jobs.filter((job) => ACTIVE_STATUSES.has(job.status)).length;
+  const shouldPollJobs = activeJobCount > 0 || Boolean(selectedJob && ACTIVE_STATUSES.has(selectedJob.status));
+
+  useEffect(() => {
+    if (!shouldPollJobs) return undefined;
+
+    const interval = window.setInterval(() => {
+      void refreshJobsAndSelection({ silent: true });
+    }, 3000);
+    return () => window.clearInterval(interval);
+  }, [refreshJobsAndSelection, shouldPollJobs]);
+
+  useEffect(() => {
+    if (!selectedJobId) {
+      setSelectedJobDetail(null);
+      return;
+    }
+    const controller = new AbortController();
+    void loadSelectedJob(selectedJobId, { signal: controller.signal });
+    return () => {
+      controller.abort();
+    };
+  }, [loadSelectedJob, selectedJobId]);
 
   function selectJob(jobId: string) {
     setSelectedJobDetail(null);
@@ -198,7 +254,7 @@ export function JobsScreen({
           <button
             className="secondary-action jobs-refresh"
             type="button"
-            onClick={() => void loadJobs({ silent: true })}
+            onClick={() => void refreshJobsAndSelection({ silent: true })}
             disabled={isLoading || isRefreshing}
           >
             {isRefreshing ? <Loader2 className="spin" size={16} /> : <RefreshCw size={16} />}

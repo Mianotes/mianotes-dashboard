@@ -6,10 +6,12 @@ import type { FolderRecord } from "../../api/types";
 import { Modal, ModalActions } from "../../components/ui/Modal";
 
 export function AddFolderDialog({
+  workspaceId,
   onClose,
   onCreated,
   onError
 }: {
+  workspaceId: string | null;
   onClose: () => void;
   onCreated: (folder: FolderRecord) => Promise<void>;
   onError: (message: string | null) => void;
@@ -26,6 +28,7 @@ export function AddFolderDialog({
     try {
       const folder = await apiFetch<FolderRecord>("/api/folders", {
         method: "POST",
+        workspaceId,
         body: JSON.stringify({ name, is_pinned: isPinned })
       });
       await onCreated(folder);

@@ -2732,6 +2732,31 @@ button {
   background: #fbfbfc;
 }
 
+.profile-empty-state {
+  display: grid;
+  justify-items: center;
+  gap: 14px;
+  max-width: 520px;
+  margin: 96px auto 0;
+  padding: 42px 28px;
+  border: 1px solid #e1e2e7;
+  border-radius: 8px;
+  background: #ffffff;
+  color: #6e707a;
+  text-align: center;
+}
+
+.profile-empty-state h2 {
+  margin: 0;
+  color: #17181f;
+  font-size: 24px;
+  line-height: 1.2;
+}
+
+.profile-empty-state p {
+  margin: 0;
+}
+
 .profile-layout {
   display: grid;
   grid-template-columns: minmax(260px, 360px) minmax(0, 1fr);

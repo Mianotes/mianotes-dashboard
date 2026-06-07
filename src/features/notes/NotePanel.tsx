@@ -91,6 +91,7 @@ export function NotePanel({
     saveTitle
   } = useNoteTitle({
     note,
+    workspaceId,
     canChangeNote,
     cannotChangeNoteMessage,
     onError: setNoteError,
@@ -119,6 +120,7 @@ export function NotePanel({
     applyMiaResponse
   } = useMiaPrompt({
     note,
+    workspaceId,
     isEditing,
     isIndexingNote,
     canChangeNote,
@@ -138,6 +140,7 @@ export function NotePanel({
     formData.set("image", image);
     const response = await apiFetch<{ url: string }>(`/api/notes/${note.id}/images`, {
       method: "POST",
+      workspaceId,
       body: formData
     });
     return mediaPath(response.url);
@@ -159,6 +162,7 @@ export function NotePanel({
     try {
       await apiFetch<NoteRecord>(`/api/notes/${note.id}`, {
         method: "PATCH",
+        workspaceId,
         body: JSON.stringify({ text: nextText })
       });
       setDraftText(nextText);
@@ -205,7 +209,7 @@ export function NotePanel({
     setIsDeleting(true);
     setNoteError(null);
     try {
-      await apiFetch(`/api/notes/${note.id}`, { method: "DELETE" });
+      await apiFetch(`/api/notes/${note.id}`, { method: "DELETE", workspaceId });
       await onDeleted();
     } catch (err) {
       setNoteError(err instanceof Error ? err.message : "Could not delete note");
@@ -309,6 +313,7 @@ export function NotePanel({
       <div className="note-section-divider" />
       <NoteTagsManager
         note={note}
+        workspaceId={workspaceId}
         canChangeNote={canEditNote}
         cannotChangeNoteMessage={cannotEditNoteMessage}
         onRefresh={onRefresh}

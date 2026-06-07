@@ -51,13 +51,16 @@ export function ProfileScreen({
 }) {
   const selectedUser = selectedUserId === "all"
     ? null
-    : users.find((user) => user.id === selectedUserId) ?? currentUser;
+    : users.find((user) => user.id === selectedUserId) ?? null;
+  const isMissingSelectedUser = selectedUserId !== "all" && !selectedUser;
   const profileSummariesByUserId = useMemo(
     () => new Map(profileSummaries.map((summary) => [summary.user_id, summary])),
     [profileSummaries]
   );
   const [isAddingUser, setIsAddingUser] = useState(false);
-  const toolbarName = isAddingUser ? "New user" : selectedUser?.name ?? "All users";
+  const toolbarName = isAddingUser
+    ? "New user"
+    : selectedUser?.name ?? (isMissingSelectedUser ? "User not found" : "All users");
   const canEditSelectedUser = Boolean(selectedUser && (currentUser.is_admin || selectedUser.id === currentUser.id));
   const [isEditing, setIsEditing] = useState(false);
   const [draft, setDraft] = useState<ProfileDraft>(emptyProfileDraft);
@@ -331,6 +334,14 @@ export function ProfileScreen({
             onPhotoUpload={uploadProfilePhoto}
             onSelectTag={onSelectTag}
           />
+        ) : isMissingSelectedUser ? (
+          <div className="profile-empty-state" role="status">
+            <h2>User not found</h2>
+            <p>This user is no longer available in this workspace.</p>
+            <button type="button" className="secondary-action" onClick={() => onSelectUser("all")}>
+              View users
+            </button>
+          </div>
         ) : (
           <AllProfilesView
             users={users}

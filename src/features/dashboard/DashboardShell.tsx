@@ -1,3 +1,4 @@
+import { X } from "lucide-react";
 import { useEffect, useState } from "react";
 import type { MutableRefObject } from "react";
 import { apiFetch } from "../../api/client";
@@ -5,6 +6,7 @@ import type { NoteRecord, NoteShareRecord, ShareSettingsRecord, UserRecord } fro
 import logoUrl from "../../assets/logo_small.png";
 import { Sidebar } from "../../components/layout/Sidebar";
 import { Toolbar } from "../../components/layout/Toolbar";
+import { Modal, ModalActions } from "../../components/ui/Modal";
 import { copyTextToClipboard } from "../../utils/clipboard";
 import { appUrlForPath, noteRoutePath } from "../../utils/internalRoutes";
 import { guestShareUrl, stableShareBase } from "../../utils/share";
@@ -51,6 +53,7 @@ export function DashboardShell({
   const [movingNote, setMovingNote] = useState<NoteRecord | null>(null);
   const [shareBlockedNote, setShareBlockedNote] = useState<NoteRecord | null>(null);
   const [shareSuccessMessage, setShareSuccessMessage] = useState<string | null>(null);
+  const [workspaceSwitchError, setWorkspaceSwitchError] = useState<string | null>(null);
   const setAccountMenuRef = (node: HTMLDivElement | null) => {
     refs.accountMenuRef.current = node;
   };
@@ -104,12 +107,22 @@ export function DashboardShell({
     : null;
   const workspaceName = activeWorkspace?.name ?? "Workspace";
   const workspaceId = activeWorkspace?.id ?? "default";
+  const workspaceRequestId = activeWorkspace?.id ?? null;
 
   async function switchWorkspaceAndReset(locationId: string) {
-    await switchWorkspace(locationId);
-    navigation.handleWorkspaceSwitched();
-    setError(null);
-    setShareSuccessMessage(null);
+    try {
+      await switchWorkspace(locationId);
+      navigation.handleWorkspaceSwitched();
+      setError(null);
+      setShareSuccessMessage(null);
+      setWorkspaceSwitchError(null);
+    } catch (err) {
+      setWorkspaceSwitchError(
+        err instanceof Error && err.message
+          ? err.message
+          : "This is a protected workspace. Please contact an admin to request access."
+      );
+    }
   }
 
   async function shareNote(note: NoteRecord) {
@@ -124,6 +137,7 @@ export function DashboardShell({
       }
       const share = await apiFetch<NoteShareRecord>(`/api/notes/${note.id}/share`, {
         method: "POST",
+        workspaceId: workspaceRequestId,
         body: JSON.stringify({})
       });
       await copyTextToClipboard(guestShareUrl(shareBase, share.share_url, note.title));
@@ -295,6 +309,7 @@ export function DashboardShell({
             <SettingsScreen
               users={users}
               currentUser={currentUser}
+              workspaceId={workspaceRequestId}
               storageCapacity={storageCapacity}
               workspaceName={workspaceName}
               storageSettings={storageSettings}
@@ -311,6 +326,7 @@ export function DashboardShell({
               folders={folders}
               tags={tags}
               currentUser={currentUser}
+              workspaceId={workspaceRequestId}
               workspaceName={workspaceName}
               storageSettings={storageSettings}
               onBack={navigation.goBack}
@@ -323,6 +339,7 @@ export function DashboardShell({
             <JobsScreen
               currentUser={currentUser}
               workspaceName={workspaceName}
+              workspaceId={workspaceRequestId}
               storageSettings={storageSettings}
               onBack={navigation.goBack}
               onSignOut={() => void signOut()}
@@ -378,7 +395,7 @@ export function DashboardShell({
               onBack={navigation.goBack}
               onRefreshOpenedNote={async () => {
                 if (!openedNote) return;
-                await refreshNote(openedNote.id);
+                await refreshNote(openedNote.id, { workspaceId: workspaceRequestId });
               }}
               onNoteEditModeChange={(isEditing) => {
                 if (!openedNote) return;
@@ -386,7 +403,7 @@ export function DashboardShell({
               }}
               onOpenedNoteDeleted={async () => {
                 navigation.setOpenedNoteId(null);
-                await refreshFolderCounts();
+                await refreshFolderCounts({ workspaceId: workspaceRequestId });
                 await actions.refreshNotes();
               }}
               onAdd={navigation.openAddNote}
@@ -396,7 +413,7 @@ export function DashboardShell({
               onExportNotePdf={(note) => exportNotePdf(note)}
               onToggleStar={(note) => void actions.toggleNoteStar(note)}
               onNotesDeleted={async () => {
-                await refreshFolderCounts();
+                await refreshFolderCounts({ workspaceId: workspaceRequestId });
                 await actions.refreshNotes();
               }}
               onError={setError}
@@ -413,6 +430,7 @@ export function DashboardShell({
       <DashboardDialogs
         isAddOpen={navigation.isAddOpen}
         folders={folders}
+        workspaceId={workspaceRequestId}
         selectedFolderId={navigation.selectedFolderId}
         onCloseAdd={() => navigation.setIsAddOpen(false)}
         onNoteCreated={async (note, shouldEdit) => {
@@ -473,6 +491,32 @@ export function DashboardShell({
           }}
           onDownloadPdf={(note) => exportNotePdf(note)}
         />
+      )}
+      {workspaceSwitchError && (
+        <Modal
+          className="folder-modal workspace-protected-modal"
+          labelledBy="workspace-protected-title"
+          onClose={() => setWorkspaceSwitchError(null)}
+        >
+          <div className="folder-modal-header">
+            <div>
+              <h2 id="workspace-protected-title">Protected workspace</h2>
+              <p>{workspaceSwitchError}</p>
+            </div>
+            <button
+              className="modal-close-button"
+              type="button"
+              aria-label="Close"
+              onClick={() => setWorkspaceSwitchError(null)}
+            >
+              <X size={18} />
+            </button>
+          </div>
+          <ModalActions
+            cancelLabel="Close"
+            onCancel={() => setWorkspaceSwitchError(null)}
+          />
+        </Modal>
       )}
     </main>
   );

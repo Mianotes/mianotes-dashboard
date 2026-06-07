@@ -10,9 +10,10 @@ const MarkdownViewer = lazy(() => import("../../MarkdownViewer"));
 
 type PrintableNoteScreenProps = {
   noteId: string;
+  workspaceId: string | null;
 };
 
-export function PrintableNoteScreen({ noteId }: PrintableNoteScreenProps) {
+export function PrintableNoteScreen({ noteId, workspaceId }: PrintableNoteScreenProps) {
   const [note, setNote] = useState<NoteRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -24,7 +25,9 @@ export function PrintableNoteScreen({ noteId }: PrintableNoteScreenProps) {
       setIsLoading(true);
       setError(null);
       try {
-        const loadedNote = await apiFetch<NoteRecord>(`/api/notes/${encodeURIComponent(noteId)}`);
+        const loadedNote = await apiFetch<NoteRecord>(`/api/notes/${encodeURIComponent(noteId)}`, {
+          workspaceId
+        });
         if (!cancelled) setNote(loadedNote);
       } catch (loadError) {
         if (!cancelled) {
@@ -40,7 +43,7 @@ export function PrintableNoteScreen({ noteId }: PrintableNoteScreenProps) {
     return () => {
       cancelled = true;
     };
-  }, [noteId]);
+  }, [noteId, workspaceId]);
 
   useEffect(() => {
     if (!note || isLoading || error) return;
