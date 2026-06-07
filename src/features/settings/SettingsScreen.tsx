@@ -65,6 +65,7 @@ export function SettingsScreen({
   onOpenProfile,
   onOpenSettings,
   onFoldersRestored,
+  onStorageCapacityNeeded,
   onSwitchWorkspace
 }: {
   users: UserRecord[];
@@ -78,6 +79,7 @@ export function SettingsScreen({
   onOpenProfile: (profileId?: string | "all") => void;
   onOpenSettings: () => void;
   onFoldersRestored: () => void | Promise<void>;
+  onStorageCapacityNeeded: () => Promise<StorageCapacityRecord>;
   onSwitchWorkspace: (locationId: string) => Promise<void>;
 }) {
   const [archivedFolders, setArchivedFolders] = useState<FolderRecord[]>([]);
@@ -246,6 +248,16 @@ export function SettingsScreen({
     }
     setActiveSection("workspaces");
   }, [activeSection, currentUser.is_admin]);
+
+  useEffect(() => {
+    if (!currentUser.is_admin || activeSection !== "storage" || storageCapacity) {
+      return;
+    }
+    setSettingsError(null);
+    void onStorageCapacityNeeded().catch((error) => {
+      setSettingsError(error instanceof Error ? error.message : "Could not check storage.");
+    });
+  }, [activeSection, currentUser.is_admin, onStorageCapacityNeeded, storageCapacity]);
 
   return (
     <>

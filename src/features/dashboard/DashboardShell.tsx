@@ -76,6 +76,7 @@ export function DashboardShell({
     loadWorkspace,
     switchWorkspace,
     refreshNote,
+    refreshStorageCapacity,
     refreshFolderCounts,
     addOrMergeNote,
     updateUserInWorkspace,
@@ -318,6 +319,7 @@ export function DashboardShell({
               onOpenProfile={navigation.openProfile}
               onOpenSettings={navigation.openSettings}
               onFoldersRestored={loadWorkspace}
+              onStorageCapacityNeeded={refreshStorageCapacity}
               onSwitchWorkspace={switchWorkspaceAndReset}
             />
           ) : navigation.workspaceView === "publish" ? (

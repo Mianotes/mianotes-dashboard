@@ -129,6 +129,15 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
     return summaries;
   }, []);
 
+  const refreshStorageCapacity = useCallback(async (options: WorkspaceRequestOptions = {}) => {
+    const capacity = await apiFetch<StorageCapacityRecord>("/api/storage", {
+      workspaceId: options.workspaceId ?? activeWorkspaceIdRef.current,
+      signal: options.signal
+    });
+    setStorageCapacity(capacity);
+    return capacity;
+  }, []);
+
   const refreshFolderCounts = useCallback(async (options: WorkspaceRequestOptions = {}) => {
     const counts = await apiFetch<FolderNoteCountsRecord>("/api/folders/counts", {
       workspaceId: options.workspaceId ?? activeWorkspaceIdRef.current,
@@ -147,8 +156,6 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
       nextUsers,
       nextFolders,
       nextTags,
-      nextProfileSummaries,
-      nextStorageCapacity,
       nextStorageSettings,
       nextFolderCounts
     ] = await Promise.all([
@@ -164,14 +171,6 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
         workspaceId: requestWorkspaceId,
         signal: options.signal
       }),
-      apiFetch<UserProfileSummaryRecord[]>("/api/users/profile-summaries", {
-        workspaceId: requestWorkspaceId,
-        signal: options.signal
-      }),
-      apiFetch<StorageCapacityRecord>("/api/storage", {
-        workspaceId: requestWorkspaceId,
-        signal: options.signal
-      }).catch(() => null),
       apiFetch<StorageSettingsRecord>("/api/settings/storage", {
         workspaceId: requestWorkspaceId,
         signal: options.signal
@@ -194,8 +193,8 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
     usersRef.current = nextUsers;
     foldersRef.current = activeFolders;
     setTags(nextTags);
-    setProfileSummaries(nextProfileSummaries);
-    setStorageCapacity(nextStorageCapacity);
+    setProfileSummaries([]);
+    setStorageCapacity(null);
     setStorageSettings(nextStorageSettings);
     setFolderNoteCounts(nextFolderCounts.folders);
     setIsWorkspaceLoaded(true);
@@ -450,6 +449,7 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
     refreshNote,
     clearOpenedNote,
     refreshProfileSummaries,
+    refreshStorageCapacity,
     refreshFolderCounts,
     addOrMergeNote,
     toggleNoteStar,
