@@ -34,7 +34,7 @@ type SettingsSectionId = "workspaces" | "admin-users" | "api-key" | "restore-fol
 const SETTINGS_SECTIONS: Array<{ id: SettingsSectionId; label: string }> = [
   { id: "workspaces", label: "Workspaces" },
   { id: "admin-users", label: "Admin users" },
-  { id: "api-key", label: "Connect AI tools" },
+  { id: "api-key", label: "Connect tools" },
   { id: "restore-folders", label: "Restore folders" },
   { id: "domain", label: "Custom Domain" },
   { id: "storage", label: "Storage" }
@@ -440,13 +440,13 @@ export function SettingsScreen({
               {currentUser.is_admin && activeSection === "api-key" && (
                 <section className="settings-card settings-api-card" aria-labelledby="settings-api-title">
                   <div className="settings-card-intro">
-                    <h2 id="settings-api-title">Connect AI tools</h2>
+                    <h2 id="settings-api-title">Connect tools</h2>
                     <p>
                       Mianotes uses an API key so tools like Codex and Claude Code can search and save notes.
                     </p>
                     <p>
                       For security, Mianotes does not show the key in the browser. Instead, it creates a one-time
-                      install link. Run the install command on the computer where you use your AI tool, and Mianotes
+                      install link. Run the install command on the computer where you use your tool, and Mianotes
                       will save the key there automatically.
                     </p>
                   </div>
