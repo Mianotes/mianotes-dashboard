@@ -1,5 +1,5 @@
 import { Loader2 } from "lucide-react";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { AuthScreen } from "./features/auth/AuthScreen";
 import { DashboardShell } from "./features/dashboard/DashboardShell";
 import { useDashboardActions } from "./features/dashboard/useDashboardActions";
@@ -143,7 +143,7 @@ function AuthenticatedApp() {
   }
 
   if (!currentUser) {
-    return <AuthScreen onSignedIn={bootstrap} />;
+    return <UnauthenticatedApp onSignedIn={() => { void bootstrap(null); }} />;
   }
 
   if (isPrintNoteRoute && initialRoute.kind === "note") {
@@ -161,4 +161,29 @@ function AuthenticatedApp() {
       setError={setError}
     />
   );
+}
+
+function UnauthenticatedApp({ onSignedIn }: { onSignedIn: () => void }) {
+  const [isRouteReady, setIsRouteReady] = useState(() => {
+    if (typeof window === "undefined") return true;
+    return window.location.pathname === "/";
+  });
+
+  useLayoutEffect(() => {
+    if (typeof window === "undefined") return;
+    if (window.location.pathname !== "/") {
+      window.history.replaceState({}, "", "/");
+    }
+    setIsRouteReady(true);
+  }, []);
+
+  if (!isRouteReady) {
+    return (
+      <main className="screen centered">
+        <Loader2 className="spin" size={28} />
+      </main>
+    );
+  }
+
+  return <AuthScreen onSignedIn={onSignedIn} />;
 }

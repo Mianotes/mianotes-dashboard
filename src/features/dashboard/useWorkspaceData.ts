@@ -201,10 +201,12 @@ export function useWorkspaceData(initialWorkspaceId: string | null = null) {
     setIsWorkspaceLoaded(true);
   }, []);
 
-  const bootstrap = useCallback(async () => {
+  const bootstrap = useCallback(async (workspaceIdOverride?: string | null) => {
     setIsLoading(true);
     setIsWorkspaceLoaded(false);
-    const workspaceId = activeWorkspaceIdRef.current;
+    const workspaceId = workspaceIdOverride === undefined
+      ? activeWorkspaceIdRef.current
+      : workspaceIdOverride;
     try {
       const session = await apiFetch<{ user: UserRecord }>("/api/auth/session");
       setCurrentUser(session.user);
