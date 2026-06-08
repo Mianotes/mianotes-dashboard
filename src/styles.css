@@ -113,6 +113,7 @@ button {
   min-height: 0;
   overflow: hidden;
   border-right: 1px solid #dedfe5;
+  border-top-left-radius: 8px;
   background: #fcfcfd;
   font-size: 13px;
 }
@@ -430,6 +431,7 @@ button {
 
 .workspace {
   min-width: 0;
+  border-top-right-radius: 8px;
   background: #ffffff;
 }
 
@@ -4909,7 +4911,8 @@ textarea:focus {
   background: #ffffff;
 }
 
-.settings-api-field input {
+.settings-api-field input,
+.settings-api-field select {
   width: 100%;
   min-width: 0;
   min-height: 34px;
@@ -4922,6 +4925,11 @@ textarea:focus {
   font-size: 14px;
 }
 
+.settings-api-field select {
+  appearance: none;
+  cursor: pointer;
+}
+
 .settings-api-field input::placeholder {
   color: #c2c3c8;
 }
@@ -4930,7 +4938,8 @@ textarea:focus {
   border-color: #bfc2cc;
 }
 
-.settings-api-input-shell:focus-within input {
+.settings-api-input-shell:focus-within input,
+.settings-api-input-shell:focus-within select {
   background: #ffffff;
 }
 
@@ -4945,6 +4954,45 @@ textarea:focus {
   display: grid;
   justify-items: start;
   padding: 24px 34px 0;
+}
+
+.settings-ai-provider-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  padding: 24px 34px 0;
+}
+
+.settings-ai-save-panel {
+  padding-top: 18px;
+}
+
+.settings-ai-key-panel {
+  padding-top: 34px;
+}
+
+.settings-ai-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  margin: 18px 34px 0;
+  padding: 12px 14px;
+  border-radius: 8px;
+  font-size: 14px;
+  line-height: 1.35;
+  font-weight: 600;
+}
+
+.settings-ai-status.success {
+  border: 1px solid #bbf7d0;
+  color: #166534;
+  background: #f0fdf4;
+}
+
+.settings-ai-status.error {
+  border: 1px solid #fecdd3;
+  color: #9f1239;
+  background: #fff1f2;
 }
 
 .settings-api-action {
@@ -6624,6 +6672,19 @@ textarea:focus {
     grid-template-columns: minmax(0, 1fr);
     gap: 0;
     padding: 24px 34px;
+  }
+
+  .settings-ai-provider-grid {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 24px 22px 0;
+  }
+
+  .settings-ai-key-panel {
+    padding-top: 30px;
+  }
+
+  .settings-ai-status {
+    margin: 18px 22px 0;
   }
 
   .settings-api-install-panel {

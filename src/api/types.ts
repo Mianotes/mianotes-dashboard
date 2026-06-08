@@ -133,6 +133,18 @@ export type SkillInstallRecord = {
   expires_at: string;
 };
 
+export type AiProviderSettingsRecord = {
+  provider: string;
+  model: string | null;
+  base_url: string | null;
+  has_api_key: boolean;
+};
+
+export type AiProviderConnectRecord = AiProviderSettingsRecord & {
+  connected: boolean;
+  message: string;
+};
+
 export type ShareSettingsRecord = {
   workspace_url: string | null;
 };

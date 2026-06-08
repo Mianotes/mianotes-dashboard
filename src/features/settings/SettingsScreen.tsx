@@ -1,7 +1,23 @@
-import { ArrowRight, Copy, Folder, HardDrive, History, Info, Link, Loader2, Users, X } from "lucide-react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  Copy,
+  Folder,
+  HardDrive,
+  History,
+  Info,
+  Link,
+  Loader2,
+  Lock,
+  Users,
+  X,
+  XCircle
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { apiBase, apiFetch } from "../../api/client";
 import type {
+  AiProviderConnectRecord,
+  AiProviderSettingsRecord,
   FolderRecord,
   ShareSettingsRecord,
   SkillInstallRecord,
@@ -29,16 +45,38 @@ function apiEnvironmentUrl() {
   return window.location.origin;
 }
 
-type SettingsSectionId = "workspaces" | "admin-users" | "api-key" | "restore-folders" | "domain" | "storage";
+type SettingsSectionId =
+  | "workspaces"
+  | "admin-users"
+  | "api-key"
+  | "mia-ai-provider"
+  | "restore-folders"
+  | "domain"
+  | "storage";
 
 const SETTINGS_SECTIONS: Array<{ id: SettingsSectionId; label: string }> = [
   { id: "workspaces", label: "Workspaces" },
   { id: "admin-users", label: "Admin users" },
   { id: "api-key", label: "Connect tools" },
+  { id: "mia-ai-provider", label: "Mia AI provider" },
   { id: "restore-folders", label: "Restore folders" },
   { id: "domain", label: "Custom Domain" },
   { id: "storage", label: "Storage" }
 ];
+
+const AI_PROVIDER_OPTIONS = [
+  { value: "openai", label: "OpenAI" },
+  { value: "ollama", label: "Ollama" },
+  { value: "openai-compatible", label: "OpenAI-compatible" }
+];
+
+function aiProviderDisplayName(provider: string) {
+  const option = AI_PROVIDER_OPTIONS.find((item) => item.value === provider);
+  if (option) {
+    return option.label;
+  }
+  return provider.trim() || "AI provider";
+}
 
 function formatStoragePercent(value: number) {
   if (!Number.isFinite(value) || value <= 0) {
@@ -96,12 +134,27 @@ export function SettingsScreen({
   const [workspaceUrl, setWorkspaceUrl] = useState("");
   const [isLoadingShareSettings, setIsLoadingShareSettings] = useState(true);
   const [isSavingShareSettings, setIsSavingShareSettings] = useState(false);
+  const [aiProviderSettings, setAiProviderSettings] = useState<AiProviderSettingsRecord | null>(null);
+  const [aiProvider, setAiProvider] = useState("openai");
+  const [aiProviderModel, setAiProviderModel] = useState("gpt-5-nano");
+  const [aiProviderBaseUrl, setAiProviderBaseUrl] = useState("");
+  const [aiProviderApiKey, setAiProviderApiKey] = useState("");
+  const [isLoadingAiProvider, setIsLoadingAiProvider] = useState(true);
+  const [isSavingAiProvider, setIsSavingAiProvider] = useState(false);
+  const [isConnectingAiProvider, setIsConnectingAiProvider] = useState(false);
+  const [aiProviderStatus, setAiProviderStatus] = useState<{
+    type: "success" | "error";
+    message: string;
+  } | null>(null);
   const [activeSection, setActiveSection] = useState<SettingsSectionId>("workspaces");
 
   useEffect(() => {
     void loadArchivedFolders();
     void loadStorageSettings();
     void loadShareSettings();
+    if (currentUser.is_admin) {
+      void loadAiProviderSettings();
+    }
   }, [workspaceId]);
 
   useEffect(() => {
@@ -161,6 +214,79 @@ export function SettingsScreen({
       setSettingsError(error instanceof Error ? error.message : "Could not load sharing settings.");
     } finally {
       setIsLoadingShareSettings(false);
+    }
+  }
+
+  function applyAiProviderSettings(settings: AiProviderSettingsRecord) {
+    setAiProviderSettings(settings);
+    setAiProvider(settings.provider || "openai");
+    setAiProviderModel(settings.model || "gpt-5-nano");
+    setAiProviderBaseUrl(settings.base_url || "");
+  }
+
+  async function loadAiProviderSettings() {
+    setIsLoadingAiProvider(true);
+    try {
+      const settings = await apiFetch<AiProviderSettingsRecord>("/api/settings/ai-provider");
+      applyAiProviderSettings(settings);
+    } catch (error) {
+      setSettingsError(error instanceof Error ? error.message : "Could not load Mia AI provider settings.");
+    } finally {
+      setIsLoadingAiProvider(false);
+    }
+  }
+
+  async function saveAiProviderSettings() {
+    setIsSavingAiProvider(true);
+    setSettingsError(null);
+    setSettingsMessage(null);
+    setAiProviderStatus(null);
+    try {
+      const settings = await apiFetch<AiProviderSettingsRecord>("/api/settings/ai-provider", {
+        method: "PATCH",
+        body: JSON.stringify({
+          provider: aiProvider,
+          model: aiProviderModel,
+          base_url: aiProviderBaseUrl
+        })
+      });
+      applyAiProviderSettings(settings);
+      setSettingsMessage("Mia AI provider saved.");
+    } catch (error) {
+      setSettingsError(error instanceof Error ? error.message : "Could not save Mia AI provider settings.");
+    } finally {
+      setIsSavingAiProvider(false);
+    }
+  }
+
+  async function connectAiProvider() {
+    setIsConnectingAiProvider(true);
+    setSettingsError(null);
+    setSettingsMessage(null);
+    setAiProviderStatus(null);
+    try {
+      const result = await apiFetch<AiProviderConnectRecord>("/api/settings/ai-provider/connect", {
+        method: "POST",
+        body: JSON.stringify({
+          provider: aiProvider,
+          model: aiProviderModel,
+          base_url: aiProviderBaseUrl,
+          api_key: aiProviderApiKey
+        })
+      });
+      applyAiProviderSettings(result);
+      setAiProviderApiKey("");
+      setAiProviderStatus({
+        type: "success",
+        message: result.message || `Connected to ${aiProviderDisplayName(result.provider)}`
+      });
+    } catch (error) {
+      setAiProviderStatus({
+        type: "error",
+        message: error instanceof Error ? error.message : "Unable to connect, check the API key and try again."
+      });
+    } finally {
+      setIsConnectingAiProvider(false);
     }
   }
 
@@ -513,6 +639,135 @@ export function SettingsScreen({
                       leak. Mianotes installs the key directly into your local environment instead.
                     </p>
                   </div>
+                </section>
+              )}
+              {currentUser.is_admin && activeSection === "mia-ai-provider" && (
+                <section className="settings-card settings-ai-card" aria-labelledby="settings-ai-title">
+                  <div className="settings-card-intro">
+                    <h2 id="settings-ai-title">Mia AI provider</h2>
+                    <p>
+                      Connect Mia to the model it uses when you ask it to summarise, rewrite, or transform notes.
+                    </p>
+                  </div>
+                  {isLoadingAiProvider ? (
+                    <div className="settings-empty-state settings-storage-loading">
+                      <Loader2 className="spin" size={24} />
+                      Loading Mia AI provider...
+                    </div>
+                  ) : (
+                    <>
+                      <div className="settings-ai-provider-grid">
+                        <label className="settings-api-field">
+                          <span>Provider</span>
+                          <span className="settings-api-input-shell">
+                            <span className="settings-api-icon-shell">
+                              <Lock size={22} />
+                            </span>
+                            <select
+                              value={aiProvider}
+                              onChange={(event) => {
+                                setAiProvider(event.currentTarget.value);
+                                setAiProviderStatus(null);
+                              }}
+                            >
+                              {AI_PROVIDER_OPTIONS.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </select>
+                          </span>
+                        </label>
+                        <label className="settings-api-field">
+                          <span>Model</span>
+                          <span className="settings-api-input-shell">
+                            <span className="settings-api-icon-shell">
+                              <Lock size={22} />
+                            </span>
+                            <input
+                              type="text"
+                              value={aiProviderModel}
+                              placeholder="gpt-5-nano"
+                              onChange={(event) => {
+                                setAiProviderModel(event.currentTarget.value);
+                                setAiProviderStatus(null);
+                              }}
+                            />
+                          </span>
+                        </label>
+                        <label className="settings-api-field">
+                          <span>Base URL</span>
+                          <span className="settings-api-input-shell">
+                            <span className="settings-api-icon-shell">
+                              <Link size={22} />
+                            </span>
+                            <input
+                              type="url"
+                              value={aiProviderBaseUrl}
+                              placeholder="Optional"
+                              onChange={(event) => {
+                                setAiProviderBaseUrl(event.currentTarget.value);
+                                setAiProviderStatus(null);
+                              }}
+                            />
+                          </span>
+                        </label>
+                      </div>
+                      <div className="settings-api-install-panel settings-ai-save-panel">
+                        <button
+                          className="settings-api-action"
+                          type="button"
+                          disabled={isSavingAiProvider}
+                          onClick={() => void saveAiProviderSettings()}
+                        >
+                          {isSavingAiProvider ? <Loader2 className="spin" size={16} /> : null}
+                          Save provider
+                        </button>
+                      </div>
+                      {aiProviderSettings ? (
+                        <div className="settings-api-panel settings-ai-key-panel">
+                          <label className="settings-api-field">
+                            <span>{aiProviderDisplayName(aiProvider)} API key</span>
+                            <span className="settings-api-input-shell">
+                              <span className="settings-api-icon-shell">
+                                <Lock size={22} />
+                              </span>
+                              <input
+                                type="password"
+                                value={aiProviderApiKey}
+                                autoComplete="off"
+                                placeholder={aiProviderSettings.has_api_key ? "API key saved" : "API key"}
+                                onChange={(event) => {
+                                  setAiProviderApiKey(event.currentTarget.value);
+                                  setAiProviderStatus(null);
+                                }}
+                              />
+                            </span>
+                            <small>Your API key will only be saved to the Mianotes environment file.</small>
+                          </label>
+                          <button
+                            className="settings-api-action"
+                            type="button"
+                            disabled={isConnectingAiProvider}
+                            onClick={() => void connectAiProvider()}
+                          >
+                            {isConnectingAiProvider ? <Loader2 className="spin" size={16} /> : null}
+                            Connect
+                          </button>
+                        </div>
+                      ) : null}
+                      {aiProviderStatus ? (
+                        <div className={`settings-ai-status ${aiProviderStatus.type}`} role="status">
+                          {aiProviderStatus.type === "success" ? (
+                            <CheckCircle2 size={18} />
+                          ) : (
+                            <XCircle size={18} />
+                          )}
+                          <span>{aiProviderStatus.message}</span>
+                        </div>
+                      ) : null}
+                    </>
+                  )}
                 </section>
               )}
               {activeSection === "restore-folders" && (
