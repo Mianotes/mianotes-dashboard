@@ -1,7 +1,7 @@
 import { Download, Edit3, Eye, Loader2, MoreVertical, Share2, Trash2 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import type { SyntheticEvent } from "react";
-import { mediaPath } from "../../api/client";
+import { mediaPath, normalizeNetworkError } from "../../api/client";
 import type { NoteRecord } from "../../api/types";
 import { MoveNoteIcon } from "../../components/icons/MoveNoteIcon";
 
@@ -167,7 +167,8 @@ export function NoteActionsMenu({
       setIsOpen(false);
     } catch (error) {
       viewer?.close();
-      window.alert(error instanceof Error ? error.message : "Could not open the source file.");
+      const normalizedError = normalizeNetworkError(error);
+      window.alert(normalizedError instanceof Error ? normalizedError.message : "Could not open the source file.");
     } finally {
       setIsOpeningSource(false);
     }

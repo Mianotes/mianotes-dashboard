@@ -1,4 +1,5 @@
 export const apiBase = import.meta.env.VITE_API_BASE_URL ?? "";
+export const NETWORK_ERROR_MESSAGE = "Unable to fetch content. Please check that you are online and try again.";
 
 type ApiFetchOptions = RequestInit & {
   workspaceId?: string | null;
@@ -53,6 +54,13 @@ export function versionedMediaPath(path: string, version = Date.now()) {
   return `${path}${separator}v=${version}`;
 }
 
+export function normalizeNetworkError(error: unknown) {
+  if (error instanceof TypeError) {
+    return new Error(NETWORK_ERROR_MESSAGE);
+  }
+  return error;
+}
+
 export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): Promise<T> {
   const { workspaceId, ...requestOptions } = options;
   const headers = new Headers(options.headers);
@@ -63,11 +71,16 @@ export async function apiFetch<T>(path: string, options: ApiFetchOptions = {}): 
   if (!(options.body instanceof FormData) && !headers.has("Content-Type")) {
     headers.set("Content-Type", "application/json");
   }
-  const response = await fetch(apiPath(path), {
-    ...requestOptions,
-    headers,
-    credentials: "include"
-  });
+  let response: Response;
+  try {
+    response = await fetch(apiPath(path), {
+      ...requestOptions,
+      headers,
+      credentials: "include"
+    });
+  } catch (error) {
+    throw normalizeNetworkError(error);
+  }
   if (!response.ok) {
     let message = response.statusText;
     try {
