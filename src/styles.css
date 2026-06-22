@@ -1376,6 +1376,13 @@ button {
   color: #111217;
 }
 
+.note-title-edit-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 1020px;
+}
+
 .note-title-input {
   width: 100%;
   max-width: 980px;
@@ -1393,6 +1400,11 @@ button {
 .note-title-input:focus {
   border-color: #8d8f99;
   box-shadow: 0 0 0 3px rgba(23, 24, 29, 0.08);
+}
+
+.note-title-spinner {
+  flex: 0 0 auto;
+  color: #767985;
 }
 
 .panel-actions {

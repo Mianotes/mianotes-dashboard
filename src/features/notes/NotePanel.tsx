@@ -85,6 +85,7 @@ export function NotePanel({
   const {
     titleDraft,
     isEditingTitle,
+    isSavingTitle,
     setTitleDraft,
     startTitleEdit,
     cancelTitleEdit,
@@ -267,6 +268,7 @@ export function NotePanel({
         titleDraft={titleDraft}
         isEditing={isEditing}
         isEditingTitle={isEditingTitle}
+        isSavingTitle={isSavingTitle}
         canChangeNote={canEditNote}
         onTitleDraftChange={setTitleDraft}
         onStartTitleEdit={startTitleEdit}

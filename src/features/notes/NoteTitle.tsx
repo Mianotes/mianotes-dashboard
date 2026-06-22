@@ -1,9 +1,12 @@
+import { Loader2 } from "lucide-react";
+
 type NoteTitleProps = {
   title: string;
   jobBadge: { label: string; tone: "blue" | "danger" } | null;
   titleDraft: string;
   isEditing: boolean;
   isEditingTitle: boolean;
+  isSavingTitle: boolean;
   canChangeNote: boolean;
   onTitleDraftChange: (value: string) => void;
   onStartTitleEdit: () => void;
@@ -17,6 +20,7 @@ export function NoteTitle({
   titleDraft,
   isEditing,
   isEditingTitle,
+  isSavingTitle,
   canChangeNote,
   onTitleDraftChange,
   onStartTitleEdit,
@@ -26,22 +30,34 @@ export function NoteTitle({
   return (
     <div className="note-document-title">
       {isEditingTitle ? (
-        <input
-          className="note-title-input"
-          value={titleDraft}
-          autoFocus
-          onChange={(event) => onTitleDraftChange(event.target.value)}
-          onBlur={() => void onSaveTitle()}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              event.preventDefault();
-              void onSaveTitle();
-            }
-            if (event.key === "Escape") {
-              onCancelTitleEdit();
-            }
-          }}
-        />
+        <div className="note-title-edit-row">
+          <input
+            className="note-title-input"
+            value={titleDraft}
+            autoFocus
+            disabled={isSavingTitle}
+            onChange={(event) => onTitleDraftChange(event.target.value)}
+            onBlur={() => {
+              if (!isSavingTitle) void onSaveTitle();
+            }}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                void onSaveTitle();
+              }
+              if (event.key === "Escape" && !isSavingTitle) {
+                onCancelTitleEdit();
+              }
+            }}
+          />
+          {isSavingTitle && (
+            <Loader2
+              className="spin note-title-spinner"
+              size={18}
+              aria-label="Saving title"
+            />
+          )}
+        </div>
       ) : (
         <div className="note-title-row">
           <h1

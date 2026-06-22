@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { apiFetch } from "../../api/client";
 import type { NoteRecord } from "../../api/types";
 
@@ -23,31 +23,38 @@ export function useNoteTitle({
 }: UseNoteTitleArgs) {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
   const [titleDraft, setTitleDraft] = useState(note.title);
+  const [isSavingTitle, setIsSavingTitle] = useState(false);
+  const isSavingTitleRef = useRef(false);
 
   useEffect(() => {
+    if (isSavingTitle) return;
     setIsEditingTitle(false);
     setTitleDraft(note.title);
-  }, [note.id, note.title]);
+  }, [isSavingTitle, note.id, note.title]);
 
   useEffect(() => {
-    if (!isEditingTitle) {
+    if (!isEditingTitle && !isSavingTitle) {
       setTitleDraft(note.title);
     }
-  }, [isEditingTitle, note.title]);
+  }, [isEditingTitle, isSavingTitle, note.title]);
 
   function startTitleEdit() {
+    if (isSavingTitle) return;
     onError(null);
     setTitleDraft(note.title);
     setIsEditingTitle(true);
   }
 
   function cancelTitleEdit() {
+    if (isSavingTitle) return;
     setTitleDraft(note.title);
     setIsEditingTitle(false);
     onError(null);
   }
 
   async function saveTitle() {
+    if (isSavingTitleRef.current) return;
+
     if (!canChangeNote) {
       onError(cannotChangeNoteMessage);
       setIsEditingTitle(false);
@@ -65,6 +72,8 @@ export function useNoteTitle({
       return;
     }
 
+    isSavingTitleRef.current = true;
+    setIsSavingTitle(true);
     setIsSaving(true);
     onError(null);
     try {
@@ -76,8 +85,12 @@ export function useNoteTitle({
       setIsEditingTitle(false);
       await onRefresh();
     } catch (err) {
+      setTitleDraft(note.title);
+      setIsEditingTitle(false);
       onError(err instanceof Error ? err.message : "Could not save note title");
     } finally {
+      isSavingTitleRef.current = false;
+      setIsSavingTitle(false);
       setIsSaving(false);
     }
   }
@@ -85,6 +98,7 @@ export function useNoteTitle({
   return {
     titleDraft,
     isEditingTitle,
+    isSavingTitle,
     setTitleDraft,
     startTitleEdit,
     cancelTitleEdit,
